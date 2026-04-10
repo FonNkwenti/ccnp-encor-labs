@@ -1,0 +1,16 @@
+.DS_Store
+.venv/
+.env
+*.log
+.gemini/
+*.ghost
+*.image
+**/*.ghost
+**/*.image
+**/project-files/dynamips/
+**/log.txt
+**/stdout.txt
+**/ilt_*
+__pycache__/
+**/__pycache__/
+.envrc

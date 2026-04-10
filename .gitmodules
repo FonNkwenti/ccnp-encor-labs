@@ -1,0 +1,3 @@
+[submodule ".agent/skills"]
+	path = .agent/skills
+	url = https://github.com/FonNkwenti/cisco-lab-skills-eve-ng.git
