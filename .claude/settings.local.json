@@ -12,7 +12,10 @@
       "Bash(py -m py_compile inject_scenario_02.py)",
       "Bash(py -m py_compile inject_scenario_03.py)",
       "Bash(py -m py_compile apply_solution.py)",
-      "Skill(commit-commands:commit-push-pr)"
+      "Skill(commit-commands:commit-push-pr)",
+      "Bash(gh repo:*)",
+      "Bash(gh pr create --title 'chore: add initial lab structure and configuration' --body ':*)",
+      "Bash(gh pr:*)"
     ]
   }
 }
