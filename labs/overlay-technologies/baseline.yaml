@@ -1,0 +1,191 @@
+topic: overlay-technologies
+topic_name: "LISP and VXLAN"
+exam: "350-401"
+version: 1.0
+workbook_format: reference   # All conceptual — no hands-on topology
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# NO EVE-NG TOPOLOGY — all "describe" bullets
+# Reference workbooks with diagrams, packet analysis, quiz questions
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices: []
+  links: []
+  notes: >
+    No EVE-NG topology. All blueprint bullets are "describe" verbs.
+    LISP requires IOS-XE map-server features not practical on IOSv.
+    VXLAN BGP EVPN requires NX-OSv 9000 with limited scope.
+    Reference workbooks are more exam-aligned for these topics.
+
+# ──────────────────────────────────────────────
+# Device Virtualization Theory (lab-00)
+# ──────────────────────────────────────────────
+device_virtualization_theory:
+  hypervisors:
+    type_1:
+      name: "Bare-Metal / Native Hypervisor"
+      examples: [VMware ESXi, Microsoft Hyper-V, KVM]
+      key_points:
+        - Runs directly on hardware (no host OS)
+        - Better performance — no host OS overhead
+        - Used in enterprise data centers and cloud
+        - Each VM gets dedicated virtual hardware (vCPU, vRAM, vNIC)
+
+    type_2:
+      name: "Hosted Hypervisor"
+      examples: [VMware Workstation, VirtualBox, Parallels]
+      key_points:
+        - Runs on top of a host operating system
+        - Easier to install — leverages existing OS
+        - Higher overhead — host OS consumes resources
+        - Used for development, testing, desktop virtualization
+
+  virtual_machines:
+    key_points:
+      - Complete OS instance with isolated kernel
+      - Hardware abstraction via hypervisor
+      - Resource allocation — vCPU, vRAM, vDisk, vNIC
+      - VM vs Container — VMs isolate at hardware level, containers share kernel
+      - Snapshot and migration capabilities (vMotion, live migration)
+
+  virtual_switching:
+    key_points:
+      - Standard vSwitch — basic L2 forwarding within hypervisor
+      - Distributed vSwitch (DVS) — centrally managed across hosts
+      - OVS (Open vSwitch) — open-source, supports OpenFlow
+      - Performance optimizations:
+        - DPDK (Data Plane Development Kit) — user-space packet processing
+        - SR-IOV (Single Root I/O Virtualization) — hardware-level NIC partitioning
+        - PCI Passthrough — direct hardware access, bypasses hypervisor
+
+# ──────────────────────────────────────────────
+# Network Virtualization Theory (lab-01)
+# ──────────────────────────────────────────────
+network_virtualization_theory:
+  lisp:
+    full_name: "Locator/ID Separation Protocol"
+    rfc: 6830
+    key_concepts:
+      - Separates host identity (EID) from network location (RLOC)
+      - EID — Endpoint Identifier (host IP address)
+      - RLOC — Routing Locator (router interface IP)
+      - Map Server (MS) — stores EID-to-RLOC mappings
+      - Map Resolver (MR) — resolves EID queries to RLOCs
+      - ITR — Ingress Tunnel Router (encapsulates)
+      - ETR — Egress Tunnel Router (decapsulates)
+      - PxTR — Proxy xTR (translates between LISP and non-LISP domains)
+    packet_flow:
+      - "1. Host sends packet to destination EID"
+      - "2. ITR checks local map-cache for EID-to-RLOC mapping"
+      - "3. If miss, ITR sends Map-Request to Map Resolver"
+      - "4. Map Resolver queries Map Server for the EID"
+      - "5. Map Server returns Map-Reply with RLOC"
+      - "6. ITR encapsulates packet (UDP 4341) and sends to ETR RLOC"
+      - "7. ETR decapsulates and delivers to destination host"
+    sd_access_role: >
+      LISP is the control plane for Cisco SD-Access. Host tracking
+      uses LISP to map endpoint MACs/IPs (EIDs) to fabric edge
+      switches (RLOCs). The Control Plane Node runs MS/MR.
+
+  vxlan:
+    full_name: "Virtual Extensible LAN"
+    rfc: 7348
+    key_concepts:
+      - MAC-in-UDP encapsulation — L2 frame inside UDP/IP
+      - VNI (VXLAN Network Identifier) — 24-bit, supports 16M+ segments
+      - VTEP (VXLAN Tunnel Endpoint) — encap/decap point
+      - Multicast or ingress replication for BUM traffic
+      - BGP EVPN — control plane for VXLAN (replaces flood-and-learn)
+    packet_format:
+      outer_headers: "Outer Ethernet | Outer IP | Outer UDP (port 4789) | VXLAN Header (VNI)"
+      inner_frame: "Original L2 Frame (inner Ethernet | inner IP | payload)"
+      overhead: "50 bytes (14 outer Eth + 20 IP + 8 UDP + 8 VXLAN)"
+    sd_access_role: >
+      VXLAN is the data plane for Cisco SD-Access. VXLAN-GPO
+      (Group Policy Option) carries SGT tags in the VXLAN header
+      for inline micro-segmentation.
+
+  lisp_vxlan_relationship: >
+    In SD-Access: LISP provides the control plane (host tracking,
+    mobility), VXLAN provides the data plane (frame encapsulation),
+    and Catalyst Center provides the management plane (policy,
+    provisioning). Understanding both is required for the 350-401 exam.
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-device-virtualization
+    title: "Device Virtualization — Hypervisors, VMs, and Virtual Switching"
+    difficulty: Foundation
+    type: progressive
+    format: reference
+    time_minutes: 45
+    devices: []
+    blueprint_refs: ["2.1", "2.1.a", "2.1.b", "2.1.c"]
+    objectives:
+      - Compare Type 1 and Type 2 hypervisors with examples and use cases
+      - Describe virtual machine architecture — vCPU, vRAM, vNIC, vDisk
+      - Compare VMs and containers — isolation model, resource usage, startup time
+      - Explain standard vSwitch vs distributed vSwitch operation
+      - Describe performance optimizations — DPDK, SR-IOV, PCI passthrough
+      - Identify when to use each optimization technique
+      - Answer exam-style questions on device virtualization concepts
+    notes: >
+      Reference workbook. Architecture diagrams showing hypervisor
+      layers, VM structure, and vSwitch packet flow. Quiz-style
+      questions aligned to 350-401 exam format.
+
+  - number: 1
+    folder: lab-01-lisp-and-vxlan
+    title: "LISP and VXLAN Network Virtualization Concepts"
+    difficulty: Intermediate
+    type: progressive
+    format: reference
+    time_minutes: 60
+    devices: []
+    extends: lab-00-device-virtualization
+    blueprint_refs: ["2.3", "2.3.a", "2.3.b"]
+    objectives:
+      - Explain LISP architecture — EID, RLOC, ITR, ETR, MS, MR
+      - Trace a LISP packet flow from Map-Request to encapsulated delivery
+      - Describe VXLAN encapsulation — MAC-in-UDP, VNI, VTEP
+      - Analyze a VXLAN packet header and calculate encapsulation overhead
+      - Compare flood-and-learn with BGP EVPN as VXLAN control planes
+      - Explain how LISP and VXLAN work together in SD-Access
+      - Interpret sample show commands for LISP and VXLAN (reference output)
+      - Answer exam-style questions on network virtualization concepts
+    notes: >
+      Reference workbook. Packet format diagrams for LISP and VXLAN
+      encapsulation. Show-command interpretation from reference outputs
+      (not live devices). Cross-references sd-networking topic for
+      SD-Access context.
+
+  - number: 2
+    folder: lab-02-capstone-review
+    title: "Virtualization Concepts Comprehensive Review"
+    type: capstone_i
+    clean_slate: true
+    format: reference
+    difficulty: Advanced
+    time_minutes: 60
+    devices: []
+    blueprint_refs: all
+    objectives:
+      - Complete a comprehensive review covering all virtualization concepts
+      - Answer scenario-based questions combining device and network virtualization
+      - Analyze a campus fabric diagram identifying LISP, VXLAN, and VTEP roles
+      - Compare hypervisor types for a given data center deployment scenario
+      - Identify the correct virtual switching optimization for a performance requirement
+      - Map LISP/VXLAN roles to SD-Access fabric components
+      - Score 80%+ on a practice quiz covering all 2.1 and 2.3 sub-bullets

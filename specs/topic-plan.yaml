@@ -1,0 +1,465 @@
+exam:
+  name: "Implementing Cisco Enterprise Network Core Technologies v1.2"
+  code: "350-401"
+  blueprint_version: "v1.2 — 2025 Cisco Systems, Inc."
+  blueprint_source: "blueprint/350-401/blueprint.md"
+  total_objectives: 35
+  planned_date: "2026-04-11"
+
+# ──────────────────────────────────────────────
+# Dual-Stack Policy (IPv4 + IPv6)
+# ──────────────────────────────────────────────
+# The exam description states: "dual stack (IPv4 and IPv6) architecture."
+# IPv6 is NOT a standalone topic — it is a cross-cutting requirement woven
+# into every relevant topic. Each topic's baseline.yaml must include IPv6
+# addressing, and labs must exercise both protocol stacks where applicable.
+#
+dual_stack_policy:
+  description: >
+    The 350-401 exam explicitly tests dual-stack (IPv4 and IPv6) knowledge.
+    IPv6 is not a separate topic but a cross-cutting requirement integrated
+    into routing, services, security, and virtualization labs.
+  affected_topics:
+    - topic_id: ospf
+      ipv6_aspect: "OSPFv3 address families (3.2.b explicitly requires OSPFv2/v3)"
+    - topic_id: eigrp
+      ipv6_aspect: "EIGRP named mode with IPv6 address family"
+    - topic_id: bgp
+      ipv6_aspect: "BGP IPv6 AFI/SAFI, IPv6 peering"
+    - topic_id: ip-services
+      ipv6_aspect: "HSRPv2/VRRPv3 for IPv6, NDP, DHCPv6 relay"
+    - topic_id: security
+      ipv6_aspect: "IPv6 ACLs, IPv6 CoPP entries"
+    - topic_id: virtualization
+      ipv6_aspect: "IPv6 over GRE/IPsec tunnels, VRF with IPv6 AF"
+  not_affected:
+    - topic_id: switching
+      reason: "L2 is IP-version agnostic (VLANs, trunking, STP, EtherChannel)"
+    - topic_id: multicast
+      reason: "Blueprint 3.3.d is IPv4 multicast (PIM-SM, IGMP); IPv6 MLD not in scope"
+
+topics:
+  # ──────────────────────────────────────────────
+  # 1. Switching (Layer 2)
+  # ──────────────────────────────────────────────
+  - topic_id: switching
+    topic_name: "Layer 2 Switching"
+    blueprint_refs:
+      - "3.1"
+      - "3.1.a"
+      - "3.1.b"
+      - "3.1.c"
+    estimated_labs: 6
+    scope_notes: >
+      802.1Q trunking (static/DTP), EtherChannel (static/LACP/PAgP),
+      STP variants (RSTP, MST), STP enhancements (root guard, BPDU guard).
+      All labbable on IOSvL2.
+    dependencies: []
+    build_order: 1
+    labability: full
+    platform: iosvl2
+
+  # ──────────────────────────────────────────────
+  # 2. OSPF
+  # ──────────────────────────────────────────────
+  - topic_id: ospf
+    topic_name: "OSPF Routing"
+    blueprint_refs:
+      - "3.2.a"
+      - "3.2.b"
+    estimated_labs: 7
+    scope_notes: >
+      OSPFv2 and OSPFv3 (dual-stack) in multiple normal areas, summarization,
+      filtering, neighbor adjacency, point-to-point and broadcast network types,
+      passive-interface. IPv6 addressing on all router interfaces; OSPFv3
+      address families introduced in lab-01 and carried through all subsequent
+      labs. 3.2.a (compare EIGRP/OSPF) is shared context — the EIGRP topic
+      covers the EIGRP side, this topic covers the OSPF side and the
+      comparison theory is included in both workbooks.
+    dependencies: []
+    build_order: 2
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 3. EIGRP
+  # ──────────────────────────────────────────────
+  - topic_id: eigrp
+    topic_name: "EIGRP Routing"
+    blueprint_refs:
+      - "3.2.a"
+    estimated_labs: 5
+    scope_notes: >
+      Classic and named mode, dual-stack (IPv4 + IPv6 address families),
+      stub, summarization, unequal-cost load balancing, feasibility condition.
+      Named mode is the primary config style — it natively supports IPv6 AF.
+      Blueprint bullet 3.2.a is a compare bullet — EIGRP-specific hands-on
+      lives here; OSPF-specific hands-on lives in the ospf topic. Scope
+      expanded beyond the single bullet to provide meaningful lab depth.
+    dependencies: []
+    build_order: 3
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 4. BGP
+  # ──────────────────────────────────────────────
+  - topic_id: bgp
+    topic_name: "BGP Routing"
+    blueprint_refs:
+      - "3.2.c"
+    estimated_labs: 5
+    scope_notes: >
+      eBGP between directly connected neighbors, best path selection
+      algorithm, neighbor relationships. Dual-stack: IPv4 and IPv6
+      AFI/SAFI with separate neighbor activation per address family.
+      Labs cover peering, attributes, filtering, and path manipulation.
+    dependencies:
+      - ospf
+    build_order: 4
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 5. IP Services
+  # ──────────────────────────────────────────────
+  - topic_id: ip-services
+    topic_name: "IP Services"
+    blueprint_refs:
+      - "1.4"
+      - "3.3.a"
+      - "3.3.b"
+      - "3.3.c"
+    estimated_labs: 6
+    scope_notes: >
+      NTP/PTP interpretation (3.3.a), NAT/PAT configuration (3.3.b),
+      HSRP/VRRP first-hop redundancy (3.3.c), QoS interpretation (1.4).
+      Dual-stack: HSRPv2/VRRPv3 for IPv6 gateways, IPv6 NDP awareness.
+      All labbable on IOSv. QoS placed here rather than in architecture
+      because the hands-on is service configuration, not design theory.
+    dependencies:
+      - ospf
+    build_order: 5
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 6. Multicast
+  # ──────────────────────────────────────────────
+  - topic_id: multicast
+    topic_name: "Multicast"
+    blueprint_refs:
+      - "3.3.d"
+    estimated_labs: 4
+    scope_notes: >
+      RPF check, PIM Sparse Mode, IGMP v2/v3, SSM, bidir, MSDP.
+      Blueprint says "describe" but PIM-SM, IGMP, and RPF are fully
+      labbable on IOSv. Labs demonstrate configuration and verification.
+    dependencies:
+      - ospf
+    build_order: 6
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 7. VRF and Tunneling
+  # ──────────────────────────────────────────────
+  - topic_id: virtualization
+    topic_name: "VRF and Tunneling"
+    blueprint_refs:
+      - "2.2"
+      - "2.2.a"
+      - "2.2.b"
+    estimated_labs: 5
+    scope_notes: >
+      VRF-Lite configuration and verification, GRE tunnels, IPsec tunnels,
+      GRE over IPsec. Dual-stack: VRF with IPv6 address family, IPv6 over
+      GRE/IPsec tunnels. All fully labbable on IOSv/CSR1000v.
+    dependencies:
+      - ospf
+      - eigrp
+    build_order: 7
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 8. Network Assurance
+  # ──────────────────────────────────────────────
+  - topic_id: network-assurance
+    topic_name: "Network Assurance"
+    blueprint_refs:
+      - "4.1"
+      - "4.2"
+      - "4.3"
+      - "4.4"
+    estimated_labs: 5
+    scope_notes: >
+      Debug/conditional debug, traceroute, ping, SNMP, syslog diagnostics
+      (4.1), Flexible NetFlow (4.2), SPAN/RSPAN/ERSPAN (4.3), IP SLA (4.4).
+      All labbable on IOSv. ERSPAN requires IOS-XE (CSR1000v).
+    dependencies:
+      - ospf
+      - switching
+    build_order: 8
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 9. Security
+  # ──────────────────────────────────────────────
+  - topic_id: security
+    topic_name: "Infrastructure Security"
+    blueprint_refs:
+      - "5.1"
+      - "5.1.a"
+      - "5.1.b"
+      - "5.2"
+      - "5.2.a"
+      - "5.2.b"
+    estimated_labs: 6
+    scope_notes: >
+      Device access control — lines, local auth, AAA (5.1). Infrastructure
+      security — ACLs and CoPP (5.2). Dual-stack: IPv6 ACLs and IPv6-aware
+      CoPP entries alongside IPv4. All fully labbable on IOSv.
+      AAA labs may use local AAA or a RADIUS stub if available.
+    dependencies:
+      - ospf
+    build_order: 9
+    labability: full
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 10. Automation and Programmability
+  # ──────────────────────────────────────────────
+  - topic_id: automation
+    topic_name: "Automation and Programmability"
+    blueprint_refs:
+      - "4.6"
+      - "6.1"
+      - "6.2"
+      - "6.5"
+      - "6.6"
+    estimated_labs: 6
+    scope_notes: >
+      NETCONF/RESTCONF configuration and verification (4.6), Python
+      scripting (6.1), JSON encoding (6.2), REST API response codes
+      with RESTCONF (6.5), EEM applets (6.6). NETCONF/RESTCONF requires
+      CSR1000v (IOS-XE). EEM is labbable on IOSv. Python/JSON exercises
+      are workstation-based.
+    dependencies: []
+    build_order: 10
+    labability: full
+    platform: csr1000v
+
+  # ──────────────────────────────────────────────
+  # 11. Network Design (Theory-Heavy)
+  # ──────────────────────────────────────────────
+  - topic_id: network-design
+    topic_name: "Enterprise Network Design"
+    blueprint_refs:
+      - "1.1"
+      - "1.1.a"
+      - "1.1.b"
+      - "3.2.d"
+    estimated_labs: 4
+    workbook_format: reference  # Option C — lightweight reference workbooks (no fault injection)
+    scope_notes: >
+      Enterprise design principles — 2-tier, 3-tier, fabric, cloud (1.1.a),
+      HA techniques — redundancy, FHRP, SSO (1.1.b), policy-based routing
+      (3.2.d). PBR is labbable on IOSv. Design principles are theory with
+      topology walkthroughs. 1.1.b HA overlaps with ip-services FHRP labs
+      but focuses on design rationale here.
+    dependencies:
+      - switching
+      - ospf
+      - ip-services
+    build_order: 11
+    labability: partial
+    platform: iosv
+
+  # ──────────────────────────────────────────────
+  # 12. SD-WAN and SD-Access
+  # ──────────────────────────────────────────────
+  - topic_id: sd-networking
+    topic_name: "SD-WAN and SD-Access"
+    blueprint_refs:
+      - "1.2"
+      - "1.2.a"
+      - "1.2.b"
+      - "1.3"
+      - "1.3.a"
+      - "1.3.b"
+    estimated_labs: 5
+    scope_notes: >
+      SD-WAN is labbable — EVE-NG has vBond 20.6.2, vEdge 20.6.2,
+      vManage 20.6.2, vSmart 20.6.2. Labs cover fabric bring-up,
+      control/data plane elements (1.2.a), OMP routing, control policies,
+      and benefits/limitations (1.2.b). SD-Access (1.3) remains conceptual
+      (requires Catalyst Center + ISE) — covered as reference workbook
+      with architecture diagrams and show-command interpretation.
+    dependencies:
+      - ospf
+    build_order: 12
+    labability: partial
+    platform: "vtmgmt-20.6.2, vtsmart-20.6.2, vtbond-20.6.2, vtedge-20.6.2"
+    partial_reason: >
+      SD-WAN fully labbable with available vManage/vSmart/vBond/vEdge
+      images. SD-Access conceptual only (no Catalyst Center or ISE).
+
+  # ──────────────────────────────────────────────
+  # 13. Network Virtualization Concepts (Conceptual)
+  # ──────────────────────────────────────────────
+  - topic_id: overlay-technologies
+    topic_name: "LISP and VXLAN"
+    blueprint_refs:
+      - "2.1"
+      - "2.1.a"
+      - "2.1.b"
+      - "2.1.c"
+      - "2.3"
+      - "2.3.a"
+      - "2.3.b"
+    estimated_labs: 3
+    workbook_format: reference  # Option C — lightweight reference workbooks (no fault injection)
+    scope_notes: >
+      Device virtualization — hypervisors, VMs, virtual switching (2.1).
+      LISP (2.3.a) and VXLAN (2.3.b) concepts. 2.1 is purely conceptual.
+      LISP/VXLAN describe bullets — limited labability. Labs focus on
+      theory walkthroughs, packet format analysis, and show-command
+      interpretation. VXLAN BGP EVPN demo possible on NX-OSv if desired.
+    dependencies: []
+    build_order: 13
+    labability: partial
+    partial_reason: >
+      2.1 (hypervisor/VM/virtual switching) is conceptual. LISP requires
+      specific IOS-XE features. VXLAN demo possible on NX-OSv 9000 but
+      limited scope.
+
+  # ──────────────────────────────────────────────
+  # 14. Security Design and APIs (Conceptual)
+  # ──────────────────────────────────────────────
+  - topic_id: security-concepts
+    topic_name: "Security Design and API Security"
+    blueprint_refs:
+      - "5.3"
+      - "5.4"
+      - "5.4.a"
+      - "5.4.b"
+      - "5.4.c"
+      - "5.4.d"
+      - "4.5"
+      - "6.3"
+      - "6.4"
+      - "6.7"
+    estimated_labs: 3
+    workbook_format: reference  # Option C — lightweight reference workbooks (no fault injection)
+    scope_notes: >
+      REST API security (5.3), network security design — threat defense,
+      endpoint security, NGFW, TrustSec/MACsec (5.4). Catalyst Center
+      workflows (4.5), YANG data modeling (6.3), Catalyst Center / SD-WAN
+      Manager APIs (6.4), agent vs agentless orchestration (6.7).
+      All "describe" or "explain" bullets. Reference workbooks with
+      architecture diagrams, show-command interpretation, and quiz-style
+      verification exercises. No setup_lab.py or fault injection scripts.
+    dependencies: []
+    build_order: 14
+    labability: conceptual
+    conceptual_reason: >
+      Requires Catalyst Center, ISE, NGFW, and SD-WAN Manager — none
+      available in this EVE-NG environment. MACsec requires hardware.
+
+# ──────────────────────────────────────────────
+# Coverage Matrix
+# ──────────────────────────────────────────────
+coverage_matrix:
+  # Domain 1 — Architecture (15%)
+  "1.1":   network-design
+  "1.1.a": network-design
+  "1.1.b": network-design
+  "1.2":   sd-networking
+  "1.2.a": sd-networking
+  "1.2.b": sd-networking
+  "1.3":   sd-networking
+  "1.3.a": sd-networking
+  "1.3.b": sd-networking
+  "1.4":   ip-services
+
+  # Domain 2 — Virtualization (10%)
+  "2.1":   overlay-technologies
+  "2.1.a": overlay-technologies
+  "2.1.b": overlay-technologies
+  "2.1.c": overlay-technologies
+  "2.2":   virtualization
+  "2.2.a": virtualization
+  "2.2.b": virtualization
+  "2.3":   overlay-technologies
+  "2.3.a": overlay-technologies
+  "2.3.b": overlay-technologies
+
+  # Domain 3 — Infrastructure (30%)
+  "3.1":   switching
+  "3.1.a": switching
+  "3.1.b": switching
+  "3.1.c": switching
+  "3.2.a": [ospf, eigrp]   # Compare bullet — shared across both topics
+  "3.2.b": ospf
+  "3.2.c": bgp
+  "3.2.d": network-design
+  "3.3.a": ip-services
+  "3.3.b": ip-services
+  "3.3.c": ip-services
+  "3.3.d": multicast
+
+  # Domain 4 — Network Assurance (10%)
+  "4.1": network-assurance
+  "4.2": network-assurance
+  "4.3": network-assurance
+  "4.4": network-assurance
+  "4.5": security-concepts
+  "4.6": automation
+
+  # Domain 5 — Security (20%)
+  "5.1":   security
+  "5.1.a": security
+  "5.1.b": security
+  "5.2":   security
+  "5.2.a": security
+  "5.2.b": security
+  "5.3":   security-concepts
+  "5.4":   security-concepts
+  "5.4.a": security-concepts
+  "5.4.b": security-concepts
+  "5.4.c": security-concepts
+  "5.4.d": security-concepts
+
+  # Domain 6 — Automation and AI (15%)
+  "6.1": automation
+  "6.2": automation
+  "6.3": security-concepts
+  "6.4": security-concepts
+  "6.5": automation
+  "6.6": automation
+  "6.7": security-concepts
+
+summary:
+  total_topics: 14
+  total_estimated_labs: 70
+  full_lab_topics: 10
+  partial_lab_topics: 3      # network-design, sd-networking, overlay-technologies
+  conceptual_only_topics: 1  # security-concepts
+  reference_workbook_topics: 3  # network-design, overlay-technologies, security-concepts (Option C format)
+  build_order:
+    - switching
+    - ospf
+    - eigrp
+    - bgp
+    - ip-services
+    - multicast
+    - virtualization
+    - network-assurance
+    - security
+    - automation
+    - network-design
+    - sd-networking
+    - overlay-technologies
+    - security-concepts

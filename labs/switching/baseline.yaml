@@ -1,0 +1,340 @@
+topic: switching
+topic_name: "Layer 2 Switching"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-sonnet-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ─────────────────────────────────────────────────
+# Core Topology — present in ALL labs
+# ─────────────────────────────────────────────────
+#
+#   Topology: Full-mesh triangle (SW1-SW2-SW3) with dual links per pair.
+#   R1 connects to SW1 via trunk for router-on-a-stick inter-VLAN routing.
+#   PC1 on SW2, PC2 on SW3 for end-to-end verification.
+#
+#                    ┌─────────┐
+#                    │   R1    │
+#                    │  (iosv) │
+#                    └────┬────┘
+#                  Gi0/0  │  (trunk to SW1 Gi0/0)
+#                    ┌────┴────┐
+#                    │   SW1   │
+#                    │(iosvl2) │
+#                    └──┬───┬──┘
+#           Gi0/1,0/2   │   │   Gi0/3,Gi1/0
+#        (to SW2)       │   │       (to SW3)
+#                    ┌──┴┐ ┌┴──┐
+#                    │SW2│ │SW3│
+#                    └──┬┘ └┬──┘
+#           Gi0/3,Gi1/0│   │Gi0/1,0/2
+#           (to SW3)   └───┘
+#                 PC1─SW2:Gi1/1    PC2─SW3:Gi1/1
+
+core_topology:
+  devices:
+    # ── Switches ──
+    - name: SW1
+      platform: iosvl2
+      role: "Distribution switch / root bridge candidate"
+      loopback0: null  # L2 switch — no loopback
+      management_vlan: 99
+      management_ip: "192.168.99.1/24"
+      console_port: null  # Dynamic — assigned by EVE-NG
+
+    - name: SW2
+      platform: iosvl2
+      role: "Access switch (PC1 segment)"
+      loopback0: null
+      management_vlan: 99
+      management_ip: "192.168.99.2/24"
+      console_port: null
+
+    - name: SW3
+      platform: iosvl2
+      role: "Access switch (PC2 segment)"
+      loopback0: null
+      management_vlan: 99
+      management_ip: "192.168.99.3/24"
+      console_port: null
+
+    # ── Router ──
+    - name: R1
+      platform: iosv
+      role: "Inter-VLAN router (router-on-a-stick)"
+      loopback0: "1.1.1.1/32"
+      console_port: null
+
+    # ── End Hosts ──
+    - name: PC1
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.10.10/24"
+          gateway: "192.168.10.1"
+
+    - name: PC2
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.20.10/24"
+          gateway: "192.168.20.1"
+
+  # ── Inter-Switch Links (dual per pair for EtherChannel) ──
+  links:
+    # SW1 ↔ R1 (trunk uplink)
+    - id: L1
+      source: "R1:GigabitEthernet0/0"
+      target: "SW1:GigabitEthernet0/0"
+      type: trunk
+      purpose: "Router-on-a-stick trunk (carries all VLANs)"
+
+    # SW1 ↔ SW2 (pair — future Po1)
+    - id: L2
+      source: "SW1:GigabitEthernet0/1"
+      target: "SW2:GigabitEthernet0/1"
+      type: trunk
+      purpose: "SW1-SW2 link 1 (EtherChannel member from lab-01)"
+    - id: L3
+      source: "SW1:GigabitEthernet0/2"
+      target: "SW2:GigabitEthernet0/2"
+      type: trunk
+      purpose: "SW1-SW2 link 2 (EtherChannel member from lab-01)"
+
+    # SW1 ↔ SW3 (pair — future Po2)
+    - id: L4
+      source: "SW1:GigabitEthernet0/3"
+      target: "SW3:GigabitEthernet0/3"
+      type: trunk
+      purpose: "SW1-SW3 link 1 (EtherChannel member from lab-01)"
+    - id: L5
+      source: "SW1:GigabitEthernet1/0"
+      target: "SW3:GigabitEthernet1/0"
+      type: trunk
+      purpose: "SW1-SW3 link 2 (EtherChannel member from lab-01)"
+
+    # SW2 ↔ SW3 (pair — future Po3)
+    - id: L6
+      source: "SW2:GigabitEthernet0/3"
+      target: "SW3:GigabitEthernet0/1"
+      type: trunk
+      purpose: "SW2-SW3 link 1 (EtherChannel member from lab-01)"
+    - id: L7
+      source: "SW2:GigabitEthernet1/0"
+      target: "SW3:GigabitEthernet0/2"
+      type: trunk
+      purpose: "SW2-SW3 link 2 (EtherChannel member from lab-01)"
+
+    # End-host access ports
+    - id: L8
+      source: "PC1:e0"
+      target: "SW2:GigabitEthernet1/1"
+      type: access
+      vlan: 10
+      purpose: "PC1 access port (VLAN 10)"
+    - id: L9
+      source: "PC2:e0"
+      target: "SW3:GigabitEthernet1/1"
+      type: access
+      vlan: 20
+      purpose: "PC2 access port (VLAN 20)"
+
+# No optional devices — all 6 nodes are used from lab-00
+
+optional_devices: []
+optional_links: []
+
+# ─────────────────────────────────────────────────
+# VLAN Plan (consistent across all labs)
+# ─────────────────────────────────────────────────
+vlans:
+  - id: 10
+    name: SALES
+    subnet: "192.168.10.0/24"
+    gateway: "192.168.10.1"  # R1 sub-interface
+  - id: 20
+    name: ENGINEERING
+    subnet: "192.168.20.0/24"
+    gateway: "192.168.20.1"  # R1 sub-interface
+  - id: 30
+    name: MANAGEMENT_HOSTS
+    subnet: "192.168.30.0/24"
+    gateway: "192.168.30.1"  # R1 sub-interface
+  - id: 99
+    name: NATIVE_MGMT
+    subnet: "192.168.99.0/24"
+    gateway: "192.168.99.1"  # SW1 SVI (or R1 if needed)
+
+# ─────────────────────────────────────────────────
+# Interface Allocation Table
+# ─────────────────────────────────────────────────
+#
+# SW1 (iosvl2):
+#   Gi0/0 — R1 trunk uplink (L1)
+#   Gi0/1 — SW2 link 1 / Po1 member (L2)
+#   Gi0/2 — SW2 link 2 / Po1 member (L3)
+#   Gi0/3 — SW3 link 1 / Po2 member (L4)
+#   Gi1/0 — SW3 link 2 / Po2 member (L5)
+#   Gi1/1 — (spare)
+#   Gi1/2 — (spare)
+#   Gi1/3 — (spare)
+#
+# SW2 (iosvl2):
+#   Gi0/0 — (spare)
+#   Gi0/1 — SW1 link 1 / Po1 member (L2)
+#   Gi0/2 — SW1 link 2 / Po1 member (L3)
+#   Gi0/3 — SW3 link 1 / Po3 member (L6)
+#   Gi1/0 — SW3 link 2 / Po3 member (L7)
+#   Gi1/1 — PC1 access (L8)
+#   Gi1/2 — (spare)
+#   Gi1/3 — (spare)
+#
+# SW3 (iosvl2):
+#   Gi0/0 — (spare)
+#   Gi0/1 — SW2 link 1 / Po3 member (L6)
+#   Gi0/2 — SW2 link 2 / Po3 member (L7)
+#   Gi0/3 — SW1 link 1 / Po2 member (L4)
+#   Gi1/0 — SW1 link 2 / Po2 member (L5)
+#   Gi1/1 — PC2 access (L9)
+#   Gi1/2 — (spare)
+#   Gi1/3 — (spare)
+#
+# R1 (iosv):
+#   Gi0/0 — SW1 trunk (L1)
+#   Gi0/1 — (spare)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 1.1.1.1/32
+
+# ─────────────────────────────────────────────────
+# EtherChannel Plan (used from lab-01 onward)
+# ─────────────────────────────────────────────────
+etherchannel:
+  - id: Po1
+    pair: "SW1 ↔ SW2"
+    members: ["Gi0/1", "Gi0/2"]
+    protocol: LACP  # Lab-01 configures LACP on this bundle
+  - id: Po2
+    pair: "SW1 ↔ SW3"
+    members: ["Gi0/3", "Gi1/0"]
+    protocol: PAgP  # Lab-01 configures PAgP on this bundle (variety for exam coverage)
+  - id: Po3
+    pair: "SW2 ↔ SW3"
+    members: ["Gi0/3(SW2)/Gi0/1(SW3)", "Gi1/0(SW2)/Gi0/2(SW3)"]
+    protocol: static  # Lab-01 configures static (mode on) for this bundle
+
+# ─────────────────────────────────────────────────
+# Labs
+# ─────────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-vlans-and-trunking
+    title: "VLANs and Trunk Negotiation"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [SW1, SW2, SW3, R1, PC1, PC2]
+    blueprint_refs: ["3.1", "3.1.a"]
+    objectives:
+      - Create VLANs 10 (SALES), 20 (ENGINEERING), 30 (MANAGEMENT_HOSTS), 99 (NATIVE_MGMT) on all switches
+      - Configure static trunks (switchport mode trunk) on all inter-switch links
+      - Configure DTP dynamic trunks on select links and verify negotiation outcomes
+      - Troubleshoot trunk formation — verify native VLAN mismatch detection, allowed VLAN filtering
+      - Configure R1 router-on-a-stick with sub-interfaces for inter-VLAN routing
+      - Assign access ports for PC1 (VLAN 10) and PC2 (VLAN 20)
+      - Verify end-to-end reachability (PC1 to PC2 across VLANs via R1)
+      - Troubleshoot DTP mode combinations and predict trunk/access outcomes
+
+  - number: 1
+    folder: lab-01-etherchannel
+    title: "Static and Dynamic EtherChannels"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [SW1, SW2, SW3, R1, PC1, PC2]
+    extends: lab-00-vlans-and-trunking
+    blueprint_refs: ["3.1.b"]
+    objectives:
+      - Configure LACP EtherChannel (Po1) between SW1 and SW2 (active/passive roles)
+      - Configure PAgP EtherChannel (Po2) between SW1 and SW3 (desirable/auto roles)
+      - Configure static EtherChannel (Po3) between SW2 and SW3 (mode on)
+      - Verify bundle formation and member port states
+      - Troubleshoot EtherChannel misconfiguration — speed/duplex mismatch, protocol mismatch, VLAN mismatch across members
+      - Verify load balancing method and traffic distribution
+      - Confirm trunk operation over bundled links
+
+  - number: 2
+    folder: lab-02-rstp-and-enhancements
+    title: "Rapid STP and STP Enhancements"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [SW1, SW2, SW3, R1, PC1, PC2]
+    extends: lab-01-etherchannel
+    blueprint_refs: ["3.1.c"]
+    objectives:
+      - Verify Rapid PVST+ operation (default STP mode) across the triangle topology
+      - Manipulate root bridge election using priority values
+      - Identify and verify root ports, designated ports, and alternate ports per VLAN
+      - Configure root guard on designated ports to prevent unauthorized root bridge changes
+      - Configure BPDU guard on access ports (PC-facing) to protect against rogue switches
+      - Configure PortFast on access ports and verify immediate forwarding
+      - Observe RSTP convergence behavior after a link failure and recovery
+      - Verify STP state consistency across EtherChannel bundles
+
+  - number: 3
+    folder: lab-03-mst
+    title: "Multiple Spanning Tree (MST)"
+    difficulty: Intermediate
+    type: standalone
+    time_minutes: 75
+    devices: [SW1, SW2, SW3, R1, PC1, PC2]
+    blueprint_refs: ["3.1.c"]
+    objectives:
+      - Configure MST region (name, revision, instance-to-VLAN mapping) on all switches
+      - Map VLANs to MST instances for traffic engineering (Instance 1 roots on SW1, Instance 2 roots on SW2)
+      - Verify MST region consistency and boundary behavior
+      - Manipulate MST root bridge priority per instance
+      - Verify port roles and states within each MST instance
+      - Compare MST behavior with Rapid PVST+ (fewer STP instances, VLAN grouping)
+      - Troubleshoot MST region mismatch between switches
+
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "Layer 2 Full Configuration — Capstone I"
+    difficulty: Advanced
+    type: capstone_i
+    clean_slate: true
+    time_minutes: 120
+    devices: [SW1, SW2, SW3, R1, PC1, PC2]
+    blueprint_refs: ["3.1", "3.1.a", "3.1.b", "3.1.c"]
+    objectives:
+      - Build the entire L2 infrastructure from scratch on a clean topology
+      - Create all VLANs with proper naming and assignments
+      - Configure trunks with specific allowed VLANs and native VLAN
+      - Bundle all inter-switch links into EtherChannels (LACP, PAgP, static)
+      - Configure Rapid PVST+ with deterministic root bridge placement
+      - Apply STP enhancements (root guard, BPDU guard, PortFast) on appropriate ports
+      - Configure router-on-a-stick for full inter-VLAN connectivity
+      - Achieve full end-to-end reachability across all VLANs
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "Layer 2 Comprehensive Troubleshooting — Capstone II"
+    difficulty: Advanced
+    type: capstone_ii
+    clean_slate: true
+    time_minutes: 120
+    devices: [SW1, SW2, SW3, R1, PC1, PC2]
+    blueprint_refs: ["3.1", "3.1.a", "3.1.b", "3.1.c"]
+    objectives:
+      - Diagnose and resolve 5+ concurrent L2 faults injected across the topology
+      - Fault categories — native VLAN mismatch, EtherChannel protocol mismatch, STP root inconsistency, BPDU guard err-disabled ports, trunk allowed VLAN filtering, access port VLAN assignment errors
+      - Use systematic troubleshooting methodology (L1 up? → trunk formed? → VLANs correct? → STP converged? → end-to-end ping?)
+      - Restore full connectivity across all VLANs without introducing new issues

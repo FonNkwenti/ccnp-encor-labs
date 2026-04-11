@@ -1,0 +1,546 @@
+topic: bgp
+topic_name: "BGP Routing"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ─────────────────────────────────────────────────
+# Core Topology — present in ALL labs (lab-00 through lab-04)
+# ─────────────────────────────────────────────────
+#
+#   R1 and R2 in AS 65001 (enterprise), R3 in AS 65002 (ISP),
+#   R4 in AS 65003 (remote site, optional from lab-02).
+#   R1-R2 internal link uses OSPF as IGP + iBGP.
+#   R1-R3 and R2-R3 are eBGP peering links (dual-homed).
+#   R3-R4 is eBGP peering (optional).
+#
+#        ┌──────────── AS 65001 ──────────────┐
+#        │                                     │
+#        │   ┌────┐  OSPF+iBGP  ┌────┐       │
+#        │   │ R1 │─────────────│ R2 │       │
+#        │   └──┬─┘             └─┬──┘       │
+#        │      │                  │          │
+#        └──────┼──────────────────┼──────────┘
+#         eBGP  │                  │  eBGP
+#               │    ┌────────┐   │
+#               └────│   R3   │───┘
+#                    │(ISP-A) │
+#                    │AS 65002│
+#                    └───┬────┘
+#                  eBGP  │ (optional)
+#                    ┌───┴────┐
+#                    │   R4   │
+#                    │(Remote)│
+#                    │AS 65003│
+#                    └────────┘
+#
+#   PC1 on R1, PC2 on R4
+
+core_topology:
+  devices:
+    # ── Routers ──
+    - name: R1
+      platform: iosv
+      role: "Enterprise Edge 1 (AS 65001)"
+      loopback0: "1.1.1.1/32"
+      bgp_as: 65001
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: "Enterprise Edge 2 (AS 65001)"
+      loopback0: "2.2.2.2/32"
+      bgp_as: 65001
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: "ISP router (AS 65002)"
+      loopback0: "3.3.3.3/32"
+      bgp_as: 65002
+      console_port: null
+
+    # ── End Hosts ──
+    - name: PC1
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.1.10/24"
+          gateway: "192.168.1.1"
+          ipv6: "2001:db8:1:1::10/64"
+          gateway_v6: "2001:db8:1:1::1"
+
+    - name: PC2
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.2.10/24"
+          gateway: "192.168.2.1"
+          ipv6: "2001:db8:2:2::10/64"
+          gateway_v6: "2001:db8:2:2::1"
+
+  # ── Links ──
+  links:
+    # R1 ↔ R2 (internal link — OSPF + iBGP)
+    - id: L1
+      source: "R1:GigabitEthernet0/0"
+      target: "R2:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R1-R2 internal link (AS 65001 — OSPF IGP + iBGP)"
+
+    # R1 ↔ R3 (eBGP — AS 65001 to AS 65002)
+    - id: L2
+      source: "R1:GigabitEthernet0/1"
+      target: "R3:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R1-R3 eBGP peering (65001 ↔ 65002)"
+
+    # R2 ↔ R3 (eBGP — AS 65001 to AS 65002, second path)
+    - id: L3
+      source: "R2:GigabitEthernet0/1"
+      target: "R3:GigabitEthernet0/1"
+      type: point-to-point
+      purpose: "R2-R3 eBGP peering (65001 ↔ 65002, dual-homed)"
+
+    # R1 ↔ PC1 (LAN segment)
+    - id: L4
+      source: "PC1:e0"
+      target: "R1:GigabitEthernet0/2"
+      type: ethernet
+      purpose: "PC1 LAN segment on R1"
+
+# ─────────────────────────────────────────────────
+# Optional Devices — introduced in lab-02
+# ─────────────────────────────────────────────────
+optional_devices:
+  - name: R4
+    platform: iosv
+    role: "Remote site router (AS 65003)"
+    loopback0: "4.4.4.4/32"
+    bgp_as: 65003
+    console_port: null
+    introduced_in: lab-02-best-path-selection
+
+optional_links:
+  - id: L5
+    source: "R3:GigabitEthernet0/2"
+    target: "R4:GigabitEthernet0/0"
+    type: point-to-point
+    purpose: "R3-R4 eBGP peering (65002 ↔ 65003)"
+    introduced_in: lab-02-best-path-selection
+  - id: L6
+    source: "PC2:e0"
+    target: "R4:GigabitEthernet0/1"
+    type: ethernet
+    purpose: "PC2 LAN segment on R4"
+    introduced_in: lab-02-best-path-selection
+
+# ─────────────────────────────────────────────────
+# IP Addressing Plan
+# ─────────────────────────────────────────────────
+ip_addressing:
+  # R1 ↔ R2 (internal)
+  - network: "10.0.12.0/30"
+    purpose: "Internal link (AS 65001)"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ip: "10.0.12.1/30"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ip: "10.0.12.2/30"
+
+  # R1 ↔ R3 (eBGP peering)
+  - network: "10.0.13.0/30"
+    purpose: "eBGP peering link"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/1
+        ip: "10.0.13.1/30"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ip: "10.0.13.2/30"
+
+  # R2 ↔ R3 (eBGP peering)
+  - network: "10.0.23.0/30"
+    purpose: "eBGP peering link (dual-homed)"
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ip: "10.0.23.1/30"
+      - device: R3
+        interface: GigabitEthernet0/1
+        ip: "10.0.23.2/30"
+
+  # R3 ↔ R4 (eBGP peering — optional)
+  - network: "10.0.34.0/30"
+    optional: true
+    purpose: "eBGP peering link (65002 ↔ 65003)"
+    assignments:
+      - device: R3
+        interface: GigabitEthernet0/2
+        ip: "10.0.34.1/30"
+      - device: R4
+        interface: GigabitEthernet0/0
+        ip: "10.0.34.2/30"
+
+  # PC1 LAN (on R1)
+  - network: "192.168.1.0/24"
+    purpose: "PC1 LAN segment (enterprise)"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/2
+        ip: "192.168.1.1/24"
+      - device: PC1
+        interface: e0
+        ip: "192.168.1.10/24"
+
+  # PC2 LAN (on R4 — optional)
+  - network: "192.168.2.0/24"
+    optional: true
+    purpose: "PC2 LAN segment (remote site)"
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/1
+        ip: "192.168.2.1/24"
+      - device: PC2
+        interface: e0
+        ip: "192.168.2.10/24"
+
+  # BGP-advertised prefixes (loopbacks for path selection exercises)
+  - network: "172.16.1.0/24"
+    purpose: "R1 BGP-advertised network"
+    assignments:
+      - device: R1
+        interface: Loopback1
+        ip: "172.16.1.1/24"
+  - network: "172.16.3.0/24"
+    purpose: "R3 BGP-advertised network"
+    assignments:
+      - device: R3
+        interface: Loopback1
+        ip: "172.16.3.1/24"
+  - network: "172.16.4.0/24"
+    optional: true
+    purpose: "R4 BGP-advertised network"
+    assignments:
+      - device: R4
+        interface: Loopback1
+        ip: "172.16.4.1/24"
+
+# ─────────────────────────────────────────────────
+# IPv6 Addressing Plan (dual-stack — introduced lab-01)
+# ─────────────────────────────────────────────────
+ipv6_addressing:
+  link_local_convention: "fe80::<router-number> on all interfaces"
+
+  # R1 ↔ R2
+  - network: "2001:db8:12::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:12::1/64"
+        link_local: "fe80::1"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:12::2/64"
+        link_local: "fe80::2"
+
+  # R1 ↔ R3
+  - network: "2001:db8:13::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:13::1/64"
+        link_local: "fe80::1"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:13::2/64"
+        link_local: "fe80::3"
+
+  # R2 ↔ R3
+  - network: "2001:db8:23::/64"
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:23::1/64"
+        link_local: "fe80::2"
+      - device: R3
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:23::2/64"
+        link_local: "fe80::3"
+
+  # R3 ↔ R4 (optional)
+  - network: "2001:db8:34::/64"
+    optional: true
+    assignments:
+      - device: R3
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:34::1/64"
+        link_local: "fe80::3"
+      - device: R4
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:34::2/64"
+        link_local: "fe80::4"
+
+  # PC1 LAN
+  - network: "2001:db8:1:1::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:1:1::1/64"
+        link_local: "fe80::1"
+      - device: PC1
+        interface: e0
+        ipv6: "2001:db8:1:1::10/64"
+        gateway_v6: "2001:db8:1:1::1"
+
+  # PC2 LAN (optional)
+  - network: "2001:db8:2:2::/64"
+    optional: true
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:2:2::1/64"
+        link_local: "fe80::4"
+      - device: PC2
+        interface: e0
+        ipv6: "2001:db8:2:2::10/64"
+        gateway_v6: "2001:db8:2:2::1"
+
+  # Loopback0 — IPv6
+  - network: "2001:db8:ff::1/128"
+    assignments:
+      - { device: R1, interface: Loopback0, ipv6: "2001:db8:ff::1/128" }
+  - network: "2001:db8:ff::2/128"
+    assignments:
+      - { device: R2, interface: Loopback0, ipv6: "2001:db8:ff::2/128" }
+  - network: "2001:db8:ff::3/128"
+    assignments:
+      - { device: R3, interface: Loopback0, ipv6: "2001:db8:ff::3/128" }
+  - network: "2001:db8:ff::4/128"
+    optional: true
+    assignments:
+      - { device: R4, interface: Loopback0, ipv6: "2001:db8:ff::4/128" }
+
+  # BGP-advertised IPv6 prefixes
+  - network: "2001:db8:172:1::/64"
+    purpose: "R1 BGP-advertised IPv6 network"
+    assignments:
+      - { device: R1, interface: Loopback1, ipv6: "2001:db8:172:1::1/64" }
+  - network: "2001:db8:172:3::/64"
+    purpose: "R3 BGP-advertised IPv6 network"
+    assignments:
+      - { device: R3, interface: Loopback1, ipv6: "2001:db8:172:3::1/64" }
+  - network: "2001:db8:172:4::/64"
+    optional: true
+    purpose: "R4 BGP-advertised IPv6 network"
+    assignments:
+      - { device: R4, interface: Loopback1, ipv6: "2001:db8:172:4::1/64" }
+
+# ─────────────────────────────────────────────────
+# BGP Design
+# ─────────────────────────────────────────────────
+bgp_design:
+  autonomous_systems:
+    - as_number: 65001
+      type: private
+      routers: [R1, R2]
+      igp: "OSPF process 1 on R1-R2 internal link"
+      description: "Enterprise AS with dual-edge routers"
+    - as_number: 65002
+      type: private
+      routers: [R3]
+      description: "ISP AS — transit between enterprise and remote site"
+    - as_number: 65003
+      type: private
+      routers: [R4]
+      description: "Remote site AS (optional from lab-02)"
+
+  peering_sessions:
+    - type: eBGP
+      source: "R1 (AS 65001)"
+      target: "R3 (AS 65002)"
+      link: "10.0.13.0/30"
+    - type: eBGP
+      source: "R2 (AS 65001)"
+      target: "R3 (AS 65002)"
+      link: "10.0.23.0/30"
+    - type: iBGP
+      source: "R1 (AS 65001)"
+      target: "R2 (AS 65001)"
+      link: "Loopback0 peering (via OSPF)"
+      notes: "next-hop-self required on both"
+    - type: eBGP
+      source: "R3 (AS 65002)"
+      target: "R4 (AS 65003)"
+      link: "10.0.34.0/30"
+      optional: true
+
+  # Best path selection exercise plan (lab-02)
+  best_path_exercises:
+    description: >
+      Lab-02 walks through the BGP best path algorithm attributes in
+      order of evaluation. Each exercise manipulates one attribute at
+      a time so the student sees the effect in isolation.
+    attributes_exercised:
+      - attribute: Weight
+        description: "Cisco-proprietary, per-router. Set via route-map on R1 to prefer R3 path."
+      - attribute: Local Preference
+        description: "Shared via iBGP within AS 65001. Set on R1, visible on R2."
+      - attribute: AS_Path
+        description: "AS_Path prepending on R3 toward R1 to make one path longer."
+      - attribute: MED
+        description: "Set by R3 toward AS 65001 to influence inbound path selection."
+      - attribute: Origin
+        description: "Compare IGP vs incomplete origin for same prefix."
+
+# ─────────────────────────────────────────────────
+# Interface Allocation Table
+# ─────────────────────────────────────────────────
+#
+# R1 (iosv, AS 65001):
+#   Gi0/0 — R2 internal link, OSPF + iBGP (L1)
+#   Gi0/1 — R3 eBGP peering (L2)
+#   Gi0/2 — PC1 LAN (L4)
+#   Gi0/3 — (spare)
+#   Loopback0 — 1.1.1.1/32 (iBGP source)
+#   Loopback1 — 172.16.1.1/24 (BGP-advertised prefix)
+#
+# R2 (iosv, AS 65001):
+#   Gi0/0 — R1 internal link, OSPF + iBGP (L1)
+#   Gi0/1 — R3 eBGP peering (L3)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 2.2.2.2/32 (iBGP source)
+#
+# R3 (iosv, AS 65002):
+#   Gi0/0 — R1 eBGP peering (L2)
+#   Gi0/1 — R2 eBGP peering (L3)
+#   Gi0/2 — R4 eBGP peering (L5, optional from lab-02)
+#   Gi0/3 — (spare)
+#   Loopback0 — 3.3.3.3/32
+#   Loopback1 — 172.16.3.1/24 (BGP-advertised prefix)
+#
+# R4 (iosv, AS 65003, optional from lab-02):
+#   Gi0/0 — R3 eBGP peering (L5)
+#   Gi0/1 — PC2 LAN (L6)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 4.4.4.4/32
+#   Loopback1 — 172.16.4.1/24 (BGP-advertised prefix)
+
+# ─────────────────────────────────────────────────
+# Labs
+# ─────────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-ebgp-peering
+    title: "eBGP Peering Fundamentals"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R3, PC1]
+    blueprint_refs: ["3.2.c"]
+    notes: >
+      Single eBGP session between R1 (AS 65001) and R3 (AS 65002).
+      Focus: BGP process, neighbor configuration, neighbor states,
+      route advertisement via network statement, verification of
+      BGP table and routing table. IPv4 only.
+    objectives:
+      - Configure BGP on R1 (AS 65001) and R3 (AS 65002) with explicit router-ID
+      - Establish eBGP neighbor session between R1 and R3 using directly connected IPs
+      - Verify BGP neighbor state progression (Idle → Active → OpenSent → Established)
+      - Advertise networks into BGP using the network statement (R1 advertises 172.16.1.0/24, R3 advertises 172.16.3.0/24)
+      - Verify BGP table (show ip bgp) — examine prefix, next-hop, AS_Path, and best path marker
+      - Verify BGP routes installed in the routing table (show ip route bgp)
+      - Examine BGP keepalive and hold timers
+      - Verify end-to-end reachability (PC1 to R3's advertised networks)
+
+  - number: 1
+    folder: lab-01-ibgp-and-dual-stack
+    title: "iBGP, Dual-Homing, and Dual-Stack"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, PC1]
+    extends: lab-00-ebgp-peering
+    blueprint_refs: ["3.2.c"]
+    notes: >
+      Add R2 to AS 65001. Configure iBGP between R1 and R2 (loopback
+      peering via OSPF). Add R2-R3 eBGP for dual-homed enterprise.
+      Introduce IPv6 addresses and BGP IPv6 address family.
+    objectives:
+      - Add R2 with IP and IPv6 addressing, configure OSPF on R1-R2 internal link
+      - Establish iBGP session between R1 and R2 using Loopback0 addresses
+      - Configure next-hop-self on both R1 and R2 for iBGP-learned routes
+      - Establish second eBGP session — R2 to R3 (dual-homed enterprise)
+      - Verify R3 receives the same prefix from two eBGP peers (R1 and R2)
+      - Add IPv6 addresses to all router interfaces
+      - Configure BGP IPv6 unicast address family with separate neighbor activation
+      - Verify dual-stack BGP — IPv4 and IPv6 routes in the BGP table
+      - Verify end-to-end IPv4 and IPv6 reachability
+
+  - number: 2
+    folder: lab-02-best-path-selection
+    title: "Best Path Selection and Attributes"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    extends: lab-01-ibgp-and-dual-stack
+    blueprint_refs: ["3.2.c"]
+    notes: >
+      R4 introduced. Systematic walk through the BGP best path
+      algorithm: Weight, Local Preference, AS_Path, MED, Origin.
+      Each attribute manipulated in isolation to observe its effect.
+    objectives:
+      - Add R4 (AS 65003) with eBGP peering to R3, advertise 172.16.4.0/24 and PC2 LAN
+      - Verify the default best path for R4's prefixes on R1 (examine AS_Path length)
+      - Manipulate Weight on R1 using a route-map to prefer one eBGP path over another
+      - Configure Local Preference on R1 and verify it propagates to R2 via iBGP
+      - Apply AS_Path prepending on R3 toward R1 — observe how longer AS_Path shifts traffic
+      - Set MED on R3 toward AS 65001 to influence inbound path selection from R1 and R2
+      - Compare IGP vs incomplete origin for the same prefix and observe best path change
+      - Verify the best path selection algorithm evaluates attributes in the correct order
+      - Verify end-to-end reachability (PC1 to PC2 across three autonomous systems)
+
+  - number: 3
+    folder: lab-03-capstone-config
+    title: "BGP Full Protocol Mastery — Capstone I"
+    difficulty: Advanced
+    type: capstone_i
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: ["3.2.c"]
+    objectives:
+      - Build the complete multi-AS BGP topology from scratch
+      - Configure OSPF as IGP within AS 65001 (R1-R2)
+      - Establish all eBGP and iBGP peering sessions with dual-stack
+      - Configure next-hop-self on iBGP peers
+      - Advertise all networks via BGP network statements
+      - Apply path selection policies (Weight, Local Preference, AS_Path prepend)
+      - Achieve full IPv4 and IPv6 end-to-end reachability across all three ASes
+
+  - number: 4
+    folder: lab-04-capstone-troubleshoot
+    title: "BGP Comprehensive Troubleshooting — Capstone II"
+    difficulty: Advanced
+    type: capstone_ii
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: ["3.2.c"]
+    objectives:
+      - Diagnose and resolve 5+ concurrent BGP faults injected across the topology
+      - "Fault categories: AS number mismatch, eBGP TTL (not directly connected), missing next-hop-self on iBGP, incorrect network statement, route-map blocking advertisements, missing OSPF for iBGP loopback reachability, IPv6 AF neighbor not activated"
+      - Use systematic BGP troubleshooting methodology (neighbor state? → TCP reachable? → AS match? → routes advertised? → best path correct?)
+      - Restore full multi-AS BGP convergence without introducing new issues

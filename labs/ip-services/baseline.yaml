@@ -1,0 +1,484 @@
+topic: ip-services
+topic_name: "IP Services"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ─────────────────────────────────────────────────
+# Core Topology — present in ALL labs
+# ─────────────────────────────────────────────────
+#
+#   R1 and R2 are redundant LAN gateways (HSRP/VRRP).
+#   Both connect to a shared LAN via SW-LAN and uplink to R3.
+#   R3 represents the upstream/ISP router.
+#
+#                    ┌──────────┐
+#                    │    R3    │
+#                    │(Upstream)│
+#                    └──┬───┬──┘
+#              Gi0/0    │   │    Gi0/1
+#                       │   │
+#              Gi0/1    │   │    Gi0/1
+#              ┌────────┴┐ ┌┴────────┐
+#              │   R1    │ │   R2    │
+#              │(Primary)│ │(Standby)│
+#              └────┬────┘ └────┬────┘
+#             Gi0/0 │           │ Gi0/0
+#                   │  SW-LAN  │
+#              ┌────┴──────────┴────┐
+#              │  (Unmanaged Switch)│
+#              │   192.168.1.0/24   │
+#              └──┬─────────────┬───┘
+#                 │             │
+#              ┌──┴──┐      ┌──┴──┐
+#              │ PC1 │      │ PC2 │
+#              └─────┘      └─────┘
+
+core_topology:
+  devices:
+    - name: R1
+      platform: iosv
+      role: "Primary LAN gateway (HSRP active / VRRP master)"
+      loopback0: "1.1.1.1/32"
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: "Secondary LAN gateway (HSRP standby / VRRP backup)"
+      loopback0: "2.2.2.2/32"
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: "Upstream / ISP router (NTP server, NAT outside destination)"
+      loopback0: "3.3.3.3/32"
+      console_port: null
+
+    - name: SW-LAN
+      platform: unmanaged_switch
+      role: "Shared LAN broadcast segment for FHRP and end-hosts"
+
+    - name: PC1
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.1.10/24"
+          gateway: "192.168.1.1"
+          ipv6: "2001:db8:1:1::10/64"
+          gateway_v6: "2001:db8:1:1::1"
+
+    - name: PC2
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.1.20/24"
+          gateway: "192.168.1.1"
+          ipv6: "2001:db8:1:1::20/64"
+          gateway_v6: "2001:db8:1:1::1"
+
+  links:
+    # R1 → SW-LAN (LAN segment)
+    - id: L1
+      source: "R1:GigabitEthernet0/0"
+      target: "SW-LAN:port1"
+      type: ethernet
+      purpose: "R1 LAN interface (HSRP/VRRP, NAT inside)"
+
+    # R2 → SW-LAN (LAN segment)
+    - id: L2
+      source: "R2:GigabitEthernet0/0"
+      target: "SW-LAN:port2"
+      type: ethernet
+      purpose: "R2 LAN interface (HSRP/VRRP, NAT inside)"
+
+    # PC1 → SW-LAN
+    - id: L3
+      source: "PC1:e0"
+      target: "SW-LAN:port3"
+      type: ethernet
+      purpose: "PC1 LAN connection"
+
+    # PC2 → SW-LAN
+    - id: L4
+      source: "PC2:e0"
+      target: "SW-LAN:port4"
+      type: ethernet
+      purpose: "PC2 LAN connection"
+
+    # R1 → R3 (uplink 1)
+    - id: L5
+      source: "R1:GigabitEthernet0/1"
+      target: "R3:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R1-R3 uplink (NAT outside, primary path)"
+
+    # R2 → R3 (uplink 2)
+    - id: L6
+      source: "R2:GigabitEthernet0/1"
+      target: "R3:GigabitEthernet0/1"
+      type: point-to-point
+      purpose: "R2-R3 uplink (NAT outside, backup path)"
+
+    # R1 ↔ R2 (direct sync link)
+    - id: L7
+      source: "R1:GigabitEthernet0/2"
+      target: "R2:GigabitEthernet0/2"
+      type: point-to-point
+      purpose: "R1-R2 direct link (OSPF adjacency, HSRP sync)"
+
+optional_devices: []
+optional_links: []
+
+# ─────────────────────────────────────────────────
+# IP Addressing Plan
+# ─────────────────────────────────────────────────
+ip_addressing:
+  # Shared LAN segment
+  - network: "192.168.1.0/24"
+    purpose: "Shared LAN — FHRP virtual gateway, NAT inside"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ip: "192.168.1.2/24"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ip: "192.168.1.3/24"
+      - device: PC1
+        interface: e0
+        ip: "192.168.1.10/24"
+      - device: PC2
+        interface: e0
+        ip: "192.168.1.20/24"
+    virtual_ip: "192.168.1.1"  # HSRP/VRRP VIP — default gateway for PCs
+
+  # R1 ↔ R3 uplink
+  - network: "10.0.13.0/30"
+    purpose: "R1-R3 uplink (NAT outside)"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/1
+        ip: "10.0.13.1/30"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ip: "10.0.13.2/30"
+
+  # R2 ↔ R3 uplink
+  - network: "10.0.23.0/30"
+    purpose: "R2-R3 uplink (NAT outside)"
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ip: "10.0.23.1/30"
+      - device: R3
+        interface: GigabitEthernet0/1
+        ip: "10.0.23.2/30"
+
+  # R1 ↔ R2 direct link
+  - network: "10.0.12.0/30"
+    purpose: "R1-R2 sync/OSPF link"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/2
+        ip: "10.0.12.1/30"
+      - device: R2
+        interface: GigabitEthernet0/2
+        ip: "10.0.12.2/30"
+
+  # R3 simulated internet server
+  - network: "203.0.113.0/24"
+    purpose: "Simulated internet server (NAT outside destination)"
+    assignments:
+      - device: R3
+        interface: Loopback1
+        ip: "203.0.113.1/24"
+
+# FHRP Plan
+fhrp_plan:
+  hsrp:  # Lab-02
+    group: 1
+    virtual_ip: "192.168.1.1"
+    r1_priority: 110
+    r2_priority: 100
+    preempt: true
+    track_interface: "GigabitEthernet0/1"  # R1 tracks uplink to R3
+    decrement: 20
+
+  vrrp:  # Lab-03
+    group: 1
+    virtual_ip: "192.168.1.1"
+    r1_priority: 110
+    r2_priority: 100
+    description: "Lab-03 replaces HSRP with VRRPv3 for dual-stack"
+
+  hsrp_ipv6:  # Lab-02 (added with IPv6)
+    group: 2
+    virtual_ipv6: "2001:db8:1:1::1"
+
+# NAT Plan (Lab-01)
+nat_plan:
+  inside_interface: "GigabitEthernet0/0"
+  outside_interface: "GigabitEthernet0/1"
+  exercises:
+    - type: static
+      description: "Map PC1 to a public IP for inbound access"
+      inside_local: "192.168.1.10"
+      inside_global: "10.0.13.10"
+    - type: dynamic_pool
+      description: "Pool of public IPs for outbound NAT"
+      pool_name: "NAT-POOL"
+      pool_start: "10.0.13.100"
+      pool_end: "10.0.13.110"
+      pool_mask: "255.255.255.0"
+    - type: pat_overload
+      description: "PAT using the outside interface IP"
+      overload_interface: "GigabitEthernet0/1"
+
+# NTP Plan (Lab-00)
+ntp_plan:
+  master: R1
+  master_stratum: 3
+  clients: [R2, R3]
+  description: >
+    R1 configured as NTP master (stratum 3). R2 and R3 synchronize to R1.
+    Students verify stratum levels, clock synchronization, and NTP
+    association states.
+
+# ─────────────────────────────────────────────────
+# IPv6 Addressing Plan (dual-stack — introduced lab-02)
+# ─────────────────────────────────────────────────
+ipv6_addressing:
+  link_local_convention: "fe80::<router-number> on all interfaces"
+
+  # Shared LAN segment
+  - network: "2001:db8:1:1::/64"
+    purpose: "LAN segment — FHRP IPv6 virtual gateway"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:1:1::2/64"
+        link_local: "fe80::1"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:1:1::3/64"
+        link_local: "fe80::2"
+      - device: PC1
+        interface: e0
+        ipv6: "2001:db8:1:1::10/64"
+        gateway_v6: "2001:db8:1:1::1"
+      - device: PC2
+        interface: e0
+        ipv6: "2001:db8:1:1::20/64"
+        gateway_v6: "2001:db8:1:1::1"
+    virtual_ipv6: "2001:db8:1:1::1"
+
+  # R1 ↔ R3
+  - network: "2001:db8:13::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:13::1/64"
+        link_local: "fe80::1"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:13::2/64"
+        link_local: "fe80::3"
+
+  # R2 ↔ R3
+  - network: "2001:db8:23::/64"
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:23::1/64"
+        link_local: "fe80::2"
+      - device: R3
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:23::2/64"
+        link_local: "fe80::3"
+
+  # R1 ↔ R2
+  - network: "2001:db8:12::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:12::1/64"
+        link_local: "fe80::1"
+      - device: R2
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:12::2/64"
+        link_local: "fe80::2"
+
+  # Loopback0 — IPv6
+  - network: "2001:db8:ff::1/128"
+    assignments:
+      - { device: R1, interface: Loopback0, ipv6: "2001:db8:ff::1/128" }
+  - network: "2001:db8:ff::2/128"
+    assignments:
+      - { device: R2, interface: Loopback0, ipv6: "2001:db8:ff::2/128" }
+  - network: "2001:db8:ff::3/128"
+    assignments:
+      - { device: R3, interface: Loopback0, ipv6: "2001:db8:ff::3/128" }
+
+# ─────────────────────────────────────────────────
+# Interface Allocation Table
+# ─────────────────────────────────────────────────
+#
+# R1 (iosv):
+#   Gi0/0 — LAN segment via SW-LAN (192.168.1.2/24, FHRP, NAT inside) (L1)
+#   Gi0/1 — R3 uplink (10.0.13.1/30, NAT outside) (L5)
+#   Gi0/2 — R2 direct link (10.0.12.1/30) (L7)
+#   Gi0/3 — (spare)
+#   Loopback0 — 1.1.1.1/32
+#
+# R2 (iosv):
+#   Gi0/0 — LAN segment via SW-LAN (192.168.1.3/24, FHRP, NAT inside) (L2)
+#   Gi0/1 — R3 uplink (10.0.23.1/30, NAT outside) (L6)
+#   Gi0/2 — R1 direct link (10.0.12.2/30) (L7)
+#   Gi0/3 — (spare)
+#   Loopback0 — 2.2.2.2/32
+#
+# R3 (iosv):
+#   Gi0/0 — R1 uplink (10.0.13.2/30) (L5)
+#   Gi0/1 — R2 uplink (10.0.23.2/30) (L6)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 3.3.3.3/32
+#   Loopback1 — 203.0.113.1/24 (simulated internet server)
+
+# ─────────────────────────────────────────────────
+# Labs
+# ─────────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-ntp-and-qos
+    title: "NTP Configuration and QoS Interpretation"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+    blueprint_refs: ["3.3.a", "1.4"]
+    notes: >
+      NTP hands-on configuration plus QoS interpretation exercise.
+      NTP: R1 as master, R2/R3 as clients. QoS: pre-loaded MQC policy
+      on R1 for students to read and analyze (class-maps, policy-maps,
+      policing, marking). PTP concepts covered in theory section.
+    objectives:
+      - Configure R1 as NTP master at stratum 3
+      - Configure R2 and R3 as NTP clients pointing to R1
+      - Verify NTP synchronization — stratum levels, clock offset, association state
+      - Examine NTP authentication (configure and verify MD5 authentication)
+      - Interpret a pre-loaded QoS MQC policy on R1 — identify class-maps, match criteria, and actions
+      - Identify policing rates, conform/exceed actions, and DSCP marking in the policy
+      - Explain PTP boundary clock concepts and when PTP is preferred over NTP
+      - Verify end-to-end reachability (baseline — OSPF pre-configured)
+
+  - number: 1
+    folder: lab-01-nat-pat
+    title: "Static NAT, Dynamic NAT, and PAT"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+    extends: lab-00-ntp-and-qos
+    blueprint_refs: ["3.3.b"]
+    notes: >
+      NAT/PAT configuration on R1. Inside: LAN (Gi0/0). Outside: uplink
+      to R3 (Gi0/1). Static NAT for PC1, dynamic NAT pool, PAT overload.
+    objectives:
+      - Define NAT inside and outside interfaces on R1
+      - Configure static NAT mapping PC1 (192.168.1.10) to a public IP (10.0.13.10)
+      - Verify static NAT with show ip nat translations — confirm bidirectional entry
+      - Configure dynamic NAT with a pool of public addresses (10.0.13.100-110)
+      - Create an ACL to define the NAT inside source range
+      - Verify dynamic NAT — observe translations created on demand
+      - Configure PAT (overload) using the outside interface IP for all LAN hosts
+      - Verify PAT — multiple inside hosts sharing a single outside IP with different ports
+      - Clear NAT translations and observe re-creation behavior
+      - Verify PC1 and PC2 can reach R3's simulated server (203.0.113.1) via NAT
+
+  - number: 2
+    folder: lab-02-hsrp
+    title: "HSRP — First Hop Redundancy"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+    extends: lab-01-nat-pat
+    blueprint_refs: ["3.3.c"]
+    notes: >
+      HSRPv2 on the shared LAN segment. R1 active (priority 110), R2 standby.
+      Preemption and interface tracking. IPv6 addresses added to all interfaces
+      for dual-stack. HSRP IPv6 group added alongside IPv4 group.
+    objectives:
+      - Add IPv6 addresses to all router interfaces (dual-stack begins)
+      - Configure HSRPv2 group 1 on R1 and R2 for IPv4 virtual IP 192.168.1.1
+      - Set R1 priority to 110, R2 priority to 100, enable preemption on both
+      - Verify HSRP state — R1 must be Active, R2 must be Standby
+      - Simulate R1 uplink failure (shutdown Gi0/1) — verify R2 takes over as Active
+      - Configure interface tracking on R1 to decrement priority by 20 when Gi0/1 goes down
+      - Verify tracked object triggers HSRP failover without manual intervention
+      - Configure HSRP group 2 for IPv6 virtual IP 2001:db8:1:1::1
+      - Verify PCs can reach R3 through the virtual gateway during normal and failover states
+
+  - number: 3
+    folder: lab-03-vrrp-dual-stack
+    title: "VRRP and Dual-Stack Gateway Redundancy"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+    extends: lab-02-hsrp
+    blueprint_refs: ["3.3.c"]
+    notes: >
+      Remove HSRP, configure VRRPv3 which natively supports both IPv4
+      and IPv6 address families in a single VRRP group. Compare VRRP
+      behavior with HSRP (preemption default, virtual MAC, timers).
+    objectives:
+      - Remove HSRP configuration from R1 and R2
+      - Configure VRRPv3 on R1 and R2 with address-family IPv4 (virtual IP 192.168.1.1)
+      - Configure VRRPv3 address-family IPv6 (virtual IP 2001:db8:1:1::1)
+      - Set R1 as master (priority 110), R2 as backup (priority 100)
+      - Verify VRRP state — R1 Master, R2 Backup for both address families
+      - Compare VRRP vs HSRP — preemption enabled by default, different hello timers, different virtual MACs
+      - Simulate failover — verify R2 becomes Master when R1's uplink fails
+      - Verify dual-stack gateway redundancy — PC1 reaches IPv4 and IPv6 destinations during failover
+      - Verify end-to-end reachability across both address families
+
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "IP Services Full Mastery — Capstone I"
+    difficulty: Advanced
+    type: capstone_i
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+    blueprint_refs: ["1.4", "3.3.a", "3.3.b", "3.3.c"]
+    objectives:
+      - Build the complete IP services stack from scratch on the shared topology
+      - Configure NTP hierarchy (R1 master, R2/R3 clients with authentication)
+      - Configure NAT/PAT on R1 (static NAT for PC1, PAT overload for remaining hosts)
+      - Configure VRRPv3 dual-stack gateway redundancy (R1 master, R2 backup)
+      - Configure interface tracking for automatic VRRP failover
+      - Interpret a pre-loaded QoS policy and answer analysis questions
+      - Achieve full dual-stack end-to-end reachability through the virtual gateway
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "IP Services Comprehensive Troubleshooting — Capstone II"
+    difficulty: Advanced
+    type: capstone_ii
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+    blueprint_refs: ["1.4", "3.3.a", "3.3.b", "3.3.c"]
+    objectives:
+      - Diagnose and resolve 5+ concurrent IP services faults
+      - "Fault categories: NTP authentication mismatch, NAT inside/outside interface reversed, HSRP priority causing wrong active router, VRRP address-family missing, interface tracking decrement too low, NAT ACL not matching traffic, OSPF missing on uplink (breaking NAT outside reachability)"
+      - Use systematic troubleshooting methodology per service (NTP synced? → NAT translating? → FHRP active correct? → end-to-end works?)
+      - Restore full IP services operation without introducing new issues

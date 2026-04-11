@@ -1,0 +1,271 @@
+topic: multicast
+topic_name: "Multicast"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# IPv4 ONLY — dual-stack policy excludes this topic
+# Blueprint 3.3.d covers IPv4 multicast (PIM-SM, IGMP)
+# IPv6 MLD is not in scope for 350-401
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: R1
+      platform: iosv
+      role: Source-side router — connects to multicast source (PC1)
+      loopback0: 1.1.1.1/32
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: Primary RP — central hub for PIM-SM shared tree
+      loopback0: 2.2.2.2/32
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: Receiver-side router — connects to multicast receiver (PC2)
+      loopback0: 3.3.3.3/32
+      console_port: null
+
+    - name: PC1
+      platform: vpcs
+      role: Multicast source (simulated traffic generator)
+      ip: 10.1.1.10/24
+      gateway: 10.1.1.1
+      console_port: null
+
+    - name: PC2
+      platform: vpcs
+      role: Multicast receiver
+      ip: 10.1.3.10/24
+      gateway: 10.1.3.1
+      console_port: null
+
+  links:
+    - id: L1
+      source: R1:Gi0/0
+      target: R2:Gi0/0
+      subnet: 10.1.12.0/30
+      description: R1-R2 point-to-point
+      addresses:
+        R1: 10.1.12.1/30
+        R2: 10.1.12.2/30
+
+    - id: L2
+      source: R2:Gi0/1
+      target: R3:Gi0/0
+      subnet: 10.1.23.0/30
+      description: R2-R3 point-to-point
+      addresses:
+        R2: 10.1.23.1/30
+        R3: 10.1.23.2/30
+
+    - id: L3
+      source: R1:Gi0/1
+      target: R3:Gi0/1
+      subnet: 10.1.13.0/30
+      description: R1-R3 direct link (creates triangle for RPF path selection)
+      addresses:
+        R1: 10.1.13.1/30
+        R3: 10.1.13.2/30
+
+    - id: L4
+      source: R1:Gi0/2
+      target: PC1
+      subnet: 10.1.1.0/24
+      description: Source LAN — PC1 generates multicast traffic
+      addresses:
+        R1: 10.1.1.1/24
+        PC1: 10.1.1.10/24
+
+    - id: L5
+      source: R3:Gi0/2
+      target: PC2
+      subnet: 10.1.3.0/24
+      description: Receiver LAN — PC2 joins multicast groups
+      addresses:
+        R3: 10.1.3.1/24
+        PC2: 10.1.3.10/24
+
+optional_devices:
+  - name: R4
+    platform: iosv
+    role: Second RP — MSDP peer for inter-domain source discovery
+    loopback0: 4.4.4.4/32
+    console_port: null
+    available_from: lab-02-ssm-bidir-msdp
+    purpose: >
+      Second RP in a separate PIM domain for MSDP peering with R2.
+      Enables demonstration of MSDP SA message exchange and inter-domain
+      multicast source discovery.
+
+optional_links:
+  - id: L6
+    source: R2:Gi0/2
+    target: R4:Gi0/0
+    subnet: 10.1.24.0/30
+    description: R2-R4 point-to-point (inter-domain boundary)
+    addresses:
+      R2: 10.1.24.1/30
+      R4: 10.1.24.2/30
+    available_from: lab-02-ssm-bidir-msdp
+
+  - id: L7
+    source: R4:Gi0/1
+    target: R3:Gi0/3
+    subnet: 10.1.34.0/30
+    description: R4-R3 point-to-point (second path to receiver)
+    addresses:
+      R4: 10.1.34.1/30
+      R3: 10.1.34.2/30
+    available_from: lab-02-ssm-bidir-msdp
+
+# ──────────────────────────────────────────────
+# Multicast Addressing Plan
+# ──────────────────────────────────────────────
+multicast_plan:
+  pim_sm_groups: 239.1.1.0/24       # Administratively scoped, PIM-SM exercises
+  ssm_groups: 232.1.1.0/24          # SSM range (RFC 4607)
+  bidir_groups: 239.2.2.0/24        # Bidirectional PIM exercises
+  rp_primary: 2.2.2.2               # R2 Loopback0 — primary RP
+  rp_secondary: 4.4.4.4             # R4 Loopback0 — second RP (MSDP)
+
+# ──────────────────────────────────────────────
+# OSPF Pre-Configuration (unicast IGP for RPF)
+# ──────────────────────────────────────────────
+ospf_plan:
+  process_id: 1
+  area: 0
+  router_ids:
+    R1: 1.1.1.1
+    R2: 2.2.2.2
+    R3: 3.3.3.3
+    R4: 4.4.4.4
+  networks: all interfaces in area 0
+  passive_interfaces:
+    R1: [Gi0/2]    # Source LAN — no OSPF hellos toward PC1
+    R3: [Gi0/2]    # Receiver LAN — no OSPF hellos toward PC2
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-pim-sm-and-igmp
+    title: "PIM Sparse Mode, IGMP, and RPF Fundamentals"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: ["3.3.d"]
+    objectives:
+      - Enable PIM Sparse Mode on all router interfaces
+      - Configure a static RP (R2 Loopback0) on all routers
+      - Verify IGMP v2 membership reports on the receiver LAN (R3 Gi0/2)
+      - Examine the RPF check for a multicast source using show ip rpf
+      - Verify the multicast routing table (show ip mroute) — shared tree (*,G) and source tree (S,G)
+      - Trace the multicast forwarding path from source to receiver through the RP
+      - Observe SPT switchover behavior (when receiver pulls traffic directly from source)
+    notes: >
+      OSPF and IP addressing are pre-configured. Students focus entirely on
+      multicast — PIM-SM, static RP, IGMP, RPF verification. IGMPv2 is the
+      default on IOSv. Multicast traffic can be simulated with ping to group
+      address from source router or PC1.
+
+  - number: 1
+    folder: lab-01-rp-discovery-and-igmpv3
+    title: "RP Discovery Mechanisms and IGMPv3"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-00-pim-sm-and-igmp
+    blueprint_refs: ["3.3.d"]
+    objectives:
+      - Replace static RP with Auto-RP (R2 as RP candidate, R1/R3 as mapping agents)
+      - Verify Auto-RP announcements with show ip pim rp mapping
+      - Reconfigure using BSR (Bootstrap Router) as an alternative RP discovery mechanism
+      - Compare Auto-RP (Cisco proprietary) vs BSR (standards-based) behavior
+      - Upgrade receiver interface to IGMPv3 and verify version negotiation
+      - Configure IGMP join-group on R3 receiver interface and observe IGMPv3 reports
+      - Verify IGMP snooping behavior and group membership with show ip igmp groups
+    notes: >
+      Builds on lab-00 PIM-SM configuration. Students replace the static RP
+      with dynamic discovery mechanisms. Auto-RP uses 224.0.1.39 (announce)
+      and 224.0.1.40 (discovery) — requires ip pim autorp listener on
+      non-RP routers. BSR uses 224.0.0.13. IGMPv3 upgrade prepares for SSM
+      in lab-02.
+
+  - number: 2
+    folder: lab-02-ssm-bidir-msdp
+    title: "SSM, Bidirectional PIM, and MSDP"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    extends: lab-01-rp-discovery-and-igmpv3
+    blueprint_refs: ["3.3.d"]
+    objectives:
+      - Configure Source-Specific Multicast (SSM) for the 232.0.0.0/8 range
+      - Verify IGMPv3 source-specific joins (S,G) — no shared tree for SSM
+      - Configure Bidirectional PIM for a designated group range (239.2.2.0/24)
+      - Verify bidir forwarding — no SPT switchover, traffic uses shared tree only
+      - Identify the Designated Forwarder (DF) election on each link for bidir
+      - Configure MSDP peering between R2 (RP1) and R4 (RP2)
+      - Verify MSDP SA (Source-Active) message exchange with show ip msdp sa-cache
+      - Demonstrate inter-domain multicast source discovery via MSDP
+    notes: >
+      R4 is introduced as a second RP in a separate PIM domain. R2 and R4
+      peer via MSDP so sources registered with one RP are advertised to the
+      other. SSM eliminates the RP entirely for the 232.x.x.x range — receivers
+      specify both source and group. Bidir PIM uses a shared tree in both
+      directions (no SPT switchover, no source registration).
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 3
+    folder: lab-03-capstone-config
+    title: "Multicast Full Protocol Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Configure PIM-SM on all interfaces across all four routers from scratch
+      - Implement BSR-based RP discovery with R2 as BSR candidate and RP candidate
+      - Configure SSM for 232.0.0.0/8 with IGMPv3 on receiver interfaces
+      - Configure Bidirectional PIM for a designated group range
+      - Establish MSDP peering between R2 and R4 with SA caching
+      - Verify end-to-end multicast forwarding for all three modes (ASM, SSM, bidir)
+      - Verify RPF checks, (S,G) and (*,G) entries, and DF elections
+
+  - number: 4
+    folder: lab-04-capstone-troubleshoot
+    title: "Multicast Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 5+ concurrent multicast faults
+      - Troubleshoot RPF failures caused by unicast routing issues
+      - Identify and correct PIM neighbor adjacency problems
+      - Fix broken RP configuration (wrong RP address, missing rp-address statements)
+      - Resolve IGMP version mismatch between router and host
+      - Diagnose MSDP peering failures and missing SA propagation
+      - Restore end-to-end multicast forwarding for ASM, SSM, and bidir groups

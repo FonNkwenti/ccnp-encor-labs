@@ -1,0 +1,532 @@
+topic: eigrp
+topic_name: "EIGRP Routing"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ─────────────────────────────────────────────────
+# Core Topology — present in ALL labs (lab-00 through lab-04)
+# ─────────────────────────────────────────────────
+#
+#   Three core IOSv routers (R1-R3) in a triangle. R4 is optional
+#   (introduced lab-02) as a stub spoke off R2. PC1 on R3, PC2 on R4.
+#
+#                    ┌──────────┐
+#                    │    R1    │
+#                    │  (Hub)   │
+#                    └──┬───┬──┘
+#              Gi0/0    │   │    Gi0/1
+#             (to R2)   │   │   (to R3)
+#                    ┌──┴┐ ┌┴──┐
+#                    │R2 │ │R3 │
+#                    └──┬┘ └┬──┘
+#              Gi0/1    │   │    Gi0/1
+#             (to R3)   └───┘   (to R2)
+#                       Gi0/2   Gi0/2
+#                    R2─────────R3
+#                     │          │
+#               Gi0/2 │    Gi0/3 │
+#              (to R4) │   (PC1) │
+#                 ┌───┘          │
+#                 │R4 (opt)  ┌───┘
+#                 └──┬──┘    │PC1│
+#              Gi0/1 │       └───┘
+#              (PC2) │
+#                 ┌──┘
+#                 │PC2│
+#                 └───┘
+
+core_topology:
+  devices:
+    # ── Routers ──
+    - name: R1
+      platform: iosv
+      role: "Hub router (EIGRP core)"
+      loopback0: "1.1.1.1/32"
+      console_port: null  # Dynamic — assigned by EVE-NG
+
+    - name: R2
+      platform: iosv
+      role: "Branch A router"
+      loopback0: "2.2.2.2/32"
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: "Branch B router (PC1 LAN segment)"
+      loopback0: "3.3.3.3/32"
+      console_port: null
+
+    # ── End Hosts ──
+    - name: PC1
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.1.10/24"
+          gateway: "192.168.1.1"
+          ipv6: "2001:db8:1:1::10/64"
+          gateway_v6: "2001:db8:1:1::1"
+
+    - name: PC2
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.2.10/24"
+          gateway: "192.168.2.1"
+          ipv6: "2001:db8:2:2::10/64"
+          gateway_v6: "2001:db8:2:2::1"
+
+  # ── Links ──
+  links:
+    # R1 ↔ R2 (triangle side 1)
+    - id: L1
+      source: "R1:GigabitEthernet0/0"
+      target: "R2:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R1-R2 link (triangle side 1)"
+
+    # R1 ↔ R3 (triangle side 2)
+    - id: L2
+      source: "R1:GigabitEthernet0/1"
+      target: "R3:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R1-R3 link (triangle side 2)"
+
+    # R2 ↔ R3 (triangle base — lower bandwidth for unequal-cost demo)
+    - id: L3
+      source: "R2:GigabitEthernet0/1"
+      target: "R3:GigabitEthernet0/1"
+      type: point-to-point
+      purpose: "R2-R3 link (triangle base — bandwidth manipulated for variance demo)"
+
+    # R3 ↔ PC1 (LAN segment)
+    - id: L4
+      source: "PC1:e0"
+      target: "R3:GigabitEthernet0/3"
+      type: ethernet
+      purpose: "PC1 LAN segment on R3"
+
+# ─────────────────────────────────────────────────
+# Optional Devices — introduced in lab-02
+# ─────────────────────────────────────────────────
+optional_devices:
+  - name: R4
+    platform: iosv
+    role: "Stub router (EIGRP stub — PC2 LAN segment)"
+    loopback0: "4.4.4.4/32"
+    console_port: null
+    introduced_in: lab-02-stub-summarization-variance
+
+optional_links:
+  - id: L5
+    source: "R2:GigabitEthernet0/2"
+    target: "R4:GigabitEthernet0/0"
+    type: point-to-point
+    purpose: "R2-R4 link (stub spoke)"
+    introduced_in: lab-02-stub-summarization-variance
+  - id: L6
+    source: "PC2:e0"
+    target: "R4:GigabitEthernet0/1"
+    type: ethernet
+    purpose: "PC2 LAN segment on R4"
+    introduced_in: lab-02-stub-summarization-variance
+
+# ─────────────────────────────────────────────────
+# IP Addressing Plan
+# ─────────────────────────────────────────────────
+ip_addressing:
+  # R1 ↔ R2
+  - network: "10.12.0.0/30"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ip: "10.12.0.1/30"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ip: "10.12.0.2/30"
+
+  # R1 ↔ R3
+  - network: "10.13.0.0/30"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/1
+        ip: "10.13.0.1/30"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ip: "10.13.0.2/30"
+
+  # R2 ↔ R3 (triangle base)
+  - network: "10.23.0.0/30"
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ip: "10.23.0.1/30"
+      - device: R3
+        interface: GigabitEthernet0/1
+        ip: "10.23.0.2/30"
+
+  # R2 ↔ R4 (stub spoke — optional, lab-02+)
+  - network: "10.24.0.0/30"
+    optional: true
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/2
+        ip: "10.24.0.1/30"
+      - device: R4
+        interface: GigabitEthernet0/0
+        ip: "10.24.0.2/30"
+
+  # PC1 LAN (on R3)
+  - network: "192.168.1.0/24"
+    purpose: "PC1 LAN segment"
+    assignments:
+      - device: R3
+        interface: GigabitEthernet0/3
+        ip: "192.168.1.1/24"
+      - device: PC1
+        interface: e0
+        ip: "192.168.1.10/24"
+
+  # PC2 LAN (on R4 — optional, lab-02+)
+  - network: "192.168.2.0/24"
+    optional: true
+    purpose: "PC2 LAN segment"
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/1
+        ip: "192.168.2.1/24"
+      - device: PC2
+        interface: e0
+        ip: "192.168.2.10/24"
+
+  # Summarization networks on R3 (lab-02 — loopbacks for summarization demo)
+  - network: "10.3.0.0/24"
+    purpose: "Summarization source on R3 (lab-02)"
+    assignments:
+      - device: R3
+        interface: Loopback1
+        ip: "10.3.0.1/24"
+  - network: "10.3.1.0/24"
+    purpose: "Summarization source on R3 (lab-02)"
+    assignments:
+      - device: R3
+        interface: Loopback2
+        ip: "10.3.1.1/24"
+  - network: "10.3.2.0/24"
+    purpose: "Summarization source on R3 (lab-02)"
+    assignments:
+      - device: R3
+        interface: Loopback3
+        ip: "10.3.2.1/24"
+  - network: "10.3.3.0/24"
+    purpose: "Summarization source on R3 (lab-02)"
+    assignments:
+      - device: R3
+        interface: Loopback4
+        ip: "10.3.3.1/24"
+
+# ─────────────────────────────────────────────────
+# IPv6 Addressing Plan (dual-stack — introduced lab-01)
+# ─────────────────────────────────────────────────
+# Scheme: 2001:db8:<link-encoding>::<host>/64 for transit links
+#         2001:db8:ff::<router-id>/128 for loopbacks
+#         Link-local: fe80::<router-number> on all interfaces
+#
+ipv6_addressing:
+  link_local_convention: "fe80::<router-number> on all interfaces (e.g., R1 = fe80::1)"
+
+  # R1 ↔ R2
+  - network: "2001:db8:12::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:12::1/64"
+        link_local: "fe80::1"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:12::2/64"
+        link_local: "fe80::2"
+
+  # R1 ↔ R3
+  - network: "2001:db8:13::/64"
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:13::1/64"
+        link_local: "fe80::1"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:13::2/64"
+        link_local: "fe80::3"
+
+  # R2 ↔ R3
+  - network: "2001:db8:23::/64"
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:23::1/64"
+        link_local: "fe80::2"
+      - device: R3
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:23::2/64"
+        link_local: "fe80::3"
+
+  # R2 ↔ R4 (optional, lab-02+)
+  - network: "2001:db8:24::/64"
+    optional: true
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:24::1/64"
+        link_local: "fe80::2"
+      - device: R4
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:24::2/64"
+        link_local: "fe80::4"
+
+  # PC1 LAN
+  - network: "2001:db8:1:1::/64"
+    purpose: "PC1 LAN segment (IPv6)"
+    assignments:
+      - device: R3
+        interface: GigabitEthernet0/3
+        ipv6: "2001:db8:1:1::1/64"
+        link_local: "fe80::3"
+      - device: PC1
+        interface: e0
+        ipv6: "2001:db8:1:1::10/64"
+        gateway_v6: "2001:db8:1:1::1"
+
+  # PC2 LAN (optional, lab-02+)
+  - network: "2001:db8:2:2::/64"
+    optional: true
+    purpose: "PC2 LAN segment (IPv6)"
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:2:2::1/64"
+        link_local: "fe80::4"
+      - device: PC2
+        interface: e0
+        ipv6: "2001:db8:2:2::10/64"
+        gateway_v6: "2001:db8:2:2::1"
+
+  # Loopback0 — IPv6 (all routers)
+  - network: "2001:db8:ff::1/128"
+    assignments:
+      - { device: R1, interface: Loopback0, ipv6: "2001:db8:ff::1/128" }
+  - network: "2001:db8:ff::2/128"
+    assignments:
+      - { device: R2, interface: Loopback0, ipv6: "2001:db8:ff::2/128" }
+  - network: "2001:db8:ff::3/128"
+    assignments:
+      - { device: R3, interface: Loopback0, ipv6: "2001:db8:ff::3/128" }
+  - network: "2001:db8:ff::4/128"
+    optional: true
+    assignments:
+      - { device: R4, interface: Loopback0, ipv6: "2001:db8:ff::4/128" }
+
+  # Summarization loopbacks on R3 (IPv6, lab-02)
+  - network: "2001:db8:3:0::/64"
+    purpose: "IPv6 summarization source on R3"
+    assignments:
+      - { device: R3, interface: Loopback1, ipv6: "2001:db8:3:0::1/64" }
+  - network: "2001:db8:3:1::/64"
+    assignments:
+      - { device: R3, interface: Loopback2, ipv6: "2001:db8:3:1::1/64" }
+  - network: "2001:db8:3:2::/64"
+    assignments:
+      - { device: R3, interface: Loopback3, ipv6: "2001:db8:3:2::1/64" }
+  - network: "2001:db8:3:3::/64"
+    assignments:
+      - { device: R3, interface: Loopback4, ipv6: "2001:db8:3:3::1/64" }
+
+# ─────────────────────────────────────────────────
+# EIGRP Design
+# ─────────────────────────────────────────────────
+eigrp_design:
+  autonomous_system: 100
+  named_process: "EIGRP-LAB"  # Used from lab-01 onward
+  router_ids:
+    R1: "1.1.1.1"
+    R2: "2.2.2.2"
+    R3: "3.3.3.3"
+    R4: "4.4.4.4"
+
+  # Bandwidth manipulation for unequal-cost load balancing demo (lab-02)
+  bandwidth_plan:
+    description: >
+      R2-R3 link has bandwidth lowered to 100 Mbps (from default 1 Gbps)
+      to create metric asymmetry. From R1 to 192.168.1.0/24 (PC1 LAN on R3):
+      - Successor: R1 → R3 direct (cost via 1 Gbps links)
+      - Feasible Successor: R1 → R2 → R3 (higher cost due to 100 Mbps R2-R3 link)
+      Variance multiplier on R1 enables both paths for load balancing.
+    manipulated_link: "R2:Gi0/1 and R3:Gi0/1"
+    configured_bandwidth: "100000 Kbps"  # 100 Mbps
+
+  # Stub configuration (lab-02)
+  stub_plan:
+    stub_router: R4
+    stub_type: "connected"  # Advertises connected routes only
+    description: >
+      R4 is configured as EIGRP stub (connected). It advertises its
+      connected subnets (PC2 LAN, loopback) but does not participate
+      in query propagation. R2 stops sending queries to R4.
+
+  # Summarization plan (lab-02)
+  summarization:
+    source_router: R3
+    source_networks: ["10.3.0.0/24", "10.3.1.0/24", "10.3.2.0/24", "10.3.3.0/24"]
+    summary_address: "10.3.0.0/22"
+    summary_interface: "GigabitEthernet0/0"  # Toward R1 (and via topology toward R2)
+    ipv6_summary: "2001:db8:3::/62"
+
+# ─────────────────────────────────────────────────
+# Interface Allocation Table
+# ─────────────────────────────────────────────────
+#
+# R1 (iosv):
+#   Gi0/0 — R2 point-to-point (L1)
+#   Gi0/1 — R3 point-to-point (L2)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 1.1.1.1/32
+#
+# R2 (iosv):
+#   Gi0/0 — R1 point-to-point (L1)
+#   Gi0/1 — R3 point-to-point (L3) — bandwidth 100 Mbps (lab-02)
+#   Gi0/2 — R4 point-to-point (L5, optional from lab-02)
+#   Gi0/3 — (spare)
+#   Loopback0 — 2.2.2.2/32
+#
+# R3 (iosv):
+#   Gi0/0 — R1 point-to-point (L2)
+#   Gi0/1 — R2 point-to-point (L3) — bandwidth 100 Mbps (lab-02)
+#   Gi0/2 — (spare)
+#   Gi0/3 — PC1 LAN, 192.168.1.1/24 (L4)
+#   Loopback0 — 3.3.3.3/32
+#   Loopback1-4 — Summarization networks 10.3.0-3.0/24 (lab-02)
+#
+# R4 (iosv, optional from lab-02):
+#   Gi0/0 — R2 point-to-point (L5)
+#   Gi0/1 — PC2 LAN, 192.168.2.1/24 (L6)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 4.4.4.4/32
+
+# ─────────────────────────────────────────────────
+# Labs
+# ─────────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-classic-eigrp
+    title: "Classic EIGRP Fundamentals"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, PC1]
+    blueprint_refs: ["3.2.a"]
+    notes: >
+      Classic EIGRP mode (router eigrp 100) on the R1-R2-R3 triangle.
+      Focus: EIGRP process, neighbor adjacency, DUAL algorithm, successor
+      and feasible successor identification, topology table, routing table,
+      metric calculation, passive-interface on LAN. IPv4 only.
+    objectives:
+      - Configure EIGRP AS 100 in classic mode with explicit router-ID on R1, R2, R3
+      - Advertise all connected networks using network statements with proper wildcard masks
+      - Verify EIGRP neighbor adjacencies (show ip eigrp neighbors)
+      - Examine the EIGRP topology table — identify successor and feasible successor for each route
+      - Understand the feasibility condition (reported distance vs feasible distance)
+      - Verify EIGRP routes in the routing table (show ip route eigrp)
+      - Calculate EIGRP composite metric and verify against show output
+      - Configure passive-interface on R3's LAN segment (Gi0/3)
+      - Verify end-to-end reachability (PC1 to all router loopbacks)
+
+  - number: 1
+    folder: lab-01-named-mode-dual-stack
+    title: "Named Mode and Dual-Stack"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, PC1]
+    extends: lab-00-classic-eigrp
+    blueprint_refs: ["3.2.a"]
+    notes: >
+      Convert classic EIGRP to named mode. Add IPv6 address family for
+      dual-stack operation. Compare classic vs named mode (wide metrics,
+      per-AF configuration). IPv6 addressing added to all interfaces.
+    objectives:
+      - Add IPv6 addresses to all router interfaces (global unicast + link-local)
+      - Convert EIGRP from classic mode (router eigrp 100) to named mode (router eigrp EIGRP-LAB)
+      - Configure IPv4 unicast address family with AS 100
+      - Configure IPv6 unicast address family with AS 100
+      - Verify dual-stack EIGRP neighbor adjacencies (IPv4 and IPv6)
+      - Compare classic metric (32-bit) vs wide metric (64-bit) in named mode
+      - Verify IPv6 EIGRP routes in the routing table (show ipv6 route eigrp)
+      - Verify end-to-end IPv4 and IPv6 reachability from PC1
+
+  - number: 2
+    folder: lab-02-stub-summarization-variance
+    title: "Stub, Summarization, and Unequal-Cost Load Balancing"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    extends: lab-01-named-mode-dual-stack
+    blueprint_refs: ["3.2.a"]
+    notes: >
+      R4 introduced as stub router. Summarization loopbacks added to R3.
+      Bandwidth manipulation on R2-R3 link for variance demonstration.
+      Covers three key EIGRP advanced features in one lab.
+    objectives:
+      - Add R4 to the topology — configure IP/IPv6 addressing and EIGRP named mode
+      - Configure R4 as EIGRP stub (connected) — verify query scoping behavior
+      - Verify R2 does not send EIGRP queries to R4 (show ip eigrp neighbors detail)
+      - Add summarization loopbacks (Loopback1-4) on R3 with 10.3.0-3.0/24
+      - Configure manual summarization on R3 toward R1 — advertise 10.3.0.0/22 summary
+      - Verify summary route appears on R1 and R2, individual /24s are suppressed
+      - Manipulate bandwidth on R2-R3 link to 100 Mbps to create metric asymmetry
+      - Configure variance on R1 to enable unequal-cost load balancing
+      - Verify both successor and feasible successor are installed in the routing table
+      - Verify traffic distribution across both paths (show ip route, show ip cef)
+      - Verify end-to-end reachability (PC1 to PC2 across the full topology)
+
+  - number: 3
+    folder: lab-03-capstone-config
+    title: "EIGRP Full Protocol Mastery — Capstone I"
+    difficulty: Advanced
+    type: capstone_i
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: ["3.2.a"]
+    objectives:
+      - Build the complete EIGRP topology from scratch using named mode
+      - Configure dual-stack (IPv4 and IPv6 address families) on all routers
+      - Configure R4 as EIGRP stub (connected)
+      - Apply manual summarization on R3 for the 10.3.x.0/24 networks
+      - Manipulate bandwidth and configure variance for unequal-cost load balancing
+      - Configure passive-interface on all LAN-facing interfaces
+      - Achieve full IPv4 and IPv6 end-to-end reachability across all segments
+
+  - number: 4
+    folder: lab-04-capstone-troubleshoot
+    title: "EIGRP Comprehensive Troubleshooting — Capstone II"
+    difficulty: Advanced
+    type: capstone_ii
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: ["3.2.a"]
+    objectives:
+      - Diagnose and resolve 5+ concurrent EIGRP faults injected across the topology
+      - "Fault categories: AS number mismatch, K-value mismatch, passive-interface on transit link, authentication mismatch, missing network statement, incorrect stub configuration, variance/feasibility condition failure"
+      - Use systematic EIGRP troubleshooting methodology (neighbor state? → AS match? → K-values? → network advertised? → metric correct?)
+      - Restore full dual-stack EIGRP convergence without introducing new issues

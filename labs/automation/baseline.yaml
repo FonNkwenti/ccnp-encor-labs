@@ -1,0 +1,388 @@
+topic: automation
+topic_name: "Automation and Programmability"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# Dual-Stack: IPv4 only in lab-00, IPv6 from lab-01
+# IPv6 config via NETCONF/RESTCONF in later labs
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: R1
+      platform: csr1000v
+      role: Primary programmability target — NETCONF/RESTCONF endpoint
+      loopback0: 1.1.1.1/32
+      console_port: null
+      programmability:
+        netconf: enabled (port 830)
+        restconf: enabled (port 443)
+        yang_models: [ietf-interfaces, Cisco-IOS-XE-native, Cisco-IOS-XE-ospf]
+
+    - name: R2
+      platform: csr1000v
+      role: Secondary programmability target — NETCONF/RESTCONF endpoint
+      loopback0: 2.2.2.2/32
+      console_port: null
+      programmability:
+        netconf: enabled (port 830)
+        restconf: enabled (port 443)
+
+    - name: R3
+      platform: iosv
+      role: EEM host — on-box automation with EEM applets
+      loopback0: 3.3.3.3/32
+      console_port: null
+
+    - name: PC1
+      platform: vpcs
+      role: Traffic generator for EEM event triggers
+      ip: 192.168.10.10/24
+      gateway: 192.168.10.1
+      console_port: null
+
+    - name: PC2
+      platform: vpcs
+      role: Remote endpoint for connectivity testing
+      ip: 192.168.20.10/24
+      gateway: 192.168.20.1
+      console_port: null
+
+  links:
+    - id: L1
+      source: R1:Gi1
+      target: R2:Gi1
+      subnet: 10.1.12.0/30
+      description: R1-R2 point-to-point (CSR1000v uses Gi1, Gi2, Gi3 numbering)
+      addresses:
+        R1: 10.1.12.1/30
+        R2: 10.1.12.2/30
+      ipv6_addresses:
+        R1: 2001:db8:12::1/64
+        R2: 2001:db8:12::2/64
+
+    - id: L2
+      source: R2:Gi2
+      target: R3:Gi0/0
+      subnet: 10.1.23.0/30
+      description: R2-R3 point-to-point
+      addresses:
+        R2: 10.1.23.1/30
+        R3: 10.1.23.2/30
+      ipv6_addresses:
+        R2: 2001:db8:23::1/64
+        R3: 2001:db8:23::2/64
+
+    - id: L3
+      source: R1:Gi2
+      target: PC1
+      subnet: 192.168.10.0/24
+      description: R1 LAN — PC1 connectivity and EEM trigger traffic
+      addresses:
+        R1: 192.168.10.1/24
+      ipv6_addresses:
+        R1: 2001:db8:10::1/64
+
+    - id: L4
+      source: R3:Gi0/1
+      target: PC2
+      subnet: 192.168.20.0/24
+      description: R3 LAN — PC2 connectivity
+      addresses:
+        R3: 192.168.20.1/24
+      ipv6_addresses:
+        R3: 2001:db8:20::1/64
+
+# ──────────────────────────────────────────────
+# Management Access (for NETCONF/RESTCONF)
+# ──────────────────────────────────────────────
+management_plan:
+  description: >
+    NETCONF and RESTCONF APIs are accessed from the student's workstation
+    (or EVE-NG host) via the management network or through routed interfaces.
+    SSH (port 830) for NETCONF, HTTPS (port 443) for RESTCONF.
+  credentials:
+    username: admin
+    privilege: 15
+    secret: "Encor-API-2026"
+  netconf_config: |
+    netconf-yang
+    netconf-yang feature candidate-datastore
+  restconf_config: |
+    restconf
+    ip http secure-server
+    ip http authentication local
+
+# ──────────────────────────────────────────────
+# EEM Plan (lab-00)
+# ──────────────────────────────────────────────
+eem_plan:
+  applets:
+    - name: TRACK-INTERFACE
+      event: "track 1 state down"
+      actions:
+        - "action 1.0 syslog msg 'EEM: Tracked interface went DOWN'"
+        - "action 2.0 cli command 'enable'"
+        - "action 3.0 cli command 'configure terminal'"
+        - "action 4.0 cli command 'interface loopback99'"
+        - "action 5.0 cli command 'ip address 99.99.99.99 255.255.255.255'"
+        - "action 6.0 cli command 'end'"
+      description: >
+        When tracked object 1 (interface) goes down, log a syslog message
+        and create a backup loopback interface.
+
+    - name: BACKUP-CONFIG
+      event: "timer cron cron-entry '0 0 * * *'"
+      actions:
+        - "action 1.0 cli command 'enable'"
+        - "action 2.0 cli command 'copy running-config startup-config' pattern 'filename'"
+        - "action 3.0 cli command ''"
+        - "action 4.0 syslog msg 'EEM: Nightly config backup completed'"
+      description: >
+        Daily cron job to save running config to startup.
+
+    - name: MATCH-SYSLOG
+      event: "syslog pattern 'OSPF-5-ADJCHG'"
+      actions:
+        - "action 1.0 syslog msg 'EEM: OSPF adjacency change detected'"
+        - "action 2.0 cli command 'enable'"
+        - "action 3.0 cli command 'show ip ospf neighbor'"
+      description: >
+        Trigger on OSPF adjacency change syslog message — collect
+        neighbor state for troubleshooting.
+
+# ──────────────────────────────────────────────
+# Python/JSON Plan (lab-01)
+# ──────────────────────────────────────────────
+python_json_plan:
+  description: >
+    Workstation-based exercises. Students interpret Python scripts and
+    construct JSON files. No Python on routers — scripts run from the
+    student's machine targeting R1/R2 APIs in later labs.
+  python_topics:
+    - Dictionaries and key-value pairs
+    - Lists and iteration
+    - The requests module (HTTP GET, POST, PUT, DELETE)
+    - JSON parsing with json.loads() and json.dumps()
+    - Basic error handling (try/except for HTTP errors)
+  json_topics:
+    - JSON syntax (objects, arrays, strings, numbers, booleans, null)
+    - Constructing valid JSON for RESTCONF payloads
+    - Comparing JSON with Python dictionaries
+    - Nested JSON structures (interfaces, routing config)
+
+# ──────────────────────────────────────────────
+# NETCONF Plan (lab-02)
+# ──────────────────────────────────────────────
+netconf_plan:
+  transport: SSH (port 830)
+  operations:
+    - get: Retrieve operational data (show ip interface brief equivalent)
+    - get-config: Retrieve running/candidate config
+    - edit-config: Modify configuration (add loopback, change description)
+    - commit: Commit candidate config (if candidate datastore enabled)
+    - lock/unlock: Lock config to prevent concurrent edits
+  yang_models:
+    - ietf-interfaces (RFC 7223)
+    - Cisco-IOS-XE-native
+    - Cisco-IOS-XE-ospf-oper
+  tools:
+    - ncclient (Python library)
+    - raw SSH subsystem (ssh -s netconf)
+  exercises:
+    - Retrieve interface list via get-config with ietf-interfaces filter
+    - Create a new loopback interface via edit-config
+    - Retrieve OSPF neighbor state via get with operational model
+    - Modify interface description via edit-config
+
+# ──────────────────────────────────────────────
+# RESTCONF Plan (lab-03)
+# ──────────────────────────────────────────────
+restconf_plan:
+  transport: HTTPS (port 443)
+  base_url: "https://<router-ip>/restconf"
+  content_type: application/yang-data+json
+  operations:
+    - GET: Retrieve config or operational data
+    - PUT: Replace a resource
+    - PATCH: Merge into existing resource
+    - POST: Create a new resource
+    - DELETE: Remove a resource
+  response_codes:
+    - 200: OK (GET success)
+    - 201: Created (POST success)
+    - 204: No Content (DELETE success, PUT/PATCH success)
+    - 400: Bad Request (malformed payload)
+    - 401: Unauthorized (authentication failure)
+    - 403: Forbidden (authorization failure)
+    - 404: Not Found (invalid resource path)
+    - 409: Conflict (resource already exists for POST)
+  exercises:
+    - GET interface list from ietf-interfaces YANG model
+    - PUT a new loopback interface with JSON payload
+    - PATCH an interface description
+    - DELETE a loopback interface
+    - Interpret response codes for each operation
+    - Construct a valid JSON payload for OSPF network statement
+
+# ──────────────────────────────────────────────
+# OSPF Pre-Configuration
+# ──────────────────────────────────────────────
+ospf_plan:
+  process_id: 1
+  area: 0
+  router_ids:
+    R1: 1.1.1.1
+    R2: 2.2.2.2
+    R3: 3.3.3.3
+  networks: all router interfaces in area 0
+  passive_interfaces:
+    R1: [Gi2]      # LAN — no OSPF hellos toward PC1
+    R3: [Gi0/1]    # LAN — no OSPF hellos toward PC2
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-eem-applets
+    title: "EEM Applets for On-Box Automation"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: ["6.6"]
+    objectives:
+      - Construct an EEM applet triggered by interface tracking state change
+      - Construct an EEM applet triggered by a cron timer (daily config backup)
+      - Construct an EEM applet triggered by a syslog pattern match (OSPF adjacency change)
+      - Verify EEM applet registration with show event manager policy registered
+      - Trigger each applet and verify actions execute (syslog output, CLI commands)
+      - Interpret EEM event detectors — track, timer, syslog pattern matching
+      - Understand EEM action types — syslog, CLI, counter, mail
+    notes: >
+      IPv4 only. EEM applets run on R3 (IOSv). R1/R2 participate in the
+      OSPF topology for adjacency-change triggers. Key concept: EEM =
+      event detector + ordered actions. Applets are simpler than Tcl
+      scripts and sufficient for the exam.
+
+  - number: 1
+    folder: lab-01-python-and-json
+    title: "Python Scripting and JSON Construction"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-00-eem-applets
+    blueprint_refs: ["6.1", "6.2"]
+    objectives:
+      - Interpret a Python script that uses the requests module to send HTTP GET
+      - Identify Python data types — dictionaries, lists, strings, integers
+      - Construct a valid JSON object representing an interface configuration
+      - Construct a nested JSON payload for RESTCONF (ietf-interfaces format)
+      - Parse JSON responses using json.loads() and extract specific values
+      - Compare Python dictionary syntax with JSON syntax (True vs true, None vs null)
+      - Identify and fix errors in a malformed JSON file
+    notes: >
+      Workstation-based exercises embedded in the workbook. Students
+      interpret provided Python scripts and construct JSON files. No
+      code runs on routers. The scripts prepare students for NETCONF
+      (lab-02) and RESTCONF (lab-03) where they will use Python to
+      interact with router APIs. Dual-stack: IPv6 interface JSON payload.
+
+  - number: 2
+    folder: lab-02-netconf
+    title: "NETCONF Configuration and Verification"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-01-python-and-json
+    blueprint_refs: ["4.6"]
+    objectives:
+      - Enable NETCONF on R1 and R2 (netconf-yang)
+      - Verify NETCONF is listening on port 830 with show platform software yang-management
+      - Connect to R1 NETCONF via SSH subsystem and exchange hello capabilities
+      - Use ncclient (Python) to retrieve running config with get-config and XML filter
+      - Create a new loopback interface via edit-config with ietf-interfaces model
+      - Retrieve OSPF operational data via get with Cisco-IOS-XE-ospf-oper model
+      - Demonstrate lock/unlock to prevent concurrent config edits
+      - Compare NETCONF operations (get, get-config, edit-config) with CLI equivalents
+    notes: >
+      R1/R2 are CSR1000v (IOS-XE) — required for NETCONF YANG support.
+      Students connect from their workstation using ncclient or raw SSH.
+      Key concept: NETCONF uses XML-encoded YANG models over SSH (port 830).
+      The candidate datastore allows staging changes before commit.
+
+  - number: 3
+    folder: lab-03-restconf
+    title: "RESTCONF and REST API Interpretation"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-02-netconf
+    blueprint_refs: ["4.6", "6.5"]
+    objectives:
+      - Enable RESTCONF on R1 and R2 (restconf, ip http secure-server)
+      - Use curl or Python requests to send GET to /restconf/data/ietf-interfaces:interfaces
+      - Interpret the JSON response — identify interface names, IP addresses, status
+      - Use PUT to create a new loopback interface with a JSON payload
+      - Use PATCH to modify an interface description
+      - Use DELETE to remove an interface and verify 204 response
+      - Interpret HTTP response codes (200, 201, 204, 400, 401, 404)
+      - Construct a valid JSON payload for adding an OSPF network statement
+      - Compare RESTCONF (HTTP/JSON) with NETCONF (SSH/XML) — use cases and trade-offs
+    notes: >
+      Builds on lab-02 NETCONF. RESTCONF provides HTTP-based access to
+      the same YANG models. Students use curl or Python requests library.
+      Key concept: RESTCONF maps YANG to REST URLs — the URL path mirrors
+      the YANG tree structure. JSON is the default encoding.
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "Automation Full Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Construct EEM applets for syslog monitoring and scheduled config backup on R3
+      - Enable and configure NETCONF on R1 from scratch
+      - Enable and configure RESTCONF on R2 from scratch
+      - Use NETCONF to create interfaces and retrieve operational data on R1
+      - Use RESTCONF to configure OSPF and verify with GET on R2
+      - Construct valid JSON payloads for all RESTCONF operations
+      - Interpret Python scripts that automate the above tasks
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "Automation Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 5+ concurrent automation faults
+      - Troubleshoot NETCONF connection failure (service not enabled, wrong port)
+      - Fix RESTCONF returning 401 (missing local user or http authentication)
+      - Diagnose EEM applet not triggering (wrong event detector syntax)
+      - Fix malformed JSON payload causing RESTCONF 400 Bad Request
+      - Resolve NETCONF edit-config failure (invalid YANG path or data type)
+      - Restore all programmability interfaces to operational state

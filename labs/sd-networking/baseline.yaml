@@ -1,0 +1,377 @@
+topic: sd-networking
+topic_name: "SD-WAN and SD-Access"
+exam: "350-401"
+version: 1.0
+workbook_format: partial   # SD-WAN = standard; SD-Access = reference
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# SD-WAN is labbable (Viptela 20.6.2 images available)
+# SD-Access is conceptual only (requires Catalyst Center + ISE)
+# No dual-stack — SD-WAN labs focus on fabric operations
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: vManage
+      platform: vtmgmt-20.6.2-001
+      role: SD-WAN Network Management System — centralized configuration, monitoring, dashboard
+      system_ip: 10.10.10.1
+      vpn0_ip: 172.16.0.1/24
+      vpn512_ip: 192.168.100.1/24
+      console_port: null
+      ram_note: "Requires ~16 GB RAM — verify EVE-NG host capacity"
+
+    - name: vSmart
+      platform: vtsmart-20.6.2
+      role: SD-WAN Controller — OMP route reflector, policy distribution
+      system_ip: 10.10.10.2
+      vpn0_ip: 172.16.0.2/24
+      console_port: null
+
+    - name: vBond
+      platform: vtbond-20.6.2
+      role: SD-WAN Orchestrator — initial authentication, discovery
+      system_ip: 10.10.10.3
+      vpn0_ip: 172.16.0.3/24
+      console_port: null
+
+    - name: vEdge1
+      platform: vtedge-20.6.2
+      role: Branch site 1 — SD-WAN edge router
+      system_ip: 10.10.10.11
+      vpn0_ip: 172.16.1.1/24
+      vpn1_ip: 192.168.1.1/24
+      site_id: 100
+      console_port: null
+
+    - name: vEdge2
+      platform: vtedge-20.6.2
+      role: Branch site 2 — SD-WAN edge router
+      system_ip: 10.10.10.12
+      vpn0_ip: 172.16.2.1/24
+      vpn1_ip: 192.168.2.1/24
+      site_id: 200
+      console_port: null
+
+    - name: R-TRANSPORT
+      platform: iosv
+      role: Transport/ISP router — simulates internet backbone between sites
+      loopback0: 9.9.9.9/32
+      console_port: null
+
+  links:
+    # ── Control Plane / Management Links ──
+    - id: L1
+      source: vBond:ge0/0
+      target: R-TRANSPORT:Gi0/0
+      subnet: 172.16.0.0/24
+      description: vBond to transport — orchestrator reachable by all components
+      addresses:
+        vBond: 172.16.0.3/24
+        R-TRANSPORT: 172.16.0.254/24
+
+    - id: L2
+      source: vSmart:eth1
+      target: R-TRANSPORT:Gi0/1
+      subnet: 172.16.0.0/24
+      description: vSmart to transport — controller plane connectivity
+      addresses:
+        vSmart: 172.16.0.2/24
+      notes: vSmart and vBond share the 172.16.0.0/24 management/transport subnet
+
+    - id: L3
+      source: vManage:eth1
+      target: R-TRANSPORT:Gi0/2
+      subnet: 172.16.0.0/24
+      description: vManage to transport — NMS connectivity
+      addresses:
+        vManage: 172.16.0.1/24
+
+    # ── Data Plane / WAN Links ──
+    - id: L4
+      source: vEdge1:ge0/0
+      target: R-TRANSPORT:Gi0/3
+      subnet: 172.16.1.0/24
+      description: vEdge1 WAN transport link (VPN 0)
+      addresses:
+        vEdge1: 172.16.1.1/24
+        R-TRANSPORT: 172.16.1.254/24
+
+    - id: L5
+      source: vEdge2:ge0/0
+      target: R-TRANSPORT:Gi0/4
+      subnet: 172.16.2.0/24
+      description: vEdge2 WAN transport link (VPN 0)
+      addresses:
+        vEdge2: 172.16.2.1/24
+        R-TRANSPORT: 172.16.2.254/24
+
+    # Note: vEdge LAN interfaces (VPN 1) are loopback or internal
+    # VPN 1 subnets represent the branch LAN behind each vEdge
+
+# ──────────────────────────────────────────────
+# SD-WAN VPN Plan
+# ──────────────────────────────────────────────
+sdwan_vpn_plan:
+  vpn0:
+    description: Transport VPN — WAN-facing interfaces, IPsec tunnels
+    subnets:
+      management: 172.16.0.0/24
+      site1_wan: 172.16.1.0/24
+      site2_wan: 172.16.2.0/24
+
+  vpn1:
+    description: Service VPN — LAN-facing interfaces, user traffic
+    subnets:
+      site1_lan: 192.168.1.0/24
+      site2_lan: 192.168.2.0/24
+
+  vpn512:
+    description: Management VPN — out-of-band management
+    subnets:
+      management: 192.168.100.0/24
+
+# ──────────────────────────────────────────────
+# SD-WAN Fabric Parameters
+# ──────────────────────────────────────────────
+sdwan_fabric:
+  organization_name: "ENCOR-LAB"
+  vbond_address: 172.16.0.3
+  certificate_authority: enterprise-root (self-signed for lab)
+  omp:
+    description: Overlay Management Protocol — BGP-like route distribution
+    graceful_restart: true
+    send_path_limit: 4
+    ecmp_limit: 4
+  ipsec:
+    description: All data plane traffic encrypted via IPsec between vEdges
+    ike_version: IKEv2
+    encryption: AES-256-GCM
+
+# ──────────────────────────────────────────────
+# SD-WAN Policy Plan (lab-01, lab-02)
+# ──────────────────────────────────────────────
+sdwan_policy_plan:
+  control_policies:
+    - name: PREFER-SITE1-PATH
+      type: control-policy
+      description: >
+        Manipulate OMP route preference to steer traffic toward
+        site 1 path. Demonstrates centralized policy via vSmart.
+      applied_to: vSmart (site-list based)
+
+  data_policies:
+    - name: APP-AWARE-ROUTING
+      type: data-policy
+      description: >
+        Application-aware routing — classify traffic by application
+        and steer to preferred transport (internet vs MPLS simulation).
+      applied_to: vEdge1, vEdge2
+
+  app_route:
+    description: >
+      SD-WAN monitors path quality (loss, latency, jitter) per tunnel
+      and can automatically reroute applications to better-performing paths.
+
+# ──────────────────────────────────────────────
+# SD-Access Theory Plan (lab-03 — reference only)
+# ──────────────────────────────────────────────
+sd_access_theory:
+  lab_03_topics:
+    - title: "SD-Access Architecture Overview"
+      key_points:
+        - Fabric underlay — IS-IS routed access (no STP)
+        - Fabric overlay — VXLAN with SGT (Scalable Group Tags)
+        - Control plane — LISP for host tracking (EID-to-RLOC mapping)
+        - Data plane — VXLAN-GPO encapsulation
+
+    - title: "Fabric Roles"
+      key_points:
+        - Control Plane Node — LISP Map Server/Resolver
+        - Fabric Border Node — connects fabric to external networks
+        - Fabric Edge Node — connects endpoints to fabric
+        - Fabric WLC — integrates wireless into fabric
+
+    - title: "Traditional Campus Interop (1.3.b)"
+      key_points:
+        - Fusion router — connects SD-Access fabric to traditional network
+        - IP Transit — routes between fabric VNs and external VRFs
+        - SDA Transit — extends fabric across WAN via VXLAN
+        - Brownfield deployment considerations
+
+    - title: "Catalyst Center Workflows"
+      key_points:
+        - Design — sites, buildings, floors, network settings
+        - Policy — virtual networks, scalable groups, contracts
+        - Provision — fabric domains, device assignment
+        - Assurance — client health, network health, issue correlation
+
+# ──────────────────────────────────────────────
+# R-TRANSPORT Pre-Configuration (IOSv)
+# ──────────────────────────────────────────────
+transport_config:
+  description: >
+    R-TRANSPORT is a simple IOSv router providing L3 connectivity
+    between all SD-WAN components. Static routes or OSPF for
+    reachability between 172.16.x.0/24 subnets. Simulates an ISP
+    backbone — does not participate in SD-WAN overlay.
+  routing: static routes for all 172.16.x.0/24 subnets
+  notes: >
+    R-TRANSPORT needs 5 GigabitEthernet interfaces (Gi0/0 through Gi0/4).
+    IOSv default is 4 interfaces (Gi0/0-Gi0/3). May need to add a 5th
+    adapter in EVE-NG node configuration, or consolidate management
+    devices onto a shared subnet with a bridge.
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-sdwan-fabric-bringup
+    title: "SD-WAN Fabric Bring-Up and Control Plane"
+    difficulty: Foundation
+    type: progressive
+    format: standard
+    time_minutes: 90
+    devices: [vManage, vSmart, vBond, vEdge1, vEdge2, R-TRANSPORT]
+    blueprint_refs: ["1.2", "1.2.a"]
+    objectives:
+      - Configure R-TRANSPORT with static routes for inter-subnet reachability
+      - Bootstrap vBond with organization name, vBond address, and certificates
+      - Bootstrap vSmart and verify DTLS connection to vBond
+      - Bootstrap vManage and verify management plane connectivity
+      - Onboard vEdge1 and vEdge2 — configure system-ip, site-id, VPN 0
+      - Verify fabric control plane — show control connections on all devices
+      - Verify OMP peering between vEdges and vSmart
+      - Explore vManage dashboard — device inventory, control status
+    notes: >
+      SD-WAN fabric bring-up follows a strict order: vBond first
+      (orchestrator), then vSmart (controller), then vManage (NMS),
+      then vEdges (data plane). Each component authenticates via
+      certificates and connects to vBond for discovery. This lab
+      focuses on control plane establishment — no data traffic yet.
+
+  - number: 1
+    folder: lab-01-sdwan-omp-and-policies
+    title: "OMP Routing and Control Policies"
+    difficulty: Intermediate
+    type: progressive
+    format: standard
+    time_minutes: 90
+    devices: [vManage, vSmart, vBond, vEdge1, vEdge2, R-TRANSPORT]
+    extends: lab-00-sdwan-fabric-bringup
+    blueprint_refs: ["1.2", "1.2.a", "1.2.b"]
+    objectives:
+      - Configure VPN 1 (service VPN) on vEdge1 and vEdge2 with LAN subnets
+      - Verify OMP route advertisement — show omp routes on vSmart and vEdges
+      - Verify IPsec tunnel establishment between vEdge1 and vEdge2
+      - Test end-to-end reachability between site 1 LAN and site 2 LAN
+      - Create a centralized control policy on vSmart to manipulate path preference
+      - Apply the policy and verify traffic path change with traceroute
+      - Discuss benefits of centralized policy vs distributed routing
+      - Identify limitations — single vSmart is a single point of failure
+    notes: >
+      Builds on lab-00 fabric. VPN 1 carries user traffic — vEdges
+      advertise LAN prefixes via OMP to vSmart, which reflects them
+      to peer vEdges. IPsec tunnels form automatically in VPN 0.
+      Control policies on vSmart can accept/reject/modify OMP routes
+      per site — this is the "software-defined" part of SD-WAN.
+
+  - number: 2
+    folder: lab-02-sdwan-data-plane
+    title: "SD-WAN Data Plane and Application Policies"
+    difficulty: Intermediate
+    type: progressive
+    format: standard
+    time_minutes: 90
+    devices: [vManage, vSmart, vBond, vEdge1, vEdge2, R-TRANSPORT]
+    extends: lab-01-sdwan-omp-and-policies
+    blueprint_refs: ["1.2", "1.2.a", "1.2.b"]
+    objectives:
+      - Examine data plane tunnels with show bfd sessions and show tunnel statistics
+      - Configure a data policy for application-aware routing on vManage
+      - Verify BFD probing for path quality (loss, latency, jitter)
+      - Simulate a path degradation and observe automatic reroute behavior
+      - Configure a simple app-route policy to prefer one transport for specific traffic
+      - Verify policy application with show policy from-vsmart on vEdges
+      - Discuss SD-WAN benefits (centralized management, app-aware routing, zero-touch)
+      - Discuss SD-WAN limitations (controller dependency, certificate management, scale)
+    notes: >
+      Data plane focus. BFD probes between vEdges measure tunnel quality.
+      Application-aware routing uses these metrics to steer traffic.
+      Data policies are pushed from vSmart to vEdges — centralized but
+      enforced locally. This lab completes the SD-WAN story: control
+      plane (lab-00) -> routing (lab-01) -> data plane (lab-02).
+
+  - number: 3
+    folder: lab-03-sd-access-concepts
+    title: "SD-Access Architecture and Campus Integration"
+    difficulty: Intermediate
+    type: standalone
+    format: reference
+    time_minutes: 60
+    devices: []
+    blueprint_refs: ["1.3", "1.3.a", "1.3.b"]
+    objectives:
+      - Explain the SD-Access fabric architecture — underlay, overlay, control plane
+      - Identify fabric roles — Control Plane Node, Border, Edge, WLC
+      - Describe VXLAN-GPO encapsulation and SGT-based segmentation
+      - Explain LISP host tracking (EID-to-RLOC mapping)
+      - Describe how traditional campus networks interoperate with SD-Access
+      - Identify the role of a fusion router in brownfield SD-Access deployments
+      - Describe Catalyst Center workflows — Design, Policy, Provision, Assurance
+      - Answer exam-style questions comparing SD-WAN and SD-Access architectures
+    notes: >
+      Reference workbook only — no topology, no hands-on configuration.
+      SD-Access requires Catalyst Center + ISE, neither available in
+      EVE-NG. Content uses architecture diagrams, packet flow
+      walkthroughs, and concept comparison exercises.
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "SD-Networking Full Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    format: hybrid
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [vManage, vSmart, vBond, vEdge1, vEdge2, R-TRANSPORT]
+    blueprint_refs: all
+    objectives:
+      - Build the complete SD-WAN fabric from scratch (vBond -> vSmart -> vManage -> vEdges)
+      - Configure VPN 0 and VPN 1 on all vEdges with proper addressing
+      - Establish OMP peering and verify full mesh IPsec tunnels
+      - Create and apply a control policy for path preference manipulation
+      - Configure a data policy for application-aware routing
+      - Answer SD-Access architecture questions (reference component of capstone)
+      - Verify end-to-end site-to-site reachability through the SD-WAN overlay
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "SD-Networking Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    format: hybrid
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [vManage, vSmart, vBond, vEdge1, vEdge2, R-TRANSPORT]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 5+ concurrent SD-WAN faults
+      - Troubleshoot vEdge failing to join fabric (wrong vBond address, certificate issue)
+      - Fix OMP routes not propagating (vSmart policy blocking, missing VPN config)
+      - Diagnose IPsec tunnel failure between vEdges (transport reachability)
+      - Resolve data policy not taking effect (activation missing on vSmart)
+      - Fix VPN 1 LAN traffic not routing between sites
+      - Answer SD-Access troubleshooting scenario questions (reference)

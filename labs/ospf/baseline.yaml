@@ -1,0 +1,734 @@
+topic: ospf
+topic_name: "OSPF Routing"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-sonnet-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ─────────────────────────────────────────────────
+# Core Topology — present in ALL labs (lab-00 through lab-06)
+# ─────────────────────────────────────────────────
+#
+#   Five core IOSv routers (R1-R5) spanning three OSPF areas.
+#   Area 0 uses a shared Ethernet segment via EVE-NG unmanaged switch
+#   for DR/BDR election observation. Areas 1 and 2 use back-to-back
+#   point-to-point links. PC1 and PC2 in different areas for
+#   end-to-end verification.
+#
+#                        ┌──────────┐
+#                        │    R1    │
+#                        │ (Area 0) │
+#                        └────┬─────┘
+#                       Gi0/0 │
+#                    ┌────────┴────────┐
+#                    │  Unmanaged SW   │  10.0.123.0/24
+#                    │   (Area 0)      │  (broadcast segment)
+#                    └──┬──────────┬───┘
+#                 Gi0/0 │          │ Gi0/0
+#              ┌────────┴──┐  ┌───┴────────┐
+#              │    R2     │  │    R3       │
+#              │(ABR 0/1)  │  │ (ABR 0/2)  │
+#              └────┬──────┘  └──┬─────────┘
+#             Gi0/1 │            │ Gi0/1
+#          (Area 1) │            │ (Area 2)
+#              ┌────┴──┐     ┌──┴──────┐
+#              │  R4   │     │   R5    │
+#              │(Int.) │     │ (ASBR)  │
+#              └───┬───┘     └──┬──────┘
+#            Gi0/2 │            │ Gi0/1
+#              ┌───┴──┐     ┌──┴──────┐
+#              │ PC1  │     │  PC2    │
+#              └──────┘     └─────────┘
+
+core_topology:
+  devices:
+    # ── Routers ──
+    - name: R1
+      platform: iosv
+      role: "Backbone router (Area 0 only)"
+      loopback0: "1.1.1.1/32"
+      console_port: null  # Dynamic — assigned by EVE-NG
+
+    - name: R2
+      platform: iosv
+      role: "ABR (Area 0 / Area 1 border)"
+      loopback0: "2.2.2.2/32"
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: "ABR (Area 0 / Area 2 border)"
+      loopback0: "3.3.3.3/32"
+      console_port: null
+
+    - name: R4
+      platform: iosv
+      role: "Internal router (Area 1)"
+      loopback0: "4.4.4.4/32"
+      console_port: null
+
+    - name: R5
+      platform: iosv
+      role: "ASBR (Area 2 — redistribution source for NSSA)"
+      loopback0: "5.5.5.5/32"
+      console_port: null
+
+    # ── L2 Bridge ──
+    - name: SW-AREA0
+      platform: unmanaged_switch
+      role: "Shared broadcast segment for Area 0 (DR/BDR election)"
+
+    # ── End Hosts ──
+    - name: PC1
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.1.10/24"
+          gateway: "192.168.1.1"
+          ipv6: "2001:db8:1:1::10/64"
+          gateway_v6: "2001:db8:1:1::1"
+
+    - name: PC2
+      type: vpc
+      interfaces:
+        - name: e0
+          ip: "192.168.2.10/24"
+          gateway: "192.168.2.1"
+          ipv6: "2001:db8:2:2::10/64"
+          gateway_v6: "2001:db8:2:2::1"
+
+  # ── Links ──
+  links:
+    # Area 0 — shared multi-access segment via unmanaged switch
+    - id: L1
+      source: "R1:GigabitEthernet0/0"
+      target: "SW-AREA0:port1"
+      type: ethernet
+      purpose: "R1 connection to Area 0 broadcast segment"
+    - id: L2
+      source: "R2:GigabitEthernet0/0"
+      target: "SW-AREA0:port2"
+      type: ethernet
+      purpose: "R2 connection to Area 0 broadcast segment"
+    - id: L3
+      source: "R3:GigabitEthernet0/0"
+      target: "SW-AREA0:port3"
+      type: ethernet
+      purpose: "R3 connection to Area 0 broadcast segment"
+
+    # Area 1 — R2 (ABR) to R4 (internal), point-to-point
+    - id: L4
+      source: "R2:GigabitEthernet0/1"
+      target: "R4:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R2-R4 inter-area link (Area 1)"
+
+    # Area 2 — R3 (ABR) to R5 (ASBR), point-to-point
+    - id: L5
+      source: "R3:GigabitEthernet0/1"
+      target: "R5:GigabitEthernet0/0"
+      type: point-to-point
+      purpose: "R3-R5 inter-area link (Area 2)"
+
+    # End-host LAN connections
+    - id: L6
+      source: "PC1:e0"
+      target: "R4:GigabitEthernet0/2"
+      type: ethernet
+      purpose: "PC1 LAN segment (Area 1)"
+    - id: L7
+      source: "PC2:e0"
+      target: "R5:GigabitEthernet0/1"
+      type: ethernet
+      purpose: "PC2 LAN segment (Area 2)"
+
+# ─────────────────────────────────────────────────
+# Optional Devices — introduced in lab-03
+# ─────────────────────────────────────────────────
+optional_devices:
+  - name: R6
+    platform: iosv
+    role: "Second internal router (Area 1 — stub/NSSA demonstrations)"
+    loopback0: "6.6.6.6/32"
+    console_port: null
+    introduced_in: lab-03-area-types
+
+optional_links:
+  - id: L8
+    source: "R2:GigabitEthernet0/2"
+    target: "R6:GigabitEthernet0/0"
+    type: point-to-point
+    purpose: "R2-R6 link (Area 1 — richer stub topology)"
+    introduced_in: lab-03-area-types
+  - id: L9
+    source: "R4:GigabitEthernet0/1"
+    target: "R6:GigabitEthernet0/1"
+    type: point-to-point
+    purpose: "R4-R6 link (Area 1 — triangle for stub demonstration)"
+    introduced_in: lab-03-area-types
+
+# ─────────────────────────────────────────────────
+# IP Addressing Plan
+# ─────────────────────────────────────────────────
+ip_addressing:
+  # Area 0 — broadcast segment
+  - network: "10.0.123.0/24"
+    area: 0
+    type: broadcast
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ip: "10.0.123.1/24"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ip: "10.0.123.2/24"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ip: "10.0.123.3/24"
+
+  # Area 1 — point-to-point links
+  - network: "10.1.24.0/30"
+    area: 1
+    type: point-to-point
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ip: "10.1.24.1/30"
+      - device: R4
+        interface: GigabitEthernet0/0
+        ip: "10.1.24.2/30"
+
+  - network: "10.1.26.0/30"
+    area: 1
+    type: point-to-point
+    optional: true  # R6 introduced in lab-03
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/2
+        ip: "10.1.26.1/30"
+      - device: R6
+        interface: GigabitEthernet0/0
+        ip: "10.1.26.2/30"
+
+  - network: "10.1.46.0/30"
+    area: 1
+    type: point-to-point
+    optional: true  # R6 introduced in lab-03
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/1
+        ip: "10.1.46.1/30"
+      - device: R6
+        interface: GigabitEthernet0/1
+        ip: "10.1.46.2/30"
+
+  # Area 2 — point-to-point link
+  - network: "10.2.35.0/30"
+    area: 2
+    type: point-to-point
+    assignments:
+      - device: R3
+        interface: GigabitEthernet0/1
+        ip: "10.2.35.1/30"
+      - device: R5
+        interface: GigabitEthernet0/0
+        ip: "10.2.35.2/30"
+
+  # End-host LANs
+  - network: "192.168.1.0/24"
+    area: 1
+    type: broadcast
+    purpose: "PC1 LAN segment"
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/2
+        ip: "192.168.1.1/24"
+      - device: PC1
+        interface: e0
+        ip: "192.168.1.10/24"
+
+  - network: "192.168.2.0/24"
+    area: 2
+    type: broadcast
+    purpose: "PC2 LAN segment"
+    assignments:
+      - device: R5
+        interface: GigabitEthernet0/1
+        ip: "192.168.2.1/24"
+      - device: PC2
+        interface: e0
+        ip: "192.168.2.10/24"
+
+  # External networks for ASBR redistribution (lab-03+)
+  - network: "172.16.5.0/24"
+    area: null  # External — redistributed into OSPF
+    type: loopback
+    purpose: "Simulated external network on R5 for NSSA redistribution"
+    assignments:
+      - device: R5
+        interface: Loopback1
+        ip: "172.16.5.1/24"
+
+  - network: "172.16.6.0/24"
+    area: null
+    type: loopback
+    purpose: "Second external network on R5 for redistribution exercises"
+    assignments:
+      - device: R5
+        interface: Loopback2
+        ip: "172.16.6.1/24"
+
+  # Summarization networks (lab-04) — additional loopbacks on R4
+  - network: "10.1.4.0/24"
+    area: 1
+    type: loopback
+    purpose: "Summarization source on R4 (lab-04)"
+    assignments:
+      - device: R4
+        interface: Loopback1
+        ip: "10.1.4.1/24"
+
+  - network: "10.1.5.0/24"
+    area: 1
+    type: loopback
+    purpose: "Summarization source on R4 (lab-04)"
+    assignments:
+      - device: R4
+        interface: Loopback2
+        ip: "10.1.5.1/24"
+
+  - network: "10.1.6.0/24"
+    area: 1
+    type: loopback
+    purpose: "Summarization source on R4 (lab-04)"
+    assignments:
+      - device: R4
+        interface: Loopback3
+        ip: "10.1.6.1/24"
+
+  - network: "10.1.7.0/24"
+    area: 1
+    type: loopback
+    purpose: "Summarization source on R4 (lab-04)"
+    assignments:
+      - device: R4
+        interface: Loopback4
+        ip: "10.1.7.1/24"
+
+# ─────────────────────────────────────────────────
+# IPv6 Addressing Plan (dual-stack — introduced lab-01)
+# ─────────────────────────────────────────────────
+# Scheme: 2001:db8:<area>:<link-id>::<host>/64 for transit links
+#         2001:db8:ff::<router-id>/128 for loopbacks
+#         Link-local: fe80::<router-number> on all interfaces
+#
+ipv6_addressing:
+  link_local_convention: "fe80::<router-number> on all interfaces (e.g., R1 = fe80::1)"
+
+  # Area 0 — broadcast segment
+  - network: "2001:db8:0:123::/64"
+    area: 0
+    type: broadcast
+    assignments:
+      - device: R1
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:0:123::1/64"
+        link_local: "fe80::1"
+      - device: R2
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:0:123::2/64"
+        link_local: "fe80::2"
+      - device: R3
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:0:123::3/64"
+        link_local: "fe80::3"
+
+  # Area 1 — point-to-point links
+  - network: "2001:db8:1:24::/64"
+    area: 1
+    type: point-to-point
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:1:24::1/64"
+        link_local: "fe80::2"
+      - device: R4
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:1:24::2/64"
+        link_local: "fe80::4"
+
+  - network: "2001:db8:1:26::/64"
+    area: 1
+    type: point-to-point
+    optional: true  # R6 introduced in lab-03
+    assignments:
+      - device: R2
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:1:26::1/64"
+        link_local: "fe80::2"
+      - device: R6
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:1:26::2/64"
+        link_local: "fe80::6"
+
+  - network: "2001:db8:1:46::/64"
+    area: 1
+    type: point-to-point
+    optional: true  # R6 introduced in lab-03
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:1:46::1/64"
+        link_local: "fe80::4"
+      - device: R6
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:1:46::2/64"
+        link_local: "fe80::6"
+
+  # Area 2 — point-to-point link
+  - network: "2001:db8:2:35::/64"
+    area: 2
+    type: point-to-point
+    assignments:
+      - device: R3
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:2:35::1/64"
+        link_local: "fe80::3"
+      - device: R5
+        interface: GigabitEthernet0/0
+        ipv6: "2001:db8:2:35::2/64"
+        link_local: "fe80::5"
+
+  # End-host LANs
+  - network: "2001:db8:1:1::/64"
+    area: 1
+    type: broadcast
+    purpose: "PC1 LAN segment (IPv6)"
+    assignments:
+      - device: R4
+        interface: GigabitEthernet0/2
+        ipv6: "2001:db8:1:1::1/64"
+        link_local: "fe80::4"
+      - device: PC1
+        interface: e0
+        ipv6: "2001:db8:1:1::10/64"
+        gateway_v6: "2001:db8:1:1::1"
+
+  - network: "2001:db8:2:2::/64"
+    area: 2
+    type: broadcast
+    purpose: "PC2 LAN segment (IPv6)"
+    assignments:
+      - device: R5
+        interface: GigabitEthernet0/1
+        ipv6: "2001:db8:2:2::1/64"
+        link_local: "fe80::5"
+      - device: PC2
+        interface: e0
+        ipv6: "2001:db8:2:2::10/64"
+        gateway_v6: "2001:db8:2:2::1"
+
+  # Loopback0 — IPv6 (all routers)
+  - network: "2001:db8:ff::1/128"
+    assignments:
+      - { device: R1, interface: Loopback0, ipv6: "2001:db8:ff::1/128" }
+  - network: "2001:db8:ff::2/128"
+    assignments:
+      - { device: R2, interface: Loopback0, ipv6: "2001:db8:ff::2/128" }
+  - network: "2001:db8:ff::3/128"
+    assignments:
+      - { device: R3, interface: Loopback0, ipv6: "2001:db8:ff::3/128" }
+  - network: "2001:db8:ff::4/128"
+    assignments:
+      - { device: R4, interface: Loopback0, ipv6: "2001:db8:ff::4/128" }
+  - network: "2001:db8:ff::5/128"
+    assignments:
+      - { device: R5, interface: Loopback0, ipv6: "2001:db8:ff::5/128" }
+  - network: "2001:db8:ff::6/128"
+    optional: true
+    assignments:
+      - { device: R6, interface: Loopback0, ipv6: "2001:db8:ff::6/128" }
+
+  # External networks for NSSA redistribution (IPv6)
+  - network: "2001:db8:172:5::/64"
+    area: null
+    purpose: "External IPv6 network on R5 for NSSA redistribution"
+    assignments:
+      - { device: R5, interface: Loopback1, ipv6: "2001:db8:172:5::1/64" }
+  - network: "2001:db8:172:6::/64"
+    area: null
+    purpose: "Second external IPv6 network on R5"
+    assignments:
+      - { device: R5, interface: Loopback2, ipv6: "2001:db8:172:6::1/64" }
+
+  # Summarization networks on R4 (IPv6, lab-04)
+  - network: "2001:db8:1:4::/64"
+    area: 1
+    purpose: "IPv6 summarization source on R4"
+    assignments:
+      - { device: R4, interface: Loopback1, ipv6: "2001:db8:1:4::1/64" }
+  - network: "2001:db8:1:5::/64"
+    area: 1
+    assignments:
+      - { device: R4, interface: Loopback2, ipv6: "2001:db8:1:5::1/64" }
+  - network: "2001:db8:1:6::/64"
+    area: 1
+    assignments:
+      - { device: R4, interface: Loopback3, ipv6: "2001:db8:1:6::1/64" }
+  - network: "2001:db8:1:7::/64"
+    area: 1
+    assignments:
+      - { device: R4, interface: Loopback4, ipv6: "2001:db8:1:7::1/64" }
+
+# ─────────────────────────────────────────────────
+# OSPF Design
+# ─────────────────────────────────────────────────
+ospf_design:
+  process_id: 1
+  router_ids:
+    R1: "1.1.1.1"
+    R2: "2.2.2.2"
+    R3: "3.3.3.3"
+    R4: "4.4.4.4"
+    R5: "5.5.5.5"
+    R6: "6.6.6.6"
+
+  areas:
+    - id: 0
+      type: backbone
+      routers: [R1, R2, R3]
+      network_type: broadcast  # Shared segment — DR/BDR election
+      description: "Backbone area on shared multi-access segment"
+
+    - id: 1
+      type: normal  # Converted to stub/totally-stubby in lab-03
+      routers: [R2, R4]  # R6 added in lab-03
+      network_type: point-to-point
+      description: "Standard area, converted to stub/totally-stubby in lab-03"
+
+    - id: 2
+      type: normal  # Converted to NSSA in lab-03
+      routers: [R3, R5]
+      network_type: point-to-point
+      description: "Standard area, converted to NSSA in lab-03"
+
+  # DR/BDR election plan for Area 0
+  dr_bdr_plan:
+    description: "Manipulated via OSPF priority in lab-02"
+    default_priority: 1  # All routers start with default priority
+    lab_02_priorities:
+      R1: 255   # Designated Router
+      R2: 200   # Backup DR
+      R3: 0     # DROTHER (never elected)
+
+# ─────────────────────────────────────────────────
+# Interface Allocation Table
+# ─────────────────────────────────────────────────
+#
+# R1 (iosv):
+#   Gi0/0 — Area 0 shared segment via SW-AREA0 (L1)
+#   Gi0/1 — (spare)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 1.1.1.1/32
+#
+# R2 (iosv):
+#   Gi0/0 — Area 0 shared segment via SW-AREA0 (L2)
+#   Gi0/1 — R4 point-to-point, Area 1 (L4)
+#   Gi0/2 — R6 point-to-point, Area 1 (L8, optional from lab-03)
+#   Gi0/3 — (spare)
+#   Loopback0 — 2.2.2.2/32
+#
+# R3 (iosv):
+#   Gi0/0 — Area 0 shared segment via SW-AREA0 (L3)
+#   Gi0/1 — R5 point-to-point, Area 2 (L5)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 3.3.3.3/32
+#
+# R4 (iosv):
+#   Gi0/0 — R2 point-to-point, Area 1 (L4)
+#   Gi0/1 — R6 point-to-point, Area 1 (L9, optional from lab-03)
+#   Gi0/2 — PC1 LAN, 192.168.1.1/24 (L6)
+#   Gi0/3 — (spare)
+#   Loopback0 — 4.4.4.4/32
+#   Loopback1-4 — Summarization networks 10.1.4-7.0/24 (lab-04)
+#
+# R5 (iosv):
+#   Gi0/0 — R3 point-to-point, Area 2 (L5)
+#   Gi0/1 — PC2 LAN, 192.168.2.1/24 (L7)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 5.5.5.5/32
+#   Loopback1 — 172.16.5.1/24 (external — NSSA redistribution)
+#   Loopback2 — 172.16.6.1/24 (external — NSSA redistribution)
+#
+# R6 (iosv, optional from lab-03):
+#   Gi0/0 — R2 point-to-point, Area 1 (L8)
+#   Gi0/1 — R4 point-to-point, Area 1 (L9)
+#   Gi0/2 — (spare)
+#   Gi0/3 — (spare)
+#   Loopback0 — 6.6.6.6/32
+
+# ─────────────────────────────────────────────────
+# Labs
+# ─────────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-single-area-ospfv2
+    title: "Single-Area OSPFv2 Fundamentals"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, R4, R5, SW-AREA0, PC1, PC2]
+    blueprint_refs: ["3.2.a", "3.2.b"]
+    notes: >
+      All routers configured in Area 0 only. R4/R5 participate via Area 0
+      to keep this single-area. PC1 connects to R4, PC2 to R5 — both
+      advertised into Area 0. Focus: OSPF process, network statements,
+      router-ID, hello/dead timers, neighbor table, LSDB, routing table.
+    objectives:
+      - Configure OSPF process 1 with explicit router-ID on all routers
+      - Advertise all connected networks into Area 0 using network statements
+      - Verify OSPF neighbor adjacencies (show ip ospf neighbor)
+      - Examine the LSDB and identify LSA Types 1 and 2
+      - Verify OSPF routes in the routing table (show ip route ospf)
+      - Configure and verify passive-interface on LAN segments (R4 Gi0/2, R5 Gi0/1)
+      - Verify end-to-end reachability (PC1 to PC2)
+      - Examine OSPF hello/dead timer behavior and adjust timers on a link
+
+  - number: 1
+    folder: lab-01-multi-area-ospfv2
+    title: "Multi-Area OSPFv2"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, R4, R5, SW-AREA0, PC1, PC2]
+    extends: lab-00-single-area-ospfv2
+    blueprint_refs: ["3.2.a", "3.2.b"]
+    notes: >
+      Transition from single-area to multi-area. R2 becomes ABR (Area 0/1),
+      R3 becomes ABR (Area 0/2). R4 moves to Area 1, R5 to Area 2.
+      Introduction of inter-area (Type 3) LSAs. OSPFv3 address families
+      added for dual-stack coverage.
+    objectives:
+      - Reconfigure OSPF areas — R4 interfaces into Area 1, R5 interfaces into Area 2
+      - Verify ABR status on R2 and R3 (show ip ospf, show ip ospf border-routers)
+      - Examine inter-area LSAs (Type 3 Summary LSAs) in the LSDB
+      - Verify inter-area routes appear as O IA in routing tables
+      - Configure OSPFv3 with IPv6 address families on all routers
+      - Verify OSPFv3 neighbor adjacencies and IPv6 routing
+      - Verify end-to-end reachability across areas (PC1 to PC2)
+      - Compare single-area vs multi-area LSDB size and route types
+
+  - number: 2
+    folder: lab-02-network-types
+    title: "Broadcast vs Point-to-Point Network Types"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, R4, R5, SW-AREA0, PC1, PC2]
+    extends: lab-01-multi-area-ospfv2
+    blueprint_refs: ["3.2.b"]
+    notes: >
+      Deep focus on OSPF network types. Area 0 shared segment is broadcast
+      (DR/BDR election). Area 1/2 links are point-to-point (no election).
+      Exercises: manipulate DR/BDR priority, convert network type on
+      selected interfaces, observe adjacency behavior differences.
+    objectives:
+      - Verify default network types — broadcast on Area 0 segment, point-to-point on serial-like links
+      - Observe DR/BDR election on the Area 0 broadcast segment (show ip ospf interface)
+      - Manipulate OSPF priority to control DR/BDR election (R1=DR, R2=BDR, R3=DROTHER)
+      - Verify DROTHER behavior — partial adjacency (2-WAY) vs full adjacency with DR/BDR
+      - Convert an Area 1 point-to-point link to broadcast and observe the behavior change
+      - Compare LSA Type 2 presence on broadcast vs point-to-point segments
+      - Verify adjacency timer differences between network types
+      - Restore correct network types and verify full convergence
+
+  - number: 3
+    folder: lab-03-area-types
+    title: "Stub, Totally Stubby, and NSSA Areas"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, R4, R5, R6, SW-AREA0, PC1, PC2]
+    extends: lab-02-network-types
+    blueprint_refs: ["3.2.a"]
+    notes: >
+      R6 introduced in this lab. Area 1 converted from normal to stub,
+      then totally stubby. Area 2 converted to NSSA. R5 configured as
+      ASBR with external route redistribution. Demonstrates how area
+      types filter LSA types.
+    objectives:
+      - Add R6 to Area 1 topology (connect to R2 and R4)
+      - Convert Area 1 to stub — verify Type 5 LSAs are blocked, default route injected
+      - Examine the LSDB before and after stub conversion (compare LSA types)
+      - Convert Area 1 to totally stubby — verify Type 3 LSAs also blocked (except default)
+      - Configure Area 2 as NSSA
+      - Configure R5 as ASBR — redistribute connected Loopback1/2 (172.16.x.0/24) into OSPF
+      - Verify Type 7 LSAs in Area 2 and Type 5 translation at ABR (R3)
+      - Verify end-to-end reachability is maintained through all area type changes
+
+  - number: 4
+    folder: lab-04-summarization-filtering
+    title: "Inter-Area Summarization and Filtering"
+    difficulty: Advanced
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, R4, R5, R6, SW-AREA0, PC1, PC2]
+    extends: lab-03-area-types
+    blueprint_refs: ["3.2.b"]
+    notes: >
+      Configure inter-area summarization on ABRs. R4's Loopback1-4
+      (10.1.4-7.0/24) provide summarization targets. Filtering with
+      distribute-list and area range. ASBR summarization on R5 for
+      external routes.
+    objectives:
+      - Add summarization loopbacks on R4 (Loopback1-4: 10.1.4-7.0/24)
+      - Configure inter-area summarization on R2 (area 1 range 10.1.4.0/22)
+      - Verify summarized route appears as single O IA entry in Area 0
+      - Configure ASBR summarization on R5 for external 172.16.x.0 routes
+      - Apply distribute-list filtering on R1 to block specific prefixes
+      - Configure area range with not-advertise to suppress specific subnets
+      - Verify filtering effectiveness — blocked routes absent from routing tables
+      - Confirm end-to-end reachability for permitted routes (PC1 to PC2)
+
+  - number: 5
+    folder: lab-05-capstone-config
+    title: "OSPF Full Protocol Mastery -- Capstone I"
+    difficulty: Advanced
+    type: capstone_i
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, R5, R6, SW-AREA0, PC1, PC2]
+    blueprint_refs: ["3.2.a", "3.2.b"]
+    objectives:
+      - Build the complete multi-area OSPF topology from scratch
+      - Configure Area 0 backbone with DR/BDR priority manipulation
+      - Configure Area 1 as totally stubby with R6 as second internal router
+      - Configure Area 2 as NSSA with R5 ASBR redistribution
+      - Apply inter-area and ASBR summarization on appropriate ABRs
+      - Configure OSPFv3 for IPv6 dual-stack on all routers
+      - Apply route filtering using distribute-lists
+      - Achieve full IPv4 and IPv6 end-to-end reachability
+
+  - number: 6
+    folder: lab-06-capstone-troubleshoot
+    title: "OSPF Comprehensive Troubleshooting -- Capstone II"
+    difficulty: Advanced
+    type: capstone_ii
+    clean_slate: true
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, R5, R6, SW-AREA0, PC1, PC2]
+    blueprint_refs: ["3.2.a", "3.2.b"]
+    objectives:
+      - Diagnose and resolve 5+ concurrent OSPF faults injected across the topology
+      - "Fault categories: hello/dead timer mismatch, area ID mismatch, MTU mismatch, authentication mismatch, passive-interface on transit link, network type mismatch, missing network statement, incorrect area type configuration"
+      - Use systematic OSPF troubleshooting methodology (neighbor state? → hello match? → area match? → network type? → routes present?)
+      - Restore full multi-area OSPF convergence without introducing new issues

@@ -1,0 +1,446 @@
+topic: security
+topic_name: "Infrastructure Security"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# Dual-Stack: IPv4 only in lab-00, IPv6 from lab-01
+# IPv6 ACLs, IPv6 CoPP entries alongside IPv4
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: R1
+      platform: iosv
+      role: Primary hardening target — device access, ACLs, CoPP applied here
+      loopback0: 1.1.1.1/32
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: Management station / AAA peer — trusted network endpoint
+      loopback0: 2.2.2.2/32
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: External/untrusted router — threat simulation, ACL filtering target
+      loopback0: 3.3.3.3/32
+      console_port: null
+
+    - name: SW1
+      platform: iosvl2
+      role: Access switch — port security, 802.1X port-based access control
+      loopback0: null
+      management_vlan: 99
+      management_ip: 192.168.99.11/24
+      console_port: null
+
+    - name: PC1
+      platform: vpcs
+      role: Legitimate user — authorized access, passes ACL checks
+      ip: 192.168.10.10/24
+      gateway: 192.168.10.1
+      console_port: null
+
+    - name: PC2
+      platform: vpcs
+      role: Untrusted host — simulates unauthorized access attempts
+      ip: 192.168.20.10/24
+      gateway: 192.168.20.1
+      console_port: null
+
+  links:
+    # ── Router-to-Router Links ──
+    - id: L1
+      source: R1:Gi0/0
+      target: R2:Gi0/0
+      subnet: 10.1.12.0/30
+      description: R1-R2 trusted management link
+      addresses:
+        R1: 10.1.12.1/30
+        R2: 10.1.12.2/30
+      ipv6_addresses:
+        R1: 2001:db8:12::1/64
+        R2: 2001:db8:12::2/64
+
+    - id: L2
+      source: R1:Gi0/1
+      target: R3:Gi0/0
+      subnet: 10.1.13.0/30
+      description: R1-R3 untrusted boundary link (ACLs applied here)
+      addresses:
+        R1: 10.1.13.1/30
+        R3: 10.1.13.2/30
+      ipv6_addresses:
+        R1: 2001:db8:13::1/64
+        R3: 2001:db8:13::2/64
+
+    - id: L3
+      source: R2:Gi0/1
+      target: R3:Gi0/1
+      subnet: 10.1.23.0/30
+      description: R2-R3 link (alternate path, provides routing redundancy)
+      addresses:
+        R2: 10.1.23.1/30
+        R3: 10.1.23.2/30
+      ipv6_addresses:
+        R2: 2001:db8:23::1/64
+        R3: 2001:db8:23::2/64
+
+    # ── Router-to-Switch Links ──
+    - id: L4
+      source: R1:Gi0/2
+      target: SW1:Gi0/1
+      subnet: 192.168.10.0/24
+      description: R1 LAN gateway — VLAN 10 (trusted users)
+      addresses:
+        R1: 192.168.10.1/24
+      ipv6_addresses:
+        R1: 2001:db8:10::1/64
+      vlan: 10
+
+    - id: L5
+      source: R2:Gi0/2
+      target: SW1:Gi0/2
+      subnet: 192.168.20.0/24
+      description: R2 LAN gateway — VLAN 20 (untrusted segment)
+      addresses:
+        R2: 192.168.20.1/24
+      ipv6_addresses:
+        R2: 2001:db8:20::1/64
+      vlan: 20
+
+    # ── PC-to-Switch Links ──
+    - id: L6
+      source: PC1
+      target: SW1:Gi0/3
+      description: PC1 access port — VLAN 10 (trusted)
+      vlan: 10
+
+    - id: L7
+      source: PC2
+      target: SW1:Gi1/0
+      description: PC2 access port — VLAN 20 (untrusted)
+      vlan: 20
+
+# ──────────────────────────────────────────────
+# VLAN Plan
+# ──────────────────────────────────────────────
+vlan_plan:
+  - vlan_id: 10
+    name: TRUSTED
+    description: Authorized users (PC1)
+    subnet: 192.168.10.0/24
+    ipv6_subnet: 2001:db8:10::/64
+
+  - vlan_id: 20
+    name: UNTRUSTED
+    description: Restricted segment (PC2)
+    subnet: 192.168.20.0/24
+    ipv6_subnet: 2001:db8:20::/64
+
+  - vlan_id: 99
+    name: MGMT
+    description: Switch management VLAN
+    subnet: 192.168.99.0/24
+
+# ──────────────────────────────────────────────
+# Device Access Plan (lab-00)
+# ──────────────────────────────────────────────
+device_access_plan:
+  local_users:
+    - username: admin
+      privilege: 15
+      secret: "Encor-Admin-2026"
+      description: Full privilege administrator
+
+    - username: operator
+      privilege: 7
+      secret: "Encor-Oper-2026"
+      description: Read-only operator (custom privilege level)
+
+  ssh_hardening:
+    version: 2
+    domain_name: encor-lab.local
+    key_size: 2048
+    timeout: 60
+    retries: 3
+    source_interface: Loopback0
+
+  line_config:
+    console:
+      login: local
+      exec_timeout: "10 0"
+      logging_synchronous: true
+    vty:
+      transport_input: ssh
+      login: local
+      access_class: VTY-ACCESS (applied in lab-02)
+      exec_timeout: "5 0"
+
+# ──────────────────────────────────────────────
+# AAA Plan (lab-01)
+# ──────────────────────────────────────────────
+aaa_plan:
+  model: "aaa new-model"
+  authentication:
+    default_login: "local"
+    method_list_ssh: "group local"
+    notes: >
+      Local AAA — no RADIUS/TACACS+ server needed. Method lists define
+      fallback order. Theory covers TACACS+ (TCP/49, full encryption,
+      per-command authorization) vs RADIUS (UDP/1812-1813, only encrypts
+      password, better for accounting).
+  authorization:
+    exec: "local"
+    commands: "local (privilege level based)"
+  accounting:
+    exec: "start-stop local"
+    notes: >
+      Accounting records stored locally (show aaa accounting).
+      Production environments send to TACACS+/RADIUS server.
+
+# ──────────────────────────────────────────────
+# ACL Plan (lab-02)
+# ──────────────────────────────────────────────
+acl_plan:
+  ipv4_acls:
+    - name: BLOCK-EXTERNAL-TELNET
+      type: extended named
+      purpose: Block Telnet from R3/external to R1
+      entries:
+        - "deny tcp 10.1.13.0 0.0.0.3 host 10.1.13.1 eq 23"
+        - "permit ip any any"
+      applied_to: R1:Gi0/1 (in)
+
+    - name: VTY-ACCESS
+      type: standard named
+      purpose: Restrict VTY access to management subnet only
+      entries:
+        - "permit 10.1.12.0 0.0.0.3"
+        - "permit 192.168.10.0 0.0.0.255"
+        - "deny any log"
+      applied_to: R1 line vty 0 4 (access-class in)
+
+    - name: PROTECT-LAN
+      type: extended named
+      purpose: Filter traffic entering R1 from untrusted R3
+      entries:
+        - "permit icmp any any echo"
+        - "permit icmp any any echo-reply"
+        - "permit ospf any any"
+        - "permit tcp any host 1.1.1.1 eq 22"
+        - "deny ip any any log"
+      applied_to: R1:Gi0/1 (in)
+
+  ipv6_acls:
+    - name: BLOCK-EXTERNAL-v6
+      type: ipv6 named
+      purpose: IPv6 equivalent of PROTECT-LAN
+      entries:
+        - "permit icmp any any echo-request"
+        - "permit icmp any any echo-reply"
+        - "permit 89 any any"
+        - "deny ipv6 any any log"
+      applied_to: R1:Gi0/1 (in)
+
+# ──────────────────────────────────────────────
+# CoPP Plan (lab-03)
+# ──────────────────────────────────────────────
+copp_plan:
+  description: >
+    Control Plane Policing uses MQC (class-map + policy-map) applied to
+    the control-plane interface. Protects the route processor from
+    excessive management/routing traffic.
+  class_maps:
+    - name: COPP-ROUTING
+      match: "access-group name COPP-ROUTING-ACL"
+      description: OSPF and BGP routing protocol traffic
+      acl_entries: "permit ospf any any; permit tcp any any eq 179"
+
+    - name: COPP-MANAGEMENT
+      match: "access-group name COPP-MGMT-ACL"
+      description: SSH, SNMP, NTP management traffic
+      acl_entries: "permit tcp any any eq 22; permit udp any any eq 161; permit udp any any eq 123"
+
+    - name: COPP-ICMP
+      match: "access-group name COPP-ICMP-ACL"
+      description: ICMP ping/traceroute
+      acl_entries: "permit icmp any any"
+
+    - name: COPP-UNDESIRABLE
+      match: "class-default"
+      description: Everything else — rate-limited aggressively
+
+  policy_map:
+    name: COPP-POLICY
+    actions:
+      COPP-ROUTING: "police 500000 conform-action transmit exceed-action transmit"
+      COPP-MANAGEMENT: "police 200000 conform-action transmit exceed-action drop"
+      COPP-ICMP: "police 64000 conform-action transmit exceed-action drop"
+      COPP-UNDESIRABLE: "police 32000 conform-action drop exceed-action drop"
+
+  application: "control-plane / service-policy input COPP-POLICY"
+
+# ──────────────────────────────────────────────
+# OSPF Pre-Configuration
+# ──────────────────────────────────────────────
+ospf_plan:
+  process_id: 1
+  area: 0
+  router_ids:
+    R1: 1.1.1.1
+    R2: 2.2.2.2
+    R3: 3.3.3.3
+  networks: all router interfaces in area 0
+  passive_interfaces:
+    R1: [Gi0/2]    # LAN — no OSPF hellos toward SW1
+    R2: [Gi0/2]    # LAN — no OSPF hellos toward SW1
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-device-access
+    title: "Lines, Local Users, and SSH Hardening"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, SW1, PC1, PC2]
+    blueprint_refs: ["5.1", "5.1.a"]
+    objectives:
+      - Create local user accounts with distinct privilege levels (15 and 7)
+      - Configure console and VTY lines with local authentication
+      - Generate RSA keys and enable SSHv2 (disable Telnet on VTY lines)
+      - Set SSH timeout, retries, and source interface
+      - Configure custom privilege level with limited command set for operator user
+      - Verify SSH access from R2 to R1 and confirm Telnet is rejected
+      - Configure exec-timeout and logging synchronous on all lines
+      - Harden SW1 console and VTY lines with same local authentication
+    notes: >
+      IPv4 only. OSPF and IP addressing pre-configured. Students focus on
+      securing device access. Key insight: privilege levels 0-15 control
+      command visibility — level 15 is full, level 1 is user EXEC, custom
+      levels (2-14) restrict specific commands.
+
+  - number: 1
+    folder: lab-01-aaa
+    title: "AAA Authentication and Authorization"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW1, PC1, PC2]
+    extends: lab-00-device-access
+    blueprint_refs: ["5.1", "5.1.b"]
+    objectives:
+      - Enable AAA new-model on R1
+      - Configure default and named authentication method lists using local database
+      - Apply named method list to VTY lines
+      - Configure exec authorization with local method list
+      - Configure command authorization for privilege level 7
+      - Enable AAA accounting for exec sessions (start-stop, local)
+      - Verify AAA behavior — test login with admin and operator users
+      - Compare TACACS+ vs RADIUS characteristics (theory — no external server)
+    notes: >
+      Builds on lab-00 local users. aaa new-model changes authentication
+      behavior — all lines require explicit method lists. Key concept:
+      method list = ordered list of authentication methods (local, group
+      tacacs+, group radius, none). Fallback happens when a method is
+      unreachable, NOT when credentials are rejected.
+
+  - number: 2
+    folder: lab-02-acls
+    title: "Standard, Extended, and IPv6 ACLs"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW1, PC1, PC2]
+    extends: lab-01-aaa
+    blueprint_refs: ["5.2", "5.2.a"]
+    objectives:
+      - Configure a standard named ACL for VTY access restriction (access-class)
+      - Configure an extended named ACL to filter traffic from R3 to R1
+      - Apply ACLs to interfaces in the correct direction (in vs out)
+      - Verify ACL hit counts with show access-lists
+      - Configure an IPv6 ACL mirroring the IPv4 extended ACL
+      - Apply IPv6 ACL to R1 Gi0/1 and verify dual-stack filtering
+      - Test ACL behavior — permitted traffic passes, denied traffic is logged
+      - Interpret ACL implicit deny and the need for explicit OSPF permits
+    notes: >
+      Builds on lab-01 AAA. ACLs are the foundation for CoPP in lab-03 —
+      CoPP class-maps reference ACLs to classify control-plane traffic.
+      Key pitfall: forgetting to permit OSPF (protocol 89) in an interface
+      ACL breaks routing adjacency.
+
+  - number: 3
+    folder: lab-03-copp
+    title: "Control Plane Policing"
+    difficulty: Advanced
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW1, PC1, PC2]
+    extends: lab-02-acls
+    blueprint_refs: ["5.2", "5.2.b"]
+    objectives:
+      - Create ACLs to classify control-plane traffic categories (routing, management, ICMP)
+      - Build class-maps matching each traffic category
+      - Build a policy-map with policing rates per class (routing > management > ICMP > default)
+      - Apply the CoPP policy to the control-plane interface (service-policy input)
+      - Verify CoPP with show policy-map control-plane — check conform/exceed counters
+      - Generate traffic to trigger policing (ping flood from R3 to R1)
+      - Add IPv6 CoPP entries for ICMPv6 and OSPFv3 traffic
+      - Verify that routing protocol traffic is prioritized over ICMP
+    notes: >
+      CoPP is MQC applied to the virtual control-plane interface. It
+      protects the route processor from DoS and excessive traffic. Key
+      design: routing traffic gets the highest rate (must not be dropped),
+      management traffic gets moderate rate, ICMP gets minimal, and
+      class-default (everything else) gets aggressively policed or dropped.
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "Infrastructure Security Full Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, SW1, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Harden device access from scratch — local users, SSHv2, privilege levels
+      - Configure AAA new-model with authentication and authorization method lists
+      - Build and apply IPv4 and IPv6 ACLs for traffic filtering and VTY restriction
+      - Configure a complete CoPP policy with class-maps for routing, management, ICMP
+      - Verify end-to-end security posture — SSH-only access, filtered traffic, policed control plane
+      - Demonstrate that unauthorized access attempts (Telnet, untrusted source) are blocked
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "Infrastructure Security Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, SW1, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 5+ concurrent security faults
+      - Troubleshoot SSH login failure caused by missing RSA keys or wrong transport input
+      - Fix AAA method list misconfiguration locking out VTY access
+      - Resolve ACL blocking legitimate traffic (missing OSPF permit, wrong direction)
+      - Diagnose CoPP dropping routing protocol traffic (policing rate too low)
+      - Fix VTY access-class referencing wrong ACL
+      - Restore full security posture with verified authorized access and filtered threats

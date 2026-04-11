@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(xxd \"C:/Users/Nkwenti/Documents/Labs/Cisco/ccnp-encor-labs/blueprint/350-401/references/blueprint-details.md\")",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(ls:*)",
+      "Bash(gh api:*)",
+      "Bash(python3 -m py_compile \"C:/Users/Nkwenti/Documents/Labs/Cisco/ccnp-encor-labs/labs/switching/lab-01-etherchannel/setup_lab.py\")",
+      "Bash(py -m py_compile \"C:/Users/Nkwenti/Documents/Labs/Cisco/ccnp-encor-labs/labs/switching/lab-01-etherchannel/setup_lab.py\")",
+      "Bash(py -m py_compile inject_scenario_01.py)",
+      "Bash(py -m py_compile inject_scenario_02.py)",
+      "Bash(py -m py_compile inject_scenario_03.py)",
+      "Bash(py -m py_compile apply_solution.py)",
+      "Skill(commit-commands:commit-push-pr)"
+    ]
+  }
+}

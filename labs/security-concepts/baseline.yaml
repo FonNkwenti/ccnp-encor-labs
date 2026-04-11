@@ -1,0 +1,216 @@
+topic: security-concepts
+topic_name: "Security Design and API Security"
+exam: "350-401"
+version: 1.0
+workbook_format: reference   # All conceptual — no hands-on topology
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# NO EVE-NG TOPOLOGY — all "describe"/"explain"/"compare" bullets
+# Requires Catalyst Center, ISE, NGFW, MACsec hardware — none available
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices: []
+  links: []
+  notes: >
+    No EVE-NG topology. All 10 blueprint bullets are conceptual verbs.
+    Catalyst Center requires dedicated appliance. ISE requires dedicated
+    appliance. NGFW requires Firepower/FTD image. MACsec requires
+    hardware ASIC support. Reference workbooks are the appropriate format.
+
+# ──────────────────────────────────────────────
+# Security Design Theory (lab-00)
+# ──────────────────────────────────────────────
+security_design_theory:
+  rest_api_security:
+    bullet: "5.3"
+    key_concepts:
+      - HTTP Basic Authentication — Base64-encoded username:password in header
+      - Token-based authentication — X-Auth-Token header (Catalyst Center pattern)
+      - OAuth 2.0 — authorization grants, access tokens, refresh tokens
+      - HTTPS/TLS — transport encryption for API calls
+      - API keys — static credentials for service-to-service auth
+      - Rate limiting — protect APIs from abuse
+    exam_focus: >
+      Know the difference between Basic Auth (credentials every request),
+      token-based (authenticate once, use token), and OAuth (delegated
+      authorization). Understand why HTTPS is mandatory for API security.
+
+  threat_defense:
+    bullet: "5.4.a"
+    key_concepts:
+      - Cisco Secure IPS (formerly Firepower NGIPS)
+      - Intrusion Prevention vs Intrusion Detection (inline vs promiscuous)
+      - Cisco Talos threat intelligence — signature updates, threat feeds
+      - Cisco Secure Endpoint (formerly AMP for Endpoints)
+      - Sandboxing — Cisco Threat Grid for malware analysis
+      - Security Information and Event Management (SIEM) integration
+
+  endpoint_security:
+    bullet: "5.4.b"
+    key_concepts:
+      - Cisco Secure Endpoint — endpoint detection and response (EDR)
+      - Host-based firewall and anti-malware
+      - Posture assessment — NAC compliance checking via ISE
+      - 802.1X and MAB for endpoint authentication
+      - Cisco Umbrella — DNS-layer security for roaming endpoints
+
+  next_gen_firewall:
+    bullet: "5.4.c"
+    key_concepts:
+      - Application Visibility and Control (AVC) — L7 inspection
+      - URL filtering and content categorization
+      - SSL/TLS decryption for encrypted traffic inspection
+      - Identity-based policies (user/group from ISE integration)
+      - Cisco Secure Firewall (formerly Firepower Threat Defense)
+      - Difference from traditional stateful firewall — application awareness
+
+  trustsec_macsec:
+    bullet: "5.4.d"
+    key_concepts:
+      - Cisco TrustSec — software-defined segmentation
+      - Scalable Group Tags (SGT) — 16-bit group identifier
+      - SGT assignment — dynamic (ISE) or static (manual)
+      - SGACL — policies based on source/destination SGT pairs
+      - SXP (SGT Exchange Protocol) — propagates SGTs across non-TrustSec devices
+      - MACsec (802.1AE) — Layer 2 hop-by-hop encryption
+      - MACsec requires hardware ASIC support (not labbable on IOSv)
+      - MKA (MACsec Key Agreement) — key management protocol
+
+# ──────────────────────────────────────────────
+# Catalyst Center and APIs Theory (lab-01)
+# ──────────────────────────────────────────────
+management_apis_theory:
+  catalyst_center:
+    bullet: "4.5"
+    key_concepts:
+      - Four workflows — Design, Policy, Provision, Assurance
+      - Design — sites, buildings, floors, network settings, IP pools
+      - Policy — virtual networks, scalable groups, access contracts
+      - Provision — device discovery, onboarding, template deployment
+      - Assurance — client health, network health, issue correlation
+      - AI-powered workflows — anomaly detection, predictive insights
+      - Network Time Travel — historical state replay
+      - Path Trace — visual path analysis with ACL/QoS hop details
+      - Client 360 — per-client health dashboard
+
+  yang:
+    bullet: "6.3"
+    key_concepts:
+      - Data modeling language defined in RFC 6020 / RFC 7950
+      - Hierarchical tree structure — containers, lists, leaves, leaf-lists
+      - Module and submodule organization
+      - Configuration data vs operational (state) data
+      - YANG types — string, uint32, inet:ipv4-address, enumeration
+      - Augmentation — extending existing models
+      - Standard models (IETF, OpenConfig) vs vendor models (Cisco-IOS-XE)
+      - pyang tool — visualize YANG trees
+    cross_reference: >
+      YANG models are used by NETCONF (XML) and RESTCONF (JSON/XML).
+      See automation topic labs 02-03 for hands-on YANG interaction.
+
+  network_apis:
+    bullet: "6.4"
+    key_concepts:
+      - Catalyst Center APIs — REST, token-based auth, JSON payloads
+      - Key endpoints — /dna/intent/api/v1/network-device, /client-health
+      - SD-WAN Manager (vManage) APIs — REST, session-based auth
+      - Key endpoints — /dataservice/device, /template/policy
+      - Common patterns — authenticate -> get token -> API calls -> interpret response
+      - Response codes — 200 OK, 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found
+    cross_reference: >
+      RESTCONF API interaction is covered hands-on in automation topic
+      lab-03. This lab covers Catalyst Center and vManage-specific APIs
+      at a conceptual level.
+
+  orchestration_tools:
+    bullet: "6.7"
+    key_concepts:
+      - Agent-based tools — require software agent on managed device
+      - Puppet — manifests (desired state), modules, Puppet agent, Puppet server
+      - Chef — recipes, cookbooks, Chef client, Chef server
+      - SaltStack — pillars, minions, Salt master, ZeroMQ transport
+      - Agentless tools — no software agent needed
+      - Ansible — playbooks (YAML), modules, SSH-based, no agent required
+      - Comparison criteria — scalability, complexity, learning curve, push vs pull
+      - Ansible is most common for network automation (SSH/NETCONF transport)
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-security-design
+    title: "Network Security Design and Components"
+    difficulty: Foundation
+    type: progressive
+    format: reference
+    time_minutes: 60
+    devices: []
+    blueprint_refs: ["5.3", "5.4", "5.4.a", "5.4.b", "5.4.c", "5.4.d"]
+    objectives:
+      - Describe REST API security mechanisms — Basic Auth, token-based, OAuth, HTTPS
+      - Explain the Cisco SAFE security framework and architectural PINs
+      - Identify threat defense components — IPS/IDS, Talos, Threat Grid
+      - Describe endpoint security — Cisco Secure Endpoint, posture assessment, Umbrella
+      - Compare traditional firewall vs NGFW — application awareness, identity policies
+      - Explain TrustSec SGT-based segmentation and SGACL policy enforcement
+      - Describe MACsec (802.1AE) operation and MKA key management
+      - Answer exam-style questions on security design components
+    notes: >
+      Reference workbook. Architecture diagrams for SAFE framework,
+      TrustSec SGT flow, MACsec packet format. API security comparison
+      table. Quiz-style questions aligned to 350-401 exam.
+
+  - number: 1
+    folder: lab-01-catalyst-center-and-apis
+    title: "Catalyst Center, YANG, and Network APIs"
+    difficulty: Intermediate
+    type: progressive
+    format: reference
+    time_minutes: 60
+    devices: []
+    extends: lab-00-security-design
+    blueprint_refs: ["4.5", "6.3", "6.4", "6.7"]
+    objectives:
+      - Describe Catalyst Center four workflows — Design, Policy, Provision, Assurance
+      - Explain AI-powered assurance features — anomaly detection, Path Trace, Client 360
+      - Describe YANG data modeling — containers, lists, leaves, module structure
+      - Interpret a YANG tree output and identify configuration vs operational data
+      - Describe Catalyst Center and SD-WAN Manager REST API patterns
+      - Interpret API response codes and JSON payloads from sample API calls
+      - Compare agent-based (Puppet, Chef, SaltStack) vs agentless (Ansible) orchestration
+      - Answer exam-style questions on management and programmability concepts
+    notes: >
+      Reference workbook. Catalyst Center dashboard screenshots (reference
+      images). YANG tree diagrams. Sample API request/response pairs for
+      interpretation. Orchestration tool comparison table. Cross-references
+      automation topic for hands-on NETCONF/RESTCONF.
+
+  - number: 2
+    folder: lab-02-capstone-review
+    title: "Security Design and APIs Comprehensive Review"
+    type: capstone_i
+    clean_slate: true
+    format: reference
+    difficulty: Advanced
+    time_minutes: 60
+    devices: []
+    blueprint_refs: all
+    objectives:
+      - Complete a comprehensive review covering all 10 blueprint bullets
+      - Answer scenario-based questions combining security design with API concepts
+      - Analyze a network diagram and identify where TrustSec, NGFW, and IPS fit
+      - Interpret a Catalyst Center API response and identify the operation performed
+      - Compare orchestration tools for a given network automation scenario
+      - Map YANG model elements to RESTCONF URL paths
+      - Identify the correct API security mechanism for a given use case
+      - Score 80%+ on a practice quiz covering all bullets in this topic

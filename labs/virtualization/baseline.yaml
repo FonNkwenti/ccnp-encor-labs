@@ -1,0 +1,352 @@
+topic: virtualization
+topic_name: "VRF and Tunneling"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# Dual-Stack: IPv4 only in lab-00, IPv6 added from lab-01
+# VRF IPv6 address families, IPv6 over GRE/IPsec
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: R1
+      platform: iosv
+      role: Branch/site router — VRF host, GRE/IPsec tunnel endpoint
+      loopback0: 1.1.1.1/32
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: Branch/site router — VRF host, second site for VRF-Lite transit
+      loopback0: 2.2.2.2/32
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: Shared WAN/transport router — carries VRF traffic, tunnel underlay
+      loopback0: 3.3.3.3/32
+      console_port: null
+
+    - name: PC1
+      platform: vpcs
+      role: End host at R1 site (VRF CUSTOMER-A)
+      ip: 192.168.1.10/24
+      gateway: 192.168.1.1
+      console_port: null
+
+    - name: PC2
+      platform: vpcs
+      role: End host at R2 site (VRF CUSTOMER-A)
+      ip: 192.168.2.10/24
+      gateway: 192.168.2.1
+      console_port: null
+
+  links:
+    # ── Underlay / Transport Links ──
+    - id: L1
+      source: R1:Gi0/0
+      target: R3:Gi0/0
+      subnet: 10.0.13.0/30
+      description: R1-R3 WAN transport (underlay)
+      addresses:
+        R1: 10.0.13.1/30
+        R3: 10.0.13.2/30
+      ipv6_addresses:
+        R1: 2001:db8:13::1/64
+        R3: 2001:db8:13::2/64
+
+    - id: L2
+      source: R2:Gi0/0
+      target: R3:Gi0/1
+      subnet: 10.0.23.0/30
+      description: R2-R3 WAN transport (underlay)
+      addresses:
+        R2: 10.0.23.1/30
+        R3: 10.0.23.2/30
+      ipv6_addresses:
+        R2: 2001:db8:23::1/64
+        R3: 2001:db8:23::2/64
+
+    - id: L3
+      source: R1:Gi0/1
+      target: R2:Gi0/1
+      subnet: 10.0.12.0/30
+      description: R1-R2 direct link (VRF-Lite transit, inter-site)
+      addresses:
+        R1: 10.0.12.1/30
+        R2: 10.0.12.2/30
+      ipv6_addresses:
+        R1: 2001:db8:12::1/64
+        R2: 2001:db8:12::2/64
+
+    # ── LAN / Customer-Facing Links ──
+    - id: L4
+      source: R1:Gi0/2
+      target: PC1
+      subnet: 192.168.1.0/24
+      description: R1 LAN — VRF CUSTOMER-A site 1
+      addresses:
+        R1: 192.168.1.1/24
+        PC1: 192.168.1.10/24
+      ipv6_addresses:
+        R1: 2001:db8:a1::1/64
+        PC1: 2001:db8:a1::10/64
+
+    - id: L5
+      source: R2:Gi0/2
+      target: PC2
+      subnet: 192.168.2.0/24
+      description: R2 LAN — VRF CUSTOMER-A site 2
+      addresses:
+        R2: 192.168.2.1/24
+        PC2: 192.168.2.10/24
+      ipv6_addresses:
+        R2: 2001:db8:a2::1/64
+        PC2: 2001:db8:a2::10/64
+
+optional_devices:
+  - name: R4
+    platform: iosv
+    role: Remote site router — GRE/IPsec tunnel endpoint (far end from R1)
+    loopback0: 4.4.4.4/32
+    console_port: null
+    available_from: lab-02-gre-tunnels
+    purpose: >
+      Remote site for GRE and IPsec tunnel exercises. Tunnels from R1 to R4
+      traverse R3 (shared transport), making overlay vs underlay separation
+      visible. Also hosts a second VRF customer LAN for end-to-end testing.
+
+optional_links:
+  - id: L6
+    source: R3:Gi0/2
+    target: R4:Gi0/0
+    subnet: 10.0.34.0/30
+    description: R3-R4 WAN transport (underlay to remote site)
+    addresses:
+      R3: 10.0.34.1/30
+      R4: 10.0.34.2/30
+    ipv6_addresses:
+      R3: 2001:db8:34::1/64
+      R4: 2001:db8:34::2/64
+    available_from: lab-02-gre-tunnels
+
+# ──────────────────────────────────────────────
+# VRF Plan
+# ──────────────────────────────────────────────
+vrf_plan:
+  vrfs:
+    - name: CUSTOMER-A
+      rd: 65001:100
+      description: Primary customer VRF — carried across R1, R3, R2
+      ipv4_subnets:
+        R1_LAN: 192.168.1.0/24
+        R2_LAN: 192.168.2.0/24
+        R1_R3_transit: 172.16.13.0/30
+        R2_R3_transit: 172.16.23.0/30
+      ipv6_subnets:
+        R1_LAN: 2001:db8:a1::/64
+        R2_LAN: 2001:db8:a2::/64
+        R1_R3_transit: 2001:db8:ca13::/64
+        R2_R3_transit: 2001:db8:ca23::/64
+
+    - name: CUSTOMER-B
+      rd: 65001:200
+      description: Second customer VRF — demonstrates isolation from CUSTOMER-A
+      ipv4_subnets:
+        R1_LAN: 172.20.1.0/24
+        R2_LAN: 172.20.2.0/24
+      ipv6_subnets:
+        R1_LAN: 2001:db8:b1::/64
+        R2_LAN: 2001:db8:b2::/64
+
+# ──────────────────────────────────────────────
+# Tunnel Plan
+# ──────────────────────────────────────────────
+tunnel_plan:
+  gre:
+    - name: Tunnel0
+      description: R1-R4 GRE tunnel over shared transport
+      source: R1 Loopback0 (1.1.1.1)
+      destination: R4 Loopback0 (4.4.4.4)
+      tunnel_subnet: 172.16.14.0/30
+      tunnel_ipv6: 2001:db8:tun14::/64
+      underlay_path: R1 -> R3 -> R4
+
+  ipsec:
+    - name: Tunnel1
+      description: R1-R4 IPsec VTI (Virtual Tunnel Interface)
+      source: R1 Loopback0 (1.1.1.1)
+      destination: R4 Loopback0 (4.4.4.4)
+      tunnel_subnet: 172.16.15.0/30
+      ike_version: IKEv2
+      encryption: AES-256
+      integrity: SHA-256
+      dh_group: 14
+      pre_shared_key: "LAB-PSK-2026"
+
+  gre_over_ipsec:
+    - name: Tunnel2
+      description: R1-R4 GRE over IPsec (multiprotocol + encryption)
+      source: R1 Loopback0 (1.1.1.1)
+      destination: R4 Loopback0 (4.4.4.4)
+      tunnel_subnet: 172.16.16.0/30
+      tunnel_ipv6: 2001:db8:tun16::/64
+      protection: ipsec profile applied to GRE tunnel
+
+# ──────────────────────────────────────────────
+# OSPF Pre-Configuration (underlay IGP)
+# ──────────────────────────────────────────────
+ospf_plan:
+  process_id: 1
+  area: 0
+  router_ids:
+    R1: 1.1.1.1
+    R2: 2.2.2.2
+    R3: 3.3.3.3
+    R4: 4.4.4.4
+  networks: global table interfaces only (underlay links + loopbacks)
+  notes: >
+    OSPF runs on global table interfaces for tunnel endpoint reachability.
+    VRF interfaces do NOT participate in global OSPF. VRF routing uses
+    static routes or a separate OSPF/EIGRP instance per VRF.
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-vrf-lite
+    title: "VRF-Lite Routing Table Isolation"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: ["2.2", "2.2.a"]
+    objectives:
+      - Create VRF CUSTOMER-A on R1, R3, and R2 with route distinguisher
+      - Assign LAN and transit interfaces to VRF CUSTOMER-A
+      - Configure static routes or per-VRF OSPF for VRF reachability across R3
+      - Verify VRF isolation with show ip vrf, show ip route vrf CUSTOMER-A
+      - Confirm PC1 can reach PC2 via the VRF path (R1 -> R3 -> R2)
+      - Create VRF CUSTOMER-B on R1 and R2 to demonstrate isolation between VRFs
+      - Verify CUSTOMER-A and CUSTOMER-B use overlapping address space without conflict
+    notes: >
+      IPv4 only. OSPF underlay and IP addressing pre-configured on global
+      table interfaces. Students create VRFs, move interfaces, and build
+      VRF-specific routing. Key insight: moving an interface to a VRF
+      removes its IP address — must re-apply.
+
+  - number: 1
+    folder: lab-01-vrf-dual-stack
+    title: "VRF with Dual-Stack and Inter-VRF Routing"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-00-vrf-lite
+    blueprint_refs: ["2.2", "2.2.a"]
+    objectives:
+      - Add IPv6 address family to VRF CUSTOMER-A definitions
+      - Configure IPv6 addresses on VRF interfaces
+      - Verify dual-stack VRF routing with show ipv6 route vrf CUSTOMER-A
+      - Configure inter-VRF route leaking between CUSTOMER-A and CUSTOMER-B on R1
+      - Verify controlled traffic flow between VRFs using route leaking
+      - Demonstrate that VRF-unaware show commands do not display VRF routes
+    notes: >
+      Builds on lab-00 VRF configuration. Adds IPv6 AF support to existing
+      VRFs. Inter-VRF route leaking uses static routes pointing from one
+      VRF to another — demonstrates controlled isolation breach. IOSv
+      supports VRF IPv6 AF natively.
+
+  - number: 2
+    folder: lab-02-gre-tunnels
+    title: "GRE Tunneling Over a Shared Transport"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    extends: lab-01-vrf-dual-stack
+    blueprint_refs: ["2.2", "2.2.b"]
+    objectives:
+      - Configure a GRE tunnel (Tunnel0) between R1 and R4 using loopback sources
+      - Verify tunnel is up with show interface Tunnel0 and show ip route
+      - Run OSPF or EIGRP over the GRE tunnel for dynamic routing through the overlay
+      - Verify that R3 (transport) sees only encapsulated GRE packets, not inner payload
+      - Configure IPv6 over the GRE tunnel (dual-stack overlay)
+      - Demonstrate that GRE supports multicast (run OSPF hello over tunnel)
+      - Verify tunnel path with traceroute — overlay vs underlay hop count
+    notes: >
+      R4 introduced. GRE tunnel from R1 to R4 traverses R3 (underlay).
+      Key concept: GRE is protocol 47, no encryption, supports multicast
+      and IPv6 inner payload. Tunnel source/destination use loopbacks
+      for stability (interface flap does not tear down tunnel).
+
+  - number: 3
+    folder: lab-03-ipsec-and-gre-over-ipsec
+    title: "IPsec Tunnels and GRE over IPsec"
+    difficulty: Advanced
+    type: progressive
+    time_minutes: 90
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    extends: lab-02-gre-tunnels
+    blueprint_refs: ["2.2", "2.2.b"]
+    objectives:
+      - Configure an IKEv2 IPsec VTI (Tunnel1) between R1 and R4
+      - Define IKEv2 proposal, policy, keyring, and profile
+      - Verify IPsec SA establishment with show crypto ikev2 sa and show crypto ipsec sa
+      - Route traffic through the IPsec VTI and verify encryption with packet counts
+      - Configure GRE over IPsec (Tunnel2) — GRE tunnel protected by IPsec profile
+      - Compare pure IPsec VTI vs GRE-over-IPsec (multicast support, overhead, use cases)
+      - Verify that GRE-over-IPsec carries both IPv4 and IPv6 with encryption
+    notes: >
+      Builds on lab-02 GRE knowledge. IPsec VTI (svti) is point-to-point
+      and does not support multicast natively. GRE-over-IPsec wraps GRE
+      inside IPsec — gets both multicast support and encryption. IKEv2
+      is the modern standard (replaces IKEv1 Phase 1/Phase 2).
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "VRF and Tunneling Full Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Configure VRF CUSTOMER-A and CUSTOMER-B with dual-stack (IPv4 + IPv6) from scratch
+      - Build VRF-Lite transit across R1-R3-R2 with per-VRF routing
+      - Configure GRE tunnel between R1 and R4 carrying VRF CUSTOMER-A traffic
+      - Protect the GRE tunnel with IPsec (GRE-over-IPsec using IKEv2)
+      - Verify end-to-end reachability: PC1 to PC2 via VRF, and R1 LAN to R4 LAN via encrypted tunnel
+      - Demonstrate VRF isolation, tunnel overlay vs underlay, and IPsec SA status
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "VRF and Tunneling Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, R4, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 5+ concurrent VRF and tunneling faults
+      - Troubleshoot VRF interface misassignment (interface in wrong VRF or global table)
+      - Fix missing VRF route distinguisher or address family configuration
+      - Diagnose GRE tunnel down caused by underlay routing failure
+      - Resolve IPsec IKEv2 negotiation failure (mismatched proposal, wrong PSK)
+      - Fix GRE-over-IPsec profile binding issue
+      - Restore end-to-end VRF reachability and encrypted tunnel forwarding

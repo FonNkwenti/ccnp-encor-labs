@@ -1,0 +1,420 @@
+topic: network-assurance
+topic_name: "Network Assurance"
+exam: "350-401"
+version: 1.0
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# Dual-Stack: IPv4 only in lab-00, IPv6 from lab-01
+# IPv6 NetFlow records, IPv6 IP SLA probes, IPv6 traceroute
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: R1
+      platform: iosv
+      role: Edge router — NetFlow exporter, IP SLA source, debug/syslog host
+      loopback0: 1.1.1.1/32
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: Distribution router — NetFlow collector endpoint, RSPAN destination
+      loopback0: 2.2.2.2/32
+      console_port: null
+
+    - name: R3
+      platform: iosv
+      role: Remote router — IP SLA responder, multi-hop traceroute target
+      loopback0: 3.3.3.3/32
+      console_port: null
+
+    - name: SW1
+      platform: iosvl2
+      role: Access switch — SPAN source, RSPAN source, connects PC1
+      loopback0: null
+      management_vlan: 99
+      management_ip: 192.168.99.11/24
+      console_port: null
+
+    - name: SW2
+      platform: iosvl2
+      role: Distribution switch — RSPAN destination, connects PC2
+      loopback0: null
+      management_vlan: 99
+      management_ip: 192.168.99.12/24
+      console_port: null
+
+    - name: PC1
+      platform: vpcs
+      role: Traffic source for NetFlow/SPAN capture
+      ip: 192.168.10.10/24
+      gateway: 192.168.10.1
+      console_port: null
+
+    - name: PC2
+      platform: vpcs
+      role: Traffic destination and monitoring endpoint
+      ip: 192.168.20.10/24
+      gateway: 192.168.20.1
+      console_port: null
+
+  links:
+    # ── Switch-to-Switch Trunk ──
+    - id: L1
+      source: SW1:Gi0/1
+      target: SW2:Gi0/1
+      description: SW1-SW2 trunk (carries VLANs 10, 20, 99, RSPAN VLAN 500)
+      trunk: true
+      vlans: [10, 20, 99, 500]
+
+    # ── Router-to-Switch Links ──
+    - id: L2
+      source: R1:Gi0/0
+      target: SW1:Gi0/2
+      subnet: 192.168.10.0/24
+      description: R1 to SW1 — VLAN 10 gateway
+      addresses:
+        R1: 192.168.10.1/24
+      ipv6_addresses:
+        R1: 2001:db8:10::1/64
+      vlan: 10
+
+    - id: L3
+      source: R2:Gi0/0
+      target: SW2:Gi0/2
+      subnet: 192.168.20.0/24
+      description: R2 to SW2 — VLAN 20 gateway
+      addresses:
+        R2: 192.168.20.1/24
+      ipv6_addresses:
+        R2: 2001:db8:20::1/64
+      vlan: 20
+
+    # ── Router-to-Router Links ──
+    - id: L4
+      source: R1:Gi0/1
+      target: R2:Gi0/1
+      subnet: 10.1.12.0/30
+      description: R1-R2 point-to-point
+      addresses:
+        R1: 10.1.12.1/30
+        R2: 10.1.12.2/30
+      ipv6_addresses:
+        R1: 2001:db8:12::1/64
+        R2: 2001:db8:12::2/64
+
+    - id: L5
+      source: R2:Gi0/2
+      target: R3:Gi0/0
+      subnet: 10.1.23.0/30
+      description: R2-R3 point-to-point
+      addresses:
+        R2: 10.1.23.1/30
+        R3: 10.1.23.2/30
+      ipv6_addresses:
+        R2: 2001:db8:23::1/64
+        R3: 2001:db8:23::2/64
+
+    # ── PC-to-Switch Links ──
+    - id: L6
+      source: PC1
+      target: SW1:Gi0/3
+      description: PC1 access port — VLAN 10
+      vlan: 10
+
+    - id: L7
+      source: PC2
+      target: SW2:Gi0/3
+      description: PC2 access port — VLAN 20
+      vlan: 20
+
+# ──────────────────────────────────────────────
+# VLAN Plan
+# ──────────────────────────────────────────────
+vlan_plan:
+  - vlan_id: 10
+    name: DATA-A
+    description: PC1 / R1 gateway segment
+    subnet: 192.168.10.0/24
+    ipv6_subnet: 2001:db8:10::/64
+
+  - vlan_id: 20
+    name: DATA-B
+    description: PC2 / R2 gateway segment
+    subnet: 192.168.20.0/24
+    ipv6_subnet: 2001:db8:20::/64
+
+  - vlan_id: 99
+    name: MGMT
+    description: Switch management VLAN
+    subnet: 192.168.99.0/24
+
+  - vlan_id: 500
+    name: RSPAN
+    description: RSPAN VLAN for remote traffic mirroring (SW1 -> SW2)
+    rspan: true
+
+# ──────────────────────────────────────────────
+# SPAN/RSPAN Plan
+# ──────────────────────────────────────────────
+span_plan:
+  local_span:
+    source: SW1:Gi0/3 (PC1 port)
+    destination: SW1:Gi0/0 (monitoring port)
+    description: Mirror PC1 traffic to a local monitoring port on SW1
+
+  rspan:
+    source_switch: SW1
+    source_port: Gi0/3 (PC1 port)
+    rspan_vlan: 500
+    destination_switch: SW2
+    destination_port: SW2:Gi0/0 (remote monitoring port)
+    description: Mirror PC1 traffic from SW1 to a monitoring port on SW2 via RSPAN VLAN
+
+  erspan:
+    note: >
+      ERSPAN (GRE-encapsulated remote SPAN) requires IOS-XE. Covered as
+      configuration interpretation and theory comparison with SPAN/RSPAN.
+      Not hands-on configured in this topology.
+
+# ──────────────────────────────────────────────
+# Flexible NetFlow Plan
+# ──────────────────────────────────────────────
+netflow_plan:
+  flow_record:
+    name: ENCOR-FLOW-RECORD
+    match_fields: [ipv4 source address, ipv4 destination address, transport source-port, transport destination-port, ip protocol]
+    collect_fields: [counter bytes, counter packets, timestamp sys-uptime first, timestamp sys-uptime last]
+  flow_exporter:
+    name: ENCOR-EXPORTER
+    destination: R2 Loopback0 (2.2.2.2)
+    transport_port: 9996
+    source: R1 Loopback0
+  flow_monitor:
+    name: ENCOR-MONITOR
+    record: ENCOR-FLOW-RECORD
+    exporter: ENCOR-EXPORTER
+    applied_to: R1:Gi0/0 (input), R1:Gi0/1 (input)
+
+# ──────────────────────────────────────────────
+# IP SLA Plan
+# ──────────────────────────────────────────────
+ipsla_plan:
+  probes:
+    - id: 1
+      type: icmp-echo
+      source: R1
+      destination: 3.3.3.3 (R3 Lo0)
+      frequency: 30
+      description: ICMP echo to R3 — basic reachability monitoring
+
+    - id: 2
+      type: udp-jitter
+      source: R1
+      destination: R3 (IP SLA responder)
+      frequency: 60
+      description: UDP jitter probe — measures delay, jitter, packet loss
+
+    - id: 3
+      type: http
+      source: R1
+      destination: R3 (if HTTP server enabled)
+      frequency: 120
+      description: HTTP GET probe — application-layer monitoring
+
+  tracking:
+    - track_id: 1
+      references: ip sla 1
+      action: >
+        Track R3 reachability — can be tied to static route or HSRP
+        priority decrement (cross-reference with ip-services topic)
+
+# ──────────────────────────────────────────────
+# OSPF Pre-Configuration
+# ──────────────────────────────────────────────
+ospf_plan:
+  process_id: 1
+  area: 0
+  router_ids:
+    R1: 1.1.1.1
+    R2: 2.2.2.2
+    R3: 3.3.3.3
+  networks: all router interfaces in area 0
+  passive_interfaces:
+    R1: [Gi0/0]    # LAN — no OSPF hellos toward SW1
+    R2: [Gi0/0]    # LAN — no OSPF hellos toward SW2
+
+# ──────────────────────────────────────────────
+# Diagnostic Tools Plan (lab-00)
+# ──────────────────────────────────────────────
+diagnostics_plan:
+  snmp:
+    version: v2c
+    community_ro: ENCOR-RO
+    community_rw: ENCOR-RW
+    trap_receiver: R2 (2.2.2.2)
+    traps: [linkdown, linkup, coldstart]
+
+  syslog:
+    buffer_size: 16384
+    severity: informational (level 6)
+    timestamps: datetime msec
+    notes: >
+      No external syslog server needed — use show logging to examine
+      local buffer. Conditional debug uses ACLs to filter debug output
+      to specific source/destination.
+
+  conditional_debug:
+    acl_name: DEBUG-FILTER
+    acl_entries: "permit ip host 192.168.10.10 any"
+    debug_command: "debug ip packet detail DEBUG-FILTER"
+    notes: >
+      Conditional debug limits output to packets matching the ACL.
+      Essential for production troubleshooting — prevents debug storms.
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-diagnostics
+    title: "Network Diagnostics — Debug, Ping, Traceroute, SNMP, Syslog"
+    difficulty: Foundation
+    type: progressive
+    time_minutes: 60
+    devices: [R1, R2, R3, SW1, SW2, PC1, PC2]
+    blueprint_refs: ["4.1"]
+    objectives:
+      - Configure syslog buffering with timestamps and appropriate severity level
+      - Configure SNMP v2c with read-only and read-write communities
+      - Set up SNMP trap receiver on R2 and enable interface traps
+      - Use extended ping with source interface, packet size, and DF bit options
+      - Use extended traceroute to trace path from R1 to R3 via R2
+      - Configure a conditional debug ACL and apply debug ip packet with the filter
+      - Interpret debug output to identify specific traffic flows
+      - Verify SNMP and syslog configuration with show snmp and show logging
+    notes: >
+      OSPF, IP addressing, VLANs, and trunking are pre-configured. Students
+      focus on diagnostic tool configuration and interpretation. Conditional
+      debug is the key advanced skill — using ACLs to scope debug output
+      prevents debug storms in production.
+
+  - number: 1
+    folder: lab-01-flexible-netflow
+    title: "Flexible NetFlow Configuration and Verification"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW1, SW2, PC1, PC2]
+    extends: lab-00-diagnostics
+    blueprint_refs: ["4.2"]
+    objectives:
+      - Define a custom flow record with match and collect fields
+      - Create a flow exporter pointing to R2 as the collector
+      - Create a flow monitor binding the record and exporter
+      - Apply the flow monitor to R1 interfaces (input direction)
+      - Generate traffic from PC1 to PC2 and verify flow cache with show flow monitor cache
+      - Compare Flexible NetFlow components (record, exporter, monitor, sampler)
+      - Add an IPv6 flow record for dual-stack monitoring
+      - Verify flow export statistics with show flow exporter statistics
+    notes: >
+      Builds on lab-00 diagnostics. Flexible NetFlow replaces traditional
+      NetFlow with reusable components. Key concept: flow record defines
+      WHAT to capture, exporter defines WHERE to send, monitor binds them
+      and is applied to interfaces. R2 acts as collector (show commands
+      only — no external collector needed).
+
+  - number: 2
+    folder: lab-02-span-rspan
+    title: "SPAN and RSPAN Traffic Mirroring"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW1, SW2, PC1, PC2]
+    extends: lab-01-flexible-netflow
+    blueprint_refs: ["4.3"]
+    objectives:
+      - Configure a local SPAN session on SW1 mirroring PC1 port to a monitoring port
+      - Verify SPAN session with show monitor session
+      - Configure RSPAN VLAN 500 on both SW1 and SW2
+      - Set up RSPAN source session on SW1 and destination session on SW2
+      - Verify RSPAN traffic arrives at the remote monitoring port on SW2
+      - Compare SPAN vs RSPAN use cases, limitations, and performance impact
+      - Interpret ERSPAN configuration syntax and compare with SPAN/RSPAN (theory)
+      - Discuss ERSPAN GRE encapsulation and Layer 3 transport capability
+    notes: >
+      SPAN is local to one switch. RSPAN extends mirroring across trunks
+      using a dedicated RSPAN VLAN. ERSPAN encapsulates in GRE for L3
+      transport but requires IOS-XE — covered as interpretation exercise.
+      Key limitation: SPAN destination port cannot be used for normal traffic.
+
+  - number: 3
+    folder: lab-03-ip-sla
+    title: "IP SLA Probes and Tracking"
+    difficulty: Intermediate
+    type: progressive
+    time_minutes: 75
+    devices: [R1, R2, R3, SW1, SW2, PC1, PC2]
+    extends: lab-02-span-rspan
+    blueprint_refs: ["4.4"]
+    objectives:
+      - Configure an ICMP echo IP SLA probe from R1 to R3 Loopback0
+      - Schedule the probe and verify results with show ip sla statistics
+      - Configure R3 as an IP SLA responder for UDP jitter probes
+      - Create a UDP jitter probe measuring delay, jitter, and packet loss
+      - Configure IP SLA tracking (track object) linked to the ICMP probe
+      - Tie tracking to a static route for automatic failover
+      - Interpret IP SLA statistics output — round-trip time, success/failure
+      - Configure an IPv6 ICMP echo probe for dual-stack monitoring
+    notes: >
+      IP SLA probes run continuously and generate statistics. Track objects
+      watch probe state (up/down) and can trigger route changes, HSRP
+      priority adjustments, or PBR next-hop switches. The responder on R3
+      is required for UDP jitter probes (timestamps packet-level RTT).
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 4
+    folder: lab-04-capstone-config
+    title: "Network Assurance Full Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, SW1, SW2, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Configure syslog, SNMP v2c, and conditional debug from scratch
+      - Build a complete Flexible NetFlow pipeline (record, exporter, monitor) on R1
+      - Configure local SPAN on SW1 and RSPAN from SW1 to SW2
+      - Set up ICMP echo and UDP jitter IP SLA probes with tracking
+      - Tie IP SLA tracking to a static route for automatic failover
+      - Generate traffic and verify all monitoring systems capture data
+      - Demonstrate end-to-end network assurance across all four toolsets
+
+  - number: 5
+    folder: lab-05-capstone-troubleshoot
+    title: "Network Assurance Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, SW1, SW2, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 5+ concurrent network assurance faults
+      - Troubleshoot NetFlow monitor not collecting data (missing interface application)
+      - Fix SPAN session with wrong source or destination port configuration
+      - Resolve RSPAN failure caused by missing RSPAN VLAN on trunk
+      - Diagnose IP SLA probe showing 100% packet loss (responder not enabled)
+      - Fix SNMP traps not reaching receiver (wrong community or trap host)
+      - Restore all monitoring and diagnostic tools to operational state

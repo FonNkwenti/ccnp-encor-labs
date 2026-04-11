@@ -1,0 +1,321 @@
+topic: network-design
+topic_name: "Enterprise Network Design"
+exam: "350-401"
+version: 1.0
+workbook_format: reference   # Theory-heavy; PBR lab uses standard format
+
+meta:
+  created:
+    date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: spec-creator
+    skill_version: "2026-04-11"
+  updated: []
+
+# ──────────────────────────────────────────────
+# IPv4 ONLY — design theory is IP-version agnostic
+# PBR exercises use IPv4 ACLs and route-maps
+# ──────────────────────────────────────────────
+
+core_topology:
+  devices:
+    - name: R1
+      platform: iosv
+      role: Enterprise edge router — dual-homed to R2/R3, PBR decision point
+      loopback0: 1.1.1.1/32
+      console_port: null
+
+    - name: R2
+      platform: iosv
+      role: ISP-A / upstream provider — primary path for PBR
+      loopback0: 2.2.2.2/32
+      loopback1: 203.0.113.1/32
+      console_port: null
+      notes: Loopback1 simulates an internet destination via ISP-A
+
+    - name: R3
+      platform: iosv
+      role: ISP-B / upstream provider — secondary path for PBR
+      loopback0: 3.3.3.3/32
+      loopback1: 198.51.100.1/32
+      console_port: null
+      notes: Loopback1 simulates an internet destination via ISP-B
+
+    - name: PC1
+      platform: vpcs
+      role: User segment A — PBR steers via R2 (ISP-A)
+      ip: 192.168.10.10/24
+      gateway: 192.168.10.1
+      console_port: null
+
+    - name: PC2
+      platform: vpcs
+      role: User segment B — PBR steers via R3 (ISP-B)
+      ip: 192.168.20.10/24
+      gateway: 192.168.20.1
+      console_port: null
+
+  links:
+    - id: L1
+      source: R1:Gi0/0
+      target: R2:Gi0/0
+      subnet: 10.1.12.0/30
+      description: R1-R2 uplink to ISP-A
+      addresses:
+        R1: 10.1.12.1/30
+        R2: 10.1.12.2/30
+
+    - id: L2
+      source: R1:Gi0/1
+      target: R3:Gi0/0
+      subnet: 10.1.13.0/30
+      description: R1-R3 uplink to ISP-B
+      addresses:
+        R1: 10.1.13.1/30
+        R3: 10.1.13.2/30
+
+    - id: L3
+      source: R1:Gi0/2
+      target: PC1
+      subnet: 192.168.10.0/24
+      description: R1 LAN segment A (PC1 — steered via ISP-A by PBR)
+      addresses:
+        R1: 192.168.10.1/24
+        PC1: 192.168.10.10/24
+
+    - id: L4
+      source: R1:Gi0/3
+      target: PC2
+      subnet: 192.168.20.0/24
+      description: R1 LAN segment B (PC2 — steered via ISP-B by PBR)
+      addresses:
+        R1: 192.168.20.1/24
+        PC2: 192.168.20.10/24
+
+# ──────────────────────────────────────────────
+# PBR Plan (lab-02 — standard format, hands-on)
+# ──────────────────────────────────────────────
+pbr_plan:
+  description: >
+    Policy-Based Routing overrides the normal routing table decision.
+    Traffic from PC1 (192.168.10.0/24) is steered to R2 (ISP-A).
+    Traffic from PC2 (192.168.20.0/24) is steered to R3 (ISP-B).
+    Without PBR, OSPF would route all traffic via the lowest-cost path.
+
+  acls:
+    - name: PBR-SEGMENT-A
+      entries: "permit ip 192.168.10.0 0.0.0.255 any"
+      description: Match traffic from PC1 / segment A
+
+    - name: PBR-SEGMENT-B
+      entries: "permit ip 192.168.20.0 0.0.0.255 any"
+      description: Match traffic from PC2 / segment B
+
+  route_map:
+    name: PBR-DUAL-ISP
+    sequences:
+      - seq: 10
+        match: "ip address PBR-SEGMENT-A"
+        set: "ip next-hop 10.1.12.2"
+        description: Segment A traffic -> ISP-A (R2)
+
+      - seq: 20
+        match: "ip address PBR-SEGMENT-B"
+        set: "ip next-hop 10.1.13.2"
+        description: Segment B traffic -> ISP-B (R3)
+
+  application:
+    - interface: R1:Gi0/2
+      direction: "ip policy route-map PBR-DUAL-ISP"
+      description: Apply PBR to traffic entering from PC1
+
+    - interface: R1:Gi0/3
+      direction: "ip policy route-map PBR-DUAL-ISP"
+      description: Apply PBR to traffic entering from PC2
+
+  verification:
+    - "show route-map PBR-DUAL-ISP"
+    - "show ip policy"
+    - "debug ip policy"
+    - "traceroute from PC1 — should traverse R2"
+    - "traceroute from PC2 — should traverse R3"
+
+# ──────────────────────────────────────────────
+# Design Theory Topics (reference workbook content)
+# ──────────────────────────────────────────────
+design_theory:
+  lab_00_topics:
+    - title: "Two-Tier (Collapsed Core) Design"
+      key_points:
+        - Core and distribution merged into a single layer
+        - Suitable for small/medium campuses (< 200 users)
+        - Fewer devices, lower cost, simpler management
+        - Reduced fault isolation compared to three-tier
+
+    - title: "Three-Tier (Core/Distribution/Access) Design"
+      key_points:
+        - Core layer — high-speed backbone, no policy processing
+        - Distribution layer — policy enforcement, inter-VLAN routing, summarization
+        - Access layer — user connectivity, port security, 802.1X
+        - Best for large campuses, provides fault containment per layer
+
+    - title: "Fabric-Based Design (SD-Access)"
+      key_points:
+        - Overlay network decoupled from physical underlay
+        - Policy-based segmentation using SGTs
+        - Automated provisioning via Catalyst Center
+        - Cross-reference with sd-networking topic for deep dive
+
+    - title: "Cloud Design Patterns"
+      key_points:
+        - Hybrid cloud connectivity (VPN, Direct Connect)
+        - Cloud OnRamp for SaaS/IaaS
+        - Distributed vs centralized policy enforcement
+
+  lab_01_topics:
+    - title: "Hardware Redundancy"
+      key_points:
+        - Redundant supervisors, power supplies, line cards
+        - Virtual Switching System (VSS) and StackWise
+        - Redundant WAN links and dual-homed designs
+
+    - title: "FHRP Design Rationale"
+      key_points:
+        - HSRP vs VRRP vs GLBP — selection criteria
+        - Active/standby vs active/active load sharing
+        - Object tracking for sub-second failover
+        - Cross-reference with ip-services for HSRP/VRRP hands-on
+
+    - title: "SSO and NSF"
+      key_points:
+        - Stateful Switchover — supervisor failover with session preservation
+        - Non-Stop Forwarding — continues forwarding during switchover
+        - Graceful Restart — routing protocol awareness of NSF
+        - Requires redundant supervisors (not labbable on IOSv)
+
+# ──────────────────────────────────────────────
+# OSPF Pre-Configuration
+# ──────────────────────────────────────────────
+ospf_plan:
+  process_id: 1
+  area: 0
+  router_ids:
+    R1: 1.1.1.1
+    R2: 2.2.2.2
+    R3: 3.3.3.3
+  networks: all router interfaces in area 0
+  passive_interfaces:
+    R1: [Gi0/2, Gi0/3]    # LAN segments — no OSPF hellos toward PCs
+
+# ──────────────────────────────────────────────
+# Lab Definitions
+# ──────────────────────────────────────────────
+labs:
+  - number: 0
+    folder: lab-00-design-principles
+    title: "Enterprise Design — 2-Tier, 3-Tier, Fabric, and Cloud"
+    difficulty: Foundation
+    type: progressive
+    format: reference
+    time_minutes: 60
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: ["1.1", "1.1.a"]
+    objectives:
+      - Compare two-tier and three-tier campus architectures
+      - Identify the role of each layer (core, distribution, access) in a three-tier design
+      - Explain when to use collapsed core vs full three-tier
+      - Describe fabric-based design principles and SD-Access overlay concepts
+      - Identify cloud connectivity patterns (hybrid, multi-cloud)
+      - Interpret a campus topology diagram and identify design tier assignments
+      - Answer exam-style questions comparing design models
+    notes: >
+      Reference workbook format. No hands-on configuration. Uses
+      architecture diagrams, topology walkthroughs, and quiz-style
+      questions. The topology is running for show-command reference
+      but no configuration changes are made.
+
+  - number: 1
+    folder: lab-01-high-availability
+    title: "High Availability — Redundancy, FHRP, and SSO"
+    difficulty: Intermediate
+    type: progressive
+    format: reference
+    time_minutes: 60
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-00-design-principles
+    blueprint_refs: ["1.1", "1.1.b"]
+    objectives:
+      - Explain hardware redundancy strategies (dual supervisors, StackWise, VSS)
+      - Compare FHRP protocols (HSRP, VRRP, GLBP) from a design perspective
+      - Describe SSO and NSF operation and requirements
+      - Explain graceful restart and its interaction with OSPF/BGP
+      - Identify redundancy in the lab topology (dual uplinks from R1)
+      - Interpret FHRP state output and explain failover behavior
+      - Answer exam-style questions on HA design trade-offs
+    notes: >
+      Reference workbook format. HA theory with cross-references to
+      ip-services topic for HSRP/VRRP hands-on. SSO/NSF requires
+      redundant supervisors — conceptual only on IOSv. The dual-homed
+      R1 topology demonstrates redundancy principles.
+
+  - number: 2
+    folder: lab-02-policy-based-routing
+    title: "Policy-Based Routing Configuration"
+    difficulty: Intermediate
+    type: progressive
+    format: standard
+    time_minutes: 75
+    devices: [R1, R2, R3, PC1, PC2]
+    extends: lab-01-high-availability
+    blueprint_refs: ["3.2.d"]
+    objectives:
+      - Create ACLs to classify traffic by source subnet (segment A vs segment B)
+      - Build a route-map with match and set clauses for PBR
+      - Apply the PBR route-map to R1 LAN interfaces (ip policy route-map)
+      - Verify PBR with show route-map, show ip policy, and traceroute
+      - Use debug ip policy to observe PBR decisions in real time
+      - Demonstrate that PBR overrides the normal routing table
+      - Remove PBR and verify traffic reverts to OSPF best path
+      - Discuss PBR use cases — ISP load sharing, application-based routing
+    notes: >
+      Standard lab format — hands-on configuration with initial-configs,
+      solutions, setup_lab.py, and fault-injection scripts. PBR is the
+      only "configure" bullet in this topic. The dual-homed R1 makes
+      PBR meaningful — without two uplinks, there is no routing decision.
+
+  # ──────────────────────────────────────────────
+  # Capstones — always last two
+  # ──────────────────────────────────────────────
+  - number: 3
+    folder: lab-03-capstone-config
+    title: "Network Design Full Mastery — Capstone I"
+    type: capstone_i
+    clean_slate: true
+    format: hybrid
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Configure PBR on R1 from scratch — ACLs, route-map, interface application
+      - Answer design interpretation questions on 2-tier vs 3-tier selection
+      - Analyze a campus topology diagram and assign components to design layers
+      - Explain FHRP and SSO design decisions for a given scenario
+      - Verify end-to-end PBR operation with traceroute and debug
+
+  - number: 4
+    folder: lab-04-capstone-troubleshoot
+    title: "Network Design Comprehensive Troubleshooting — Capstone II"
+    type: capstone_ii
+    clean_slate: true
+    format: hybrid
+    difficulty: Advanced
+    time_minutes: 120
+    devices: [R1, R2, R3, PC1, PC2]
+    blueprint_refs: all
+    objectives:
+      - Diagnose and fix 3+ PBR faults (wrong next-hop, missing interface policy, ACL mismatch)
+      - Interpret a broken campus design diagram and identify design violations
+      - Answer scenario-based questions on HA failover behavior
+      - Troubleshoot route-map sequence ordering issues
+      - Restore correct PBR-based traffic steering
