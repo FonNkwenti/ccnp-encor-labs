@@ -35,7 +35,8 @@ devices:
 
 files:
   workbook: workbook.md
-  topology: topology.drawio
+  readme: README.md
+  topology: topology/topology.drawio
   setup_script: setup_lab.py
   initial_configs:
     - initial-configs/R1.cfg
@@ -43,6 +44,8 @@ files:
     - initial-configs/R3.cfg
     - initial-configs/R4.cfg
     - initial-configs/R5.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
   solutions:
     - solutions/R1.cfg
     - solutions/R2.cfg
@@ -73,3 +76,13 @@ updated:
       - scripts/fault-injection/inject_scenario_03.py
       - scripts/fault-injection/apply_solution.py
       - scripts/fault-injection/README.md
+  - date: "2026-04-12"
+    agent: claude-opus-4-6
+    changes:
+      - "Workbook §9: fix troubleshooting workflow to reset with apply_solution.py"
+      - "Add initial-configs/PC1.vpc and PC2.vpc"
+      - "Refactor setup_lab.py and all fault-injection scripts to use shared labs/common/tools/eve_ng.py (REST port discovery, require_host, connect_node)"
+      - "Add pre-flight checks to inject scripts (verify solution state before injecting)"
+      - "Move topology.drawio into topology/ subdir; add topology/README.md with EVE-NG import workflow"
+      - "Add lab-level README.md with Stage 0-5 flow"
+      - "Rewrite scripts/fault-injection/README.md with fault matrix and exit codes"
