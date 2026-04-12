@@ -835,10 +835,15 @@ diagnose and fix using only show commands.
 ### Workflow
 
 ```bash
-python3 setup_lab.py --host <eve-ng-ip>              # reset to known-good (solution config)
-python3 scripts/fault-injection/inject_scenario_01.py # Ticket 1
-python3 scripts/fault-injection/apply_solution.py     # restore
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # reset to known-good solution
+python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>  # inject Ticket 1
+# diagnose and fix using show commands
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # restore between tickets
 ```
+
+> Note: `setup_lab.py` pushes the *initial* (bare-minimum) configs and is only
+> used once, before you start Section 4. For troubleshooting, always reset
+> with `apply_solution.py`, which pushes the full solution configs.
 
 ---
 
@@ -848,7 +853,7 @@ The overnight monitoring system flagged that Po1 on SW1 shows only one active me
 network team confirmed both physical cables between SW1 and SW2 are connected and the
 LEDs are lit.
 
-**Inject:** `python3 scripts/fault-injection/inject_scenario_01.py`
+**Inject:** `python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>`
 
 **Success criteria:** Both Gi0/1 and Gi0/2 show as `P` (bundled) in `show etherchannel summary`
 on both SW1 and SW2. Po1 line protocol is `up`.
@@ -898,7 +903,7 @@ SW1# show etherchannel summary
 The engineering team reports they cannot reach PC2 from any device in the campus. SW1's
 routing table shows no path to the VLAN 20 subnet.
 
-**Inject:** `python3 scripts/fault-injection/inject_scenario_02.py`
+**Inject:** `python3 scripts/fault-injection/inject_scenario_02.py --host <eve-ng-ip>`
 
 **Success criteria:** `show etherchannel summary` on SW1 shows Po2 as `SU` with both
 Gi0/3 and Gi1/0 as `P`. PC1 can ping PC2.
@@ -953,7 +958,7 @@ SW1# show pagp 2 neighbor
 SW2's network team reports that SW3 is unreachable from the SW2 management SVI. PC2 is
 also not pingable from the campus.
 
-**Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
+**Inject:** `python3 scripts/fault-injection/inject_scenario_03.py --host <eve-ng-ip>`
 
 **Success criteria:** `show etherchannel summary` on SW2 shows Po3 as `SU` with both
 Gi0/3 and Gi1/0 as `P`. SW2 can ping SW3's management IP 192.168.99.3.
