@@ -725,10 +725,15 @@ diagnose and fix using only show commands.
 ### Workflow
 
 ```bash
-python3 setup_lab.py --host <eve-ng-ip>                          # reset to known-good
-python3 scripts/fault-injection/inject_scenario_01.py            # Ticket 1
-python3 scripts/fault-injection/apply_solution.py                # restore
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>     # reset to known-good
+python3 scripts/fault-injection/inject_scenario_NN.py --host <eve-ng-ip> # break
+# diagnose + fix using show commands only
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>     # restore
 ```
+
+Inject scripts run a **pre-flight check** -- they refuse to inject if the
+target device isn't in the expected solution state. Always restore with
+`apply_solution.py` between tickets.
 
 ---
 
