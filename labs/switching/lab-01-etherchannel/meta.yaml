@@ -8,12 +8,14 @@ created:
   skill_version: "2026-04-11"
   files:
     - workbook.md
-    - topology.drawio
+    - topology/topology.drawio
     - setup_lab.py
     - initial-configs/SW1.cfg
     - initial-configs/SW2.cfg
     - initial-configs/SW3.cfg
     - initial-configs/R1.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
     - solutions/SW1.cfg
     - solutions/SW2.cfg
     - solutions/SW3.cfg
@@ -23,4 +25,18 @@ created:
     - scripts/fault-injection/inject_scenario_03.py
     - scripts/fault-injection/apply_solution.py
     - scripts/fault-injection/README.md
-updated: []
+topology:
+  diagram: topology/topology.drawio
+  eve_ng_lab: topology/lab-01-etherchannel.unl
+  readme: topology/README.md
+updated:
+  - date: "2026-04-12"
+    agent: claude-opus-4-6
+    changes:
+      - "Workbook §9: fix troubleshooting workflow to reset with apply_solution.py"
+      - "Add initial-configs/PC1.vpc and PC2.vpc"
+      - "Refactor setup_lab.py and all fault-injection scripts to use shared labs/common/tools/eve_ng.py (REST port discovery, require_host, connect_node)"
+      - "Add pre-flight checks to inject scripts (verify solution state before injecting)"
+      - "Convert apply_solution.py from delta-only restore to full-config restore for consistency with lab-00"
+      - "Add topology/README.md with EVE-NG import workflow"
+      - "Add lab-level README.md with Stage 0-5 flow"
