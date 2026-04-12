@@ -1,57 +1,65 @@
+#!/usr/bin/env python3
+"""
+Initial Lab Setup
+
+Pushes each node's bare-minimum starting configuration from initial-configs/
+via the EVE-NG console (telnet). Run this once after you build the topology
+in EVE-NG and before you begin Section 4 of the workbook.
+
+For troubleshooting scenarios, use scripts/fault-injection/apply_solution.py
+instead — it pushes the full solution config.
+"""
+
 from netmiko import ConnectHandler
-import sys
 import argparse
 import os
+import sys
 
-# EVE-NG server IP — override with --host argument or set here
+# EVE-NG server IP — override with --host argument
 DEFAULT_EVE_NG_HOST = "192.168.x.x"
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description="Push initial configs to EVE-NG lab nodes")
+    parser = argparse.ArgumentParser(
+        description="Push initial configs to EVE-NG lab nodes via console telnet"
+    )
     parser.add_argument("--host", default=DEFAULT_EVE_NG_HOST,
                         help="EVE-NG server IP (default: %(default)s)")
-    parser.add_argument("--ssh", action="store_true",
-                        help="Use SSH instead of telnet (requires management network on nodes)")
     return parser.parse_args()
 
+
 class LabSetup:
-    def __init__(self, devices, eve_ng_host, use_ssh=False):
+    def __init__(self, devices, eve_ng_host):
         self.devices = devices        # List of (name, port, config_path)
         self.eve_ng_host = eve_ng_host
-        self.use_ssh = use_ssh
 
     def push_config(self, host, port, config_file):
-        device_type = "cisco_ios" if self.use_ssh else "cisco_ios_telnet"
-        print(f"Connecting to {host}:{port} ({device_type})...")
+        print(f"Connecting to {host}:{port} (cisco_ios_telnet)...")
         try:
             if not os.path.exists(config_file):
                 print(f"  Error: Config file {config_file} not found.")
                 return False
 
-            conn_params = {
-                "device_type": device_type,
-                "host": host,
-                "port": port,
-                "timeout": 10,
-            }
-            if not self.use_ssh:
-                # Telnet to EVE-NG console — credentials typically empty
-                conn_params.update({"username": "", "password": "", "secret": ""})
-
-            conn = ConnectHandler(**conn_params)
+            conn = ConnectHandler(
+                device_type="cisco_ios_telnet",
+                host=host,
+                port=port,
+                username="",
+                password="",
+                secret="",
+                timeout=10,
+            )
 
             # Read config lines, skipping blanks and comments
-            with open(config_file, 'r') as f:
+            with open(config_file, "r") as f:
                 commands = [
                     line.strip() for line in f
-                    if line.strip() and not line.startswith('!')
+                    if line.strip() and not line.startswith("!")
                 ]
 
-            # Push configuration commands
             conn.send_config_set(commands)
-
-            # Save configuration
-            conn.send_command("write memory", read_timeout=10)
+            # save_config() handles the "Destination filename?" prompt correctly
+            conn.save_config()
             print(f"  Successfully loaded {config_file}")
 
             conn.disconnect()
@@ -74,6 +82,11 @@ class LabSetup:
 # Check: EVE-NG web UI or GET /api/labs/<lab>/nodes
 if __name__ == "__main__":
     args = parse_args()
+    if args.host == DEFAULT_EVE_NG_HOST:
+        print(f"[!] --host not set (still '{DEFAULT_EVE_NG_HOST}'). "
+              "Pass --host <eve-ng-ip>.", file=sys.stderr)
+        sys.exit(2)
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     devices = [
         ("SW1", 32768, os.path.join(script_dir, "initial-configs", "SW1.cfg")),
@@ -81,5 +94,5 @@ if __name__ == "__main__":
         ("SW3", 32770, os.path.join(script_dir, "initial-configs", "SW3.cfg")),
         ("R1",  32771, os.path.join(script_dir, "initial-configs", "R1.cfg")),
     ]
-    lab = LabSetup(devices, eve_ng_host=args.host, use_ssh=args.ssh)
+    lab = LabSetup(devices, eve_ng_host=args.host)
     lab.run()

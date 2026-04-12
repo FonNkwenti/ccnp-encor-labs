@@ -888,10 +888,15 @@ diagnose and fix using only show commands.
 ### Workflow
 
 ```bash
-python3 setup_lab.py --host <eve-ng-ip>                          # reset to known-good
-python3 scripts/fault-injection/inject_scenario_01.py            # Ticket 1
-python3 scripts/fault-injection/apply_solution.py                # restore
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # reset to known-good solution
+python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>  # inject Ticket 1 fault
+# diagnose and fix using show commands
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # restore between tickets
 ```
+
+> Note: `setup_lab.py` pushes the *initial* (bare-minimum) configs and is only
+> used once, before you start Section 4. For troubleshooting, always reset with
+> `apply_solution.py`, which pushes the full solution configs.
 
 ---
 
@@ -911,24 +916,19 @@ A junior engineer reports that PC1 (VLAN 10, 192.168.10.10) can ping its default
 2. From PC1: `ping 192.168.10.1` — succeeds (gateway reachable, VLAN 10 is fine).
 3. From R1: `ping 192.168.20.10` — fails (R1 cannot reach PC2 either).
 4. From R1: `show ip interface brief` — check if Gi0/0.20 is up/up with correct IP.
-5. On SW1: `show interfaces trunk` — check "Vlans allowed on trunk" for Gi0/3 and Gi1/0 (links to SW3). If VLAN 20 is missing from allowed list on the SW1-SW3 trunk, VLAN 20 traffic cannot reach SW3.
-6. On SW3: `show interfaces trunk` — confirm the same VLAN is missing from the SW3 side.
+5. On SW1: `show interfaces trunk` — check "Vlans allowed on trunk" for Gi0/3 and Gi1/0 (links to SW3). VLAN 20 is missing from the allowed list on the SW1 side, so VLAN 20 traffic cannot traverse the SW1-SW3 trunk.
+6. On SW3: `show interfaces trunk` — SW3's side shows VLAN 20 allowed; trunks only forward VLANs allowed on **both** ends, so the SW1-side restriction is the break.
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-The fault is a missing VLAN in the trunk allowed list on the SW1-SW3 links. VLAN 20 was
-removed from the allowed VLAN list on SW1's Gi0/3 and Gi1/0 (and/or SW3's Gi0/3 and Gi1/0).
+The fault is a missing VLAN in the trunk allowed list on **SW1's** Gi0/3 and Gi1/0 (the
+SW1-SW3 trunk links). VLAN 20 was removed from the allowed list on the SW1 side only;
+restore it and the trunk will forward VLAN 20 again.
 
 ```bash
 ! SW1
-interface GigabitEthernet0/3
- switchport trunk allowed vlan 10,20,30,99
-interface GigabitEthernet1/0
- switchport trunk allowed vlan 10,20,30,99
-
-! SW3 (if also affected)
 interface GigabitEthernet0/3
  switchport trunk allowed vlan 10,20,30,99
 interface GigabitEthernet1/0
