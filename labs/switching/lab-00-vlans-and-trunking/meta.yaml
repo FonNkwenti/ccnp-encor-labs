@@ -31,7 +31,10 @@ devices:
 
 files:
   workbook: workbook.md
-  topology: topology.drawio
+  topology:
+    diagram: topology/topology.drawio
+    eve_ng_lab: topology/lab-00-vlans-and-trunking.unl
+    readme: topology/README.md
   setup_script: setup_lab.py
   initial_configs:
     - initial-configs/SW1.cfg

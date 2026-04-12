@@ -1,72 +1,93 @@
 #!/usr/bin/env python3
 """
-Fault Injection Script: Scenario 02 — Native VLAN Mismatch
+Fault Injection: Scenario 02 -- Native VLAN Mismatch
 
-Injects:     Changes native VLAN on SW2 Gi0/1 trunk back to VLAN 1
-Target:      SW2
-Fault Type:  Native VLAN Mismatch
+Target:     SW2 (Gi0/1 trunk)
+Injects:    Resets native VLAN from 99 -> 1 (creates mismatch with peer)
+Fault Type: Native VLAN Mismatch
+
+Before running, ensure the lab is in the SOLUTION state:
+    python3 apply_solution.py --host <eve-ng-ip>
 """
 
-from netmiko import ConnectHandler
+from __future__ import annotations
+
 import argparse
 import sys
+from pathlib import Path
 
-# Device Configuration
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
+from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
+
+
+DEFAULT_LAB_PATH = "switching/lab-00-vlans-and-trunking.unl"
 DEVICE_NAME = "SW2"
-CONSOLE_PORT = 32769  # Dynamic port from EVE-NG web UI — replace with actual port
-
-# Fault Configuration Commands
 FAULT_COMMANDS = [
     "interface GigabitEthernet0/1",
     "switchport trunk native vlan 1",
 ]
+PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/1"
+# Target should currently have "native vlan 99" -- otherwise not in solution state
+PREFLIGHT_EXPECT = "native vlan 99"
 
 
-def inject_fault(eve_ng_host):
-    """Connect to device and inject the fault configuration."""
-    print(f"[*] Connecting to {DEVICE_NAME} on {eve_ng_host}:{CONSOLE_PORT}...")
+def preflight(conn) -> bool:
+    output = conn.send_command(PREFLIGHT_CMD)
+    if PREFLIGHT_EXPECT not in output:
+        print(f"[!] Pre-flight failed: Gi0/1 does not have '{PREFLIGHT_EXPECT}'.")
+        print("    Run apply_solution.py first to restore the known-good config.")
+        return False
+    return True
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Inject Scenario 02 fault")
+    parser.add_argument("--host", default="192.168.x.x",
+                        help="EVE-NG server IP (required)")
+    parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,
+                        help=f"Lab .unl path (default: {DEFAULT_LAB_PATH})")
+    parser.add_argument("--skip-preflight", action="store_true",
+                        help="Skip the sanity check that target has expected config")
+    args = parser.parse_args()
+
+    host = require_host(args.host)
+
+    print("=" * 60)
+    print("Fault Injection: Scenario 02 (Native VLAN Mismatch)")
+    print("=" * 60)
 
     try:
-        conn = ConnectHandler(
-            device_type="cisco_ios_telnet",
-            host=eve_ng_host,
-            port=CONSOLE_PORT,
-            username="",
-            password="",
-            secret="",
-            timeout=10,
-        )
-        print(f"[+] Connected to {DEVICE_NAME}")
+        ports = discover_ports(host, args.lab_path)
+    except EveNgError as exc:
+        print(f"[!] {exc}", file=sys.stderr)
+        return 3
 
-        print(f"[*] Injecting fault configuration...")
-        output = conn.send_config_set(FAULT_COMMANDS)
-        print(output)
+    port = ports.get(DEVICE_NAME)
+    if port is None:
+        print(f"[!] {DEVICE_NAME} not found in lab {args.lab_path}.")
+        return 3
 
-        output = conn.save_config()
-        print(output)
+    print(f"[*] Connecting to {DEVICE_NAME} on {host}:{port} ...")
+    try:
+        conn = connect_node(host, port)
+    except Exception as exc:
+        print(f"[!] Connection failed: {exc}", file=sys.stderr)
+        return 3
 
+    try:
+        if not args.skip_preflight and not preflight(conn):
+            return 4
+        print("[*] Injecting fault configuration ...")
+        conn.send_config_set(FAULT_COMMANDS)
+        conn.save_config()
+    finally:
         conn.disconnect()
 
-        print(f"[+] Fault injected successfully on {DEVICE_NAME}!")
-        print(f"[!] Troubleshooting Scenario 02 is now active.")
-
-    except ConnectionRefusedError:
-        print(f"[!] Error: Could not connect to {eve_ng_host}:{CONSOLE_PORT}")
-        print(f"[!] Make sure the EVE-NG lab is running and {DEVICE_NAME} is started.")
-        sys.exit(1)
-    except Exception as e:
-        print(f"[!] Error: {e}")
-        sys.exit(1)
+    print(f"[+] Fault injected on {DEVICE_NAME}. Scenario 02 is now active.")
+    print("=" * 60)
+    return 0
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Inject Scenario 02 fault")
-    parser.add_argument("--host", default="192.168.x.x",
-                        help="EVE-NG server IP (default: 192.168.x.x)")
-    args = parser.parse_args()
-
-    print("=" * 60)
-    print("Fault Injection: Scenario 02")
-    print("=" * 60)
-    inject_fault(args.host)
-    print("=" * 60)
+    sys.exit(main())
