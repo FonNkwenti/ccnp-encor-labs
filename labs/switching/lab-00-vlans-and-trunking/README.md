@@ -54,6 +54,34 @@ Follow [`topology/README.md`](topology/README.md):
 
 **Done when:** every node shows a green icon in the EVE-NG web UI.
 
+### Stage 1.5 -- (Optional) Verify REST API reachability
+
+Before running `setup_lab.py`, confirm the EVE-NG REST API is reachable and
+the lab is started by printing each node's console port:
+
+```bash
+python ../../common/tools/show_ports.py \
+    --host <eve-ng-ip> \
+    --lab-path switching/lab-00-vlans-and-trunking.unl
+```
+
+Expected output (port numbers vary per EVE-NG session):
+
+```
+Node  Port   Telnet command
+----  -----  ------------------------------
+R1    32772  telnet <eve-ng-ip> 32772
+SW1   32769  telnet <eve-ng-ip> 32769
+SW2   32770  telnet <eve-ng-ip> 32770
+SW3   32771  telnet <eve-ng-ip> 32771
+```
+
+You can paste any `telnet ...` line into a separate terminal to spot-check
+that a node's console is responsive before pushing configs.
+
+If this step fails with "No console ports discovered", the lab isn't started
+-- go back to Stage 1 and hit **More actions -> Start all nodes**.
+
 ### Stage 2 -- Push initial configs
 
 ```bash

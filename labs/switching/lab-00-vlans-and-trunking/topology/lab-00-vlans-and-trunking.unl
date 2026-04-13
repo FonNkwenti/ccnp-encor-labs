@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<lab name="lab-00-vlans-and-trunking" version="1" scripttimeout="300" lock="0" author="gen_unl.py">
+  <description>Auto-generated from baseline.yaml by gen_unl.py for lab 'lab-00-vlans-and-trunking'.</description>
+  <topology>
+    <nodes>
+      <node id="1" name="SW1" type="qemu" template="viosl2" image="viosl2-2020" console="telnet" cpu="1" cpulimit="0" ram="768" ethernet="8" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Switch-2D-L3-Generic-S.svg" uuid="2f5a38e0-29ba-4aa7-b7ee-1eb34acafd50" config="1" left="200" top="420">
+        <interface id="0" name="Gi0/0" type="ethernet" network_id="1" />
+        <interface id="1" name="Gi0/1" type="ethernet" network_id="2" />
+        <interface id="2" name="Gi0/2" type="ethernet" network_id="3" />
+        <interface id="3" name="Gi0/3" type="ethernet" network_id="4" />
+        <interface id="4" name="Gi1/0" type="ethernet" network_id="5" />
+      </node>
+      <node id="2" name="SW2" type="qemu" template="viosl2" image="viosl2-2020" console="telnet" cpu="1" cpulimit="0" ram="768" ethernet="8" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Switch-2D-L3-Generic-S.svg" uuid="cc7a0bf4-ab4b-49e2-99c5-f1e37e57ff44" config="1" left="500" top="420">
+        <interface id="1" name="Gi0/1" type="ethernet" network_id="2" />
+        <interface id="2" name="Gi0/2" type="ethernet" network_id="3" />
+        <interface id="3" name="Gi0/3" type="ethernet" network_id="6" />
+        <interface id="4" name="Gi1/0" type="ethernet" network_id="7" />
+        <interface id="5" name="Gi1/1" type="ethernet" network_id="8" />
+      </node>
+      <node id="3" name="SW3" type="qemu" template="viosl2" image="viosl2-2020" console="telnet" cpu="1" cpulimit="0" ram="768" ethernet="8" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Switch-2D-L3-Generic-S.svg" uuid="ba0c0889-6b3b-4e5b-af0f-e2aaf07f9094" config="1" left="800" top="420">
+        <interface id="1" name="Gi0/1" type="ethernet" network_id="6" />
+        <interface id="2" name="Gi0/2" type="ethernet" network_id="7" />
+        <interface id="3" name="Gi0/3" type="ethernet" network_id="4" />
+        <interface id="4" name="Gi1/0" type="ethernet" network_id="5" />
+        <interface id="5" name="Gi1/1" type="ethernet" network_id="9" />
+      </node>
+      <node id="4" name="R1" type="qemu" template="vios" image="vios-159-3" console="telnet" cpu="1" cpulimit="0" ram="512" ethernet="4" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Router-2D-Gen-White-S.svg" uuid="a9d8a243-ca6e-4bbf-b732-e89acc5457f5" config="1" left="200" top="80">
+        <interface id="0" name="Gi0/0" type="ethernet" network_id="1" />
+      </node>
+      <node id="5" name="PC1" type="vpcs" template="vpcs" image="" ethernet="1" delay="0" icon="PC-2D-Desktop-Generic-S.svg" config="1" left="200" top="700">
+        <interface id="0" name="eth0" type="ethernet" network_id="8" />
+      </node>
+      <node id="6" name="PC2" type="vpcs" template="vpcs" image="" ethernet="1" delay="0" icon="PC-2D-Desktop-Generic-S.svg" config="1" left="500" top="700">
+        <interface id="0" name="eth0" type="ethernet" network_id="9" />
+      </node>
+    </nodes>
+    <networks>
+      <network id="1" type="bridge" name="Net-L1" left="200" top="250" visibility="0" icon="lan.png" />
+      <network id="2" type="bridge" name="Net-L2" left="350" top="420" visibility="0" icon="lan.png" />
+      <network id="3" type="bridge" name="Net-L3" left="350" top="420" visibility="0" icon="lan.png" />
+      <network id="4" type="bridge" name="Net-L4" left="500" top="420" visibility="0" icon="lan.png" />
+      <network id="5" type="bridge" name="Net-L5" left="500" top="420" visibility="0" icon="lan.png" />
+      <network id="6" type="bridge" name="Net-L6" left="650" top="420" visibility="0" icon="lan.png" />
+      <network id="7" type="bridge" name="Net-L7" left="650" top="420" visibility="0" icon="lan.png" />
+      <network id="8" type="bridge" name="Net-L8" left="350" top="560" visibility="0" icon="lan.png" />
+      <network id="9" type="bridge" name="Net-L9" left="650" top="560" visibility="0" icon="lan.png" />
+    </networks>
+  </topology>
+  <objects>
+    <configs>
+      <config id="1">IQohIFNXMSDigJQgSW5pdGlhbCBjb25maWd1cmF0aW9uIChsYWItMDAgc3RhcnRpbmcgcG9pbnQpCiEKaG9zdG5hbWUgU1cxCiEKbm8gaXAgZG9tYWluLWxvb2t1cAohCmxpbmUgY29uIDAKIGxvZ2dpbmcgc3luY2hyb25vdXMKIGV4ZWMtdGltZW91dCAwIDAKbGluZSB2dHkgMCA0CiBsb2dnaW5nIHN5bmNocm9ub3VzCiBleGVjLXRpbWVvdXQgMCAwCiEKZW5kCg==</config>
+      <config id="2">IQohIFNXMiDigJQgSW5pdGlhbCBjb25maWd1cmF0aW9uIChsYWItMDAgc3RhcnRpbmcgcG9pbnQpCiEKaG9zdG5hbWUgU1cyCiEKbm8gaXAgZG9tYWluLWxvb2t1cAohCmxpbmUgY29uIDAKIGxvZ2dpbmcgc3luY2hyb25vdXMKIGV4ZWMtdGltZW91dCAwIDAKbGluZSB2dHkgMCA0CiBsb2dnaW5nIHN5bmNocm9ub3VzCiBleGVjLXRpbWVvdXQgMCAwCiEKZW5kCg==</config>
+      <config id="3">IQohIFNXMyDigJQgSW5pdGlhbCBjb25maWd1cmF0aW9uIChsYWItMDAgc3RhcnRpbmcgcG9pbnQpCiEKaG9zdG5hbWUgU1czCiEKbm8gaXAgZG9tYWluLWxvb2t1cAohCmxpbmUgY29uIDAKIGxvZ2dpbmcgc3luY2hyb25vdXMKIGV4ZWMtdGltZW91dCAwIDAKbGluZSB2dHkgMCA0CiBsb2dnaW5nIHN5bmNocm9ub3VzCiBleGVjLXRpbWVvdXQgMCAwCiEKZW5kCg==</config>
+      <config id="4">IQohIFIxIOKAlCBJbml0aWFsIGNvbmZpZ3VyYXRpb24gKGxhYi0wMCBzdGFydGluZyBwb2ludCkKIQpob3N0bmFtZSBSMQohCm5vIGlwIGRvbWFpbi1sb29rdXAKIQpsaW5lIGNvbiAwCiBsb2dnaW5nIHN5bmNocm9ub3VzCiBleGVjLXRpbWVvdXQgMCAwCmxpbmUgdnR5IDAgNAogbG9nZ2luZyBzeW5jaHJvbm91cwogZXhlYy10aW1lb3V0IDAgMAohCmVuZAo=</config>
+      <config id="5">aXAgMTkyLjE2OC4xMC4xMCAyNTUuMjU1LjI1NS4wIDE5Mi4xNjguMTAuMQpzYXZlCg==</config>
+      <config id="6">aXAgMTkyLjE2OC4yMC4xMCAyNTUuMjU1LjI1NS4wIDE5Mi4xNjguMjAuMQpzYXZlCg==</config>
+    </configs>
+  </objects>
+</lab>
