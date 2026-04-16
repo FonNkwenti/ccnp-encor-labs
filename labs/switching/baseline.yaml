@@ -75,14 +75,14 @@ core_topology:
     - name: PC1
       type: vpc
       interfaces:
-        - name: e0
+        - name: eth0
           ip: "192.168.10.10/24"
           gateway: "192.168.10.1"
 
     - name: PC2
       type: vpc
       interfaces:
-        - name: e0
+        - name: eth0
           ip: "192.168.20.10/24"
           gateway: "192.168.20.1"
 
@@ -133,13 +133,13 @@ core_topology:
 
     # End-host access ports
     - id: L8
-      source: "PC1:e0"
+      source: "PC1:eth0"
       target: "SW2:GigabitEthernet1/1"
       type: access
       vlan: 10
       purpose: "PC1 access port (VLAN 10)"
     - id: L9
-      source: "PC2:e0"
+      source: "PC2:eth0"
       target: "SW3:GigabitEthernet1/1"
       type: access
       vlan: 20

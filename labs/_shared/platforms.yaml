@@ -1,0 +1,94 @@
+# Platform specs for EVE-NG lab nodes.
+#
+# Source of truth: .agent/skills/eve-ng/SKILL.md (human-readable).
+# This file is the machine-readable projection used by
+# scripts/render_topology_readme.py.
+#
+# When SKILL.md changes (new IOS version, new platform, RAM bump), update
+# this file in the same commit.
+
+platforms:
+
+  iosv:
+    display_name: "Cisco IOSv"
+    ios_version: "15.9(3)M6"
+    ram_mb: 512
+    interface_prefix: "GigabitEthernet"
+    interface_short: "Gi"
+    ports_available:
+      - "Gi0/0"
+      - "Gi0/1"
+      - "Gi0/2"
+      - "Gi0/3"
+
+  iosvl2:
+    display_name: "Cisco IOSvL2"
+    ios_version: "15.x (high_iron_20200929)"
+    ram_mb: 768
+    interface_prefix: "GigabitEthernet"
+    interface_short: "Gi"
+    ports_available:
+      - "Gi0/0"
+      - "Gi0/1"
+      - "Gi0/2"
+      - "Gi0/3"
+      - "Gi1/0"
+      - "Gi1/1"
+      - "Gi1/2"
+      - "Gi1/3"
+
+  vpc:
+    display_name: "Virtual PC (VPCS)"
+    ios_version: "n/a (VPCS)"
+    ram_mb: null
+    interface_prefix: ""
+    interface_short: "e"
+    ports_available:
+      - "e0"
+
+  # Platforms below are referenced by other chapter baselines (bgp, ospf,
+  # network-assurance, etc.). Kept here so a single render_topology_readme.py
+  # run can service every chapter.
+
+  csr1000v:
+    display_name: "Cisco CSR1000v"
+    ios_version: "17.03.05"
+    ram_mb: 4096
+    interface_prefix: "GigabitEthernet"
+    interface_short: "Gi"
+    ports_available:
+      - "Gi1"
+      - "Gi2"
+      - "Gi3"
+
+  iol_l3:
+    display_name: "Cisco IOL (L3)"
+    ios_version: "15.7(3)M"
+    ram_mb: 256
+    interface_prefix: "Ethernet"
+    interface_short: "e"
+    ports_available:
+      - "e0/0"
+      - "e0/1"
+      - "e0/2"
+      - "e0/3"
+      - "e1/0"
+      - "e1/1"
+      - "e1/2"
+      - "e1/3"
+
+  iol_l2:
+    display_name: "Cisco IOL (L2)"
+    ios_version: "15.7(3)M"
+    ram_mb: 256
+    interface_prefix: "Ethernet"
+    interface_short: "e"
+    ports_available:
+      - "e0/0"
+      - "e0/1"
+      - "e0/2"
+      - "e0/3"
+      - "e1/0"
+      - "e1/1"
+      - "e1/2"
+      - "e1/3"

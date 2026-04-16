@@ -29,6 +29,9 @@ See conductor/product.md and conductor/workflow.md for detailed documentation.
 ## Common Commands
 
 ```bash
+# First-time setup (or after fresh clone) — register skills with Claude Code
+python3 scripts/register-skills.py
+
 # Update skills to latest
 git submodule update --remote .agent/skills
 git add .agent/skills
@@ -39,3 +42,11 @@ python labs/<topic>/lab-NN-<slug>/setup_lab.py --host <eve-ng-ip>
 # Run tests
 pytest tests/ -v
 ```
+
+## Skill Registration
+
+Skills live at `.agent/skills/<name>/SKILL.md` (git submodule). The Claude Code
+`Skill` tool discovers skills under `.claude/skills/<name>/`, so
+`scripts/register-skills.py` creates a junction (Windows) or symlink (POSIX) per
+skill. The junctions are per-machine and gitignored. Re-run after `git submodule
+update` if new skills appear.
