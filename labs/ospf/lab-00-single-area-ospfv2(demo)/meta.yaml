@@ -1,0 +1,88 @@
+lab:
+  number: 0
+  folder: lab-00-single-area-ospfv2
+  title: "Single-Area OSPFv2 Fundamentals"
+  topic: ospf
+  exam: "350-401"
+  difficulty: Foundation
+  type: progressive
+  time_minutes: 60
+  blueprint_refs: ["3.2.a", "3.2.b"]
+
+devices:
+  - name: R1
+    platform: iosv
+    role: "Backbone router (Area 0 only)"
+  - name: R2
+    platform: iosv
+    role: "Future ABR (Area 0/1)"
+  - name: R3
+    platform: iosv
+    role: "Future ABR (Area 0/2)"
+  - name: R4
+    platform: iosv
+    role: "Internal router"
+  - name: R5
+    platform: iosv
+    role: "Future ASBR"
+  - name: SW-AREA0
+    platform: unmanaged_switch
+    role: "Shared broadcast segment"
+  - name: PC1
+    type: vpc
+  - name: PC2
+    type: vpc
+
+files:
+  workbook: workbook.md
+  readme: README.md
+  topology: topology/topology.drawio
+  setup_script: setup_lab.py
+  initial_configs:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/R4.cfg
+    - initial-configs/R5.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+  solutions:
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/R4.cfg
+    - solutions/R5.cfg
+  fault_injection:
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+
+troubleshooting_scenarios: 3
+
+created:
+  date: "2026-04-11"
+  agent: claude-opus-4-6
+  skill: lab-workbook-creator
+
+updated:
+  - date: "2026-04-11"
+    agent: claude-opus-4-6
+    skill: inject-faults
+    files:
+      - scripts/fault-injection/inject_scenario_01.py
+      - scripts/fault-injection/inject_scenario_02.py
+      - scripts/fault-injection/inject_scenario_03.py
+      - scripts/fault-injection/apply_solution.py
+      - scripts/fault-injection/README.md
+  - date: "2026-04-12"
+    agent: claude-opus-4-6
+    changes:
+      - "Workbook §9: fix troubleshooting workflow to reset with apply_solution.py"
+      - "Add initial-configs/PC1.vpc and PC2.vpc"
+      - "Refactor setup_lab.py and all fault-injection scripts to use shared labs/common/tools/eve_ng.py (REST port discovery, require_host, connect_node)"
+      - "Add pre-flight checks to inject scripts (verify solution state before injecting)"
+      - "Move topology.drawio into topology/ subdir; add topology/README.md with EVE-NG import workflow"
+      - "Add lab-level README.md with Stage 0-5 flow"
+      - "Rewrite scripts/fault-injection/README.md with fault matrix and exit codes"

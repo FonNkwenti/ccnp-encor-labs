@@ -1,0 +1,70 @@
+lab:
+  number: 2
+  folder: lab-02-network-types
+  title: "OSPF Network Types + DR/BDR Manipulation"
+  topic: ospf
+  exam: "350-401"
+  difficulty: Intermediate
+  type: progressive
+  extends: lab-01-multi-area-ospfv2
+  time_minutes: 75
+  blueprint_refs: ["3.2.b"]
+
+devices:
+  - name: R1
+    platform: iosv
+    role: "Backbone router (Area 0, DR at priority 255)"
+  - name: R2
+    platform: iosv
+    role: "ABR (Area 0 / Area 1, BDR at priority 200)"
+  - name: R3
+    platform: iosv
+    role: "ABR (Area 0 / Area 2, ineligible at priority 0)"
+  - name: R4
+    platform: iosv
+    role: "Internal router (Area 1, p2p transit to R2)"
+  - name: R5
+    platform: iosv
+    role: "Internal router (Area 2, p2p transit to R3)"
+  - name: SW-AREA0
+    platform: unmanaged_switch
+    role: "Shared broadcast segment for Area 0"
+  - name: PC1
+    type: vpc
+  - name: PC2
+    type: vpc
+
+files:
+  workbook: workbook.md
+  readme: README.md
+  topology: topology/topology.drawio
+  setup_script: setup_lab.py
+  initial_configs:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/R4.cfg
+    - initial-configs/R5.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+  solutions:
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/R4.cfg
+    - solutions/R5.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+  fault_injection:
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+
+troubleshooting_scenarios: 3
+
+created:
+  date: "2026-04-16"
+  agent: claude-opus-4-6
+  skill: lab-workbook-creator
