@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """
-Solution Restoration: OSPF Lab 00
+Solution Restoration -- OSPF Lab 00: Single-Area OSPFv2 Fundamentals
 
-Pushes the full solution configs from ../../solutions/ to all five routers,
-overwriting any injected faults and restoring the lab to a known-good state.
+Restores all devices to the known-good solution configs under ../../solutions/.
+Run this:
+  * before injecting a fault (reset to clean state)
+  * between tickets (so each scenario starts from a known baseline)
+  * after you finish troubleshooting (verify your fix matches the solution)
 
-Usage:
-    python3 apply_solution.py --host <eve-ng-ip>
+Console ports are discovered via the EVE-NG REST API, so the lab must be
+STARTED in EVE-NG before running.
+
+NOTE: We push the FULL solution config -- not just the delta reversal of the
+injected fault. This guarantees the lab is truly in "known-good" state even
+if the student has made exploratory changes beyond the injected fault.
 """
 
 from __future__ import annotations
@@ -16,62 +23,62 @@ import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+# labs/ospf/lab-00-.../scripts/fault-injection/apply_solution.py -> parents[3] = labs/
 sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
 from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
 
-
+SOLUTIONS_DIR = SCRIPT_DIR.parent.parent / "solutions"
 DEFAULT_LAB_PATH = "ospf/lab-00-single-area-ospfv2.unl"
 DEVICES = ["R1", "R2", "R3", "R4", "R5"]
-SOLUTIONS_DIR = SCRIPT_DIR.parents[1] / "solutions"
 
 
-def load_commands(cfg_path: Path) -> list[str]:
-    lines: list[str] = []
-    for raw in cfg_path.read_text().splitlines():
-        stripped = raw.strip()
-        if not stripped or stripped.startswith("!") or stripped == "end":
+def parse_config(config_text: str) -> list[str]:
+    """Strip comments, blanks, and the 'end' marker -- keep everything else."""
+    cmds = []
+    for line in config_text.splitlines():
+        stripped = line.rstrip()
+        if not stripped or stripped.startswith("!") or stripped.lower() == "end":
             continue
-        lines.append(raw)
-    return lines
+        cmds.append(stripped)
+    return cmds
 
 
 def restore(host: str, name: str, port: int) -> bool:
-    cfg_path = SOLUTIONS_DIR / f"{name}.cfg"
-    if not cfg_path.exists():
-        print(f"[!] {name}: solution file not found at {cfg_path}")
+    cfg = SOLUTIONS_DIR / f"{name}.cfg"
+    print(f"\n[*] Restoring {name} ({host}:{port}) from {cfg.name}")
+    if not cfg.exists():
+        print(f"    [!] Solution config not found: {cfg}")
         return False
 
-    print(f"\n[*] {name}: restoring via {host}:{port} ...")
+    commands = parse_config(cfg.read_text(encoding="utf-8"))
+    if not commands:
+        print(f"    [!] No commands parsed from {cfg}")
+        return False
+
     try:
         conn = connect_node(host, port)
-    except Exception as exc:
-        print(f"[!] {name}: connection failed -- {exc}")
-        return False
-
-    try:
-        conn.send_config_set(load_commands(cfg_path))
+        conn.send_config_set(commands)
         conn.save_config()
-        print(f"[+] {name}: solution applied.")
+        conn.disconnect()
+        print(f"    [+] {name} restored.")
         return True
     except Exception as exc:
-        print(f"[!] {name}: restore failed -- {exc}")
+        print(f"    [!] {name}: {exc}")
         return False
-    finally:
-        conn.disconnect()
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Restore OSPF lab-00 to solution state")
+    parser = argparse.ArgumentParser(description="Restore all devices to solution config")
     parser.add_argument("--host", default="192.168.x.x",
                         help="EVE-NG server IP (required)")
     parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,
-                        help=f"Lab .unl path (default: {DEFAULT_LAB_PATH})")
+                        help=f"Lab .unl path on EVE-NG (default: {DEFAULT_LAB_PATH})")
     args = parser.parse_args()
 
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Solution Restoration: OSPF Lab 00")
+    print("Solution Restoration: Removing All Faults")
     print("=" * 60)
 
     try:
@@ -80,22 +87,22 @@ def main() -> int:
         print(f"[!] {exc}", file=sys.stderr)
         return 3
 
-    fail = 0
+    ok = fail = 0
     for name in DEVICES:
         port = ports.get(name)
         if port is None:
-            print(f"[!] {name}: not found in lab {args.lab_path}")
+            print(f"\n[!] {name} not found in lab -- skipping.")
             fail += 1
             continue
-        if not restore(host, name, port):
+        if restore(host, name, port):
+            ok += 1
+        else:
             fail += 1
 
     print("\n" + "=" * 60)
-    if fail:
-        print(f"[!] {fail} device(s) failed. Lab not fully restored.")
-        return 1
-    print("[+] All devices restored to solution state.")
-    return 0
+    print(f"Restoration Complete: {ok} succeeded, {fail} failed")
+    print("=" * 60)
+    return 0 if fail == 0 else 1
 
 
 if __name__ == "__main__":

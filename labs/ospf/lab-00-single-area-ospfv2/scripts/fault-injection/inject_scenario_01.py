@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Fault Injection: Scenario 01 -- Hello/Dead Timer Mismatch
+Fault Injection: Scenario 01 -- R4 Cannot Reach R1 Loopback
 
-Target:     R4 (Gi0/0 -- link to R2)
-Injects:    'ip ospf hello-interval 15' on R4 Gi0/0. Dead interval
-            auto-scales to 60, while R2 Gi0/1 stays at the default 10/40.
-Fault Type: OSPF Timer Mismatch
+Target:     R2 (shared Ethernet segment Gi0/0, member of 10.0.123.0/24 segment)
+Injects:    Removes R2's OSPF network statement for the shared segment so R2
+            no longer advertises or forms adjacencies via that interface.
+Fault Type: Missing OSPF Network Statement (Shared Segment)
 
-Result:     R4 and R2 drop the adjacency on the 10.1.24.0/30 link; R4
-            shows zero OSPF neighbors and no OSPF routes learned from the
-            Area 0 backbone.
+Result:     R2 loses its adjacency with R1 on the 10.0.123.0/24 segment.
+            R4 can still reach R2's loopback (2.2.2.2) via the R2<->R4 P2P
+            link but cannot reach R1's loopback (1.1.1.1) because R1's LSA
+            is no longer reachable from R4's OSPF topology.
 
 Before running, ensure the lab is in the SOLUTION state:
     python3 apply_solution.py --host <eve-ng-ip>
@@ -27,27 +28,20 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 
 DEFAULT_LAB_PATH = "ospf/lab-00-single-area-ospfv2.unl"
-DEVICE_NAME = "R4"
+DEVICE_NAME = "R2"
 FAULT_COMMANDS = [
-    "interface GigabitEthernet0/0",
-    "ip ospf hello-interval 15",
+    "router ospf 1",
+    "no network 10.0.123.0 0.0.0.255 area 0",
 ]
-PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/0"
-# Fault marker: if already present, the fault is already injected -- bail out
-PREFLIGHT_FAULT_MARKER = "ip ospf hello-interval 15"
-# Solution marker: confirms the interface is in the expected state
-PREFLIGHT_SOLUTION_MARKER = "ip address 10.1.24.2"
+PREFLIGHT_CMD = "show running-config | section router ospf"
+PREFLIGHT_EXPECT = "network 10.0.123.0 0.0.0.255 area 0"
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
-    if PREFLIGHT_SOLUTION_MARKER not in output:
-        print(f"[!] Pre-flight failed: Gi0/0 does not have '{PREFLIGHT_SOLUTION_MARKER}'.")
+    if PREFLIGHT_EXPECT not in output:
+        print(f"[!] Pre-flight failed: R2 does not have '{PREFLIGHT_EXPECT}'.")
         print("    Run apply_solution.py first to restore the known-good config.")
-        return False
-    if PREFLIGHT_FAULT_MARKER in output:
-        print(f"[!] Pre-flight failed: '{PREFLIGHT_FAULT_MARKER}' already present.")
-        print("    Scenario 01 appears to be already injected. Restore with apply_solution.py.")
         return False
     return True
 
@@ -65,7 +59,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 01 (Hello Timer Mismatch)")
+    print("Fault Injection: Scenario 01 (R4 Cannot Reach R1 Loopback)")
     print("=" * 60)
 
     try:

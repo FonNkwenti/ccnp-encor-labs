@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
-Fault Injection: Scenario 02 -- Missing Network Statement
+Fault Injection: Scenario 02 -- No Adjacency Between R4 and R2
 
-Target:     R4 (router ospf 1)
-Injects:    Removes 'network 192.168.1.0 0.0.0.255 area 0' so R4's PC1
-            LAN (Gi0/2) is no longer advertised into OSPF.
-Fault Type: OSPF Route Advertisement Error
+Target:     R4 (Gi0/0, P2P link to R2 at 10.1.24.0/30)
+Injects:    Removes the tuned OSPF hello (5 s) and dead (20 s) timers from
+            R4 Gi0/0, reverting it to IOS defaults (hello=10, dead=40).
+            R2 Gi0/1 retains the tuned timers (hello=5, dead=20).
+Fault Type: OSPF Hello/Dead Timer Mismatch on P2P Link
 
-Result:     PC1 (192.168.1.10) can still reach R4 (local subnet), but
-            remote routers have no route to 192.168.1.0/24 -- so PC1
-            cannot reach PC2 (192.168.2.0/24) or any other remote prefix.
+Result:     OSPF requires both ends of a link to agree on the dead-interval.
+            Mismatched timers prevent the two-way Hello exchange from
+            completing. Neither R4 nor R2 will see the other in
+            'show ip ospf neighbor'; the adjacency never reaches FULL.
 
 Before running, ensure the lab is in the SOLUTION state:
     python3 apply_solution.py --host <eve-ng-ip>
@@ -29,18 +31,18 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 DEFAULT_LAB_PATH = "ospf/lab-00-single-area-ospfv2.unl"
 DEVICE_NAME = "R4"
 FAULT_COMMANDS = [
-    "router ospf 1",
-    "no network 192.168.1.0 0.0.0.255 area 0",
+    "interface GigabitEthernet0/0",
+    "no ip ospf hello-interval",
+    "no ip ospf dead-interval",
 ]
-PREFLIGHT_CMD = "show running-config | section router ospf"
-# Solution state has the network statement present; fault removes it
-PREFLIGHT_EXPECT = "network 192.168.1.0 0.0.0.255 area 0"
+PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/0"
+PREFLIGHT_EXPECT = "ip ospf hello-interval 5"
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
     if PREFLIGHT_EXPECT not in output:
-        print(f"[!] Pre-flight failed: R4 does not have '{PREFLIGHT_EXPECT}'.")
+        print(f"[!] Pre-flight failed: R4 Gi0/0 does not have '{PREFLIGHT_EXPECT}'.")
         print("    Run apply_solution.py first to restore the known-good config.")
         return False
     return True
@@ -59,7 +61,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (Missing Network Statement)")
+    print("Fault Injection: Scenario 02 (No Adjacency Between R4 and R2)")
     print("=" * 60)
 
     try:

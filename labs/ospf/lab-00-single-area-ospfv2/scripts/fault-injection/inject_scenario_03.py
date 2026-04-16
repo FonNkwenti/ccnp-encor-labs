@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """
-Fault Injection: Scenario 03 -- Passive Interface on Transit Link
+Fault Injection: Scenario 03 -- PC1 Cannot Reach PC2
 
-Target:     R3 (router ospf 1)
-Injects:    'passive-interface GigabitEthernet0/1' on R3. Gi0/1 is the
-            transit link to R5 (10.2.35.0/30).
-Fault Type: OSPF Interface Configuration Error
+Target:     R5 (Gi0/1, passive interface toward the PC2 LAN 192.168.2.0/24)
+Injects:    Removes R5's OSPF network statement for the PC2 LAN so R5 stops
+            advertising the 192.168.2.0/24 prefix into OSPF Area 0.
+Fault Type: Missing OSPF Network Statement (Stub LAN)
 
-Result:     R3 stops sending Hellos on Gi0/1, so the R3<->R5 adjacency
-            never forms. R5 becomes isolated from the Area 0 backbone
-            and PC2 (192.168.2.0/24) is unreachable from PC1.
+Result:     All OSPF adjacencies remain FULL. Loopback reachability between
+            all routers continues to work. However, 192.168.2.0/24 disappears
+            from the LSDB and RIB of every router except R5 itself (which
+            has the connected route). PC1 on 192.168.1.0/24 cannot reach
+            PC2 on 192.168.2.0/24.
 
 Before running, ensure the lab is in the SOLUTION state:
     python3 apply_solution.py --host <eve-ng-ip>
@@ -27,27 +29,20 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 
 DEFAULT_LAB_PATH = "ospf/lab-00-single-area-ospfv2.unl"
-DEVICE_NAME = "R3"
+DEVICE_NAME = "R5"
 FAULT_COMMANDS = [
     "router ospf 1",
-    "passive-interface GigabitEthernet0/1",
+    "no network 192.168.2.0 0.0.0.255 area 0",
 ]
 PREFLIGHT_CMD = "show running-config | section router ospf"
-# Fault marker: if already present, the fault is already injected -- bail out
-PREFLIGHT_FAULT_MARKER = "passive-interface GigabitEthernet0/1"
-# Solution marker: confirms OSPF still advertises the transit link
-PREFLIGHT_SOLUTION_MARKER = "network 10.2.35.0 0.0.0.3 area 0"
+PREFLIGHT_EXPECT = "network 192.168.2.0 0.0.0.255 area 0"
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
-    if PREFLIGHT_SOLUTION_MARKER not in output:
-        print(f"[!] Pre-flight failed: R3 OSPF does not advertise '{PREFLIGHT_SOLUTION_MARKER}'.")
+    if PREFLIGHT_EXPECT not in output:
+        print(f"[!] Pre-flight failed: R5 does not have '{PREFLIGHT_EXPECT}'.")
         print("    Run apply_solution.py first to restore the known-good config.")
-        return False
-    if PREFLIGHT_FAULT_MARKER in output:
-        print(f"[!] Pre-flight failed: '{PREFLIGHT_FAULT_MARKER}' already present.")
-        print("    Scenario 03 appears to be already injected. Restore with apply_solution.py.")
         return False
     return True
 
@@ -65,7 +60,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (Passive Interface on Transit)")
+    print("Fault Injection: Scenario 03 (PC1 Cannot Reach PC2)")
     print("=" * 60)
 
     try:

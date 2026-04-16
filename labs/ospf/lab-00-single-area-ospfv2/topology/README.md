@@ -7,7 +7,7 @@ in EVE-NG* before running `setup_lab.py`.
 
 | File | Purpose | Authoritative for |
 |------|---------|-------------------|
-| `topology.drawio` | Conceptual diagram (devices, areas, links) | **Design** -- read this first |
+| `topology.drawio` | Conceptual diagram (devices, areas, subnets, interfaces) | **Design** -- read this first |
 | `lab-00-single-area-ospfv2.unl` | EVE-NG native lab file | **EVE-NG build** -- import this |
 
 > **If `lab-00-single-area-ospfv2.unl` is missing** from this folder, the repo
@@ -17,8 +17,8 @@ in EVE-NG* before running `setup_lab.py`.
 ## Why both a `.drawio` and a `.unl`?
 
 - `.drawio` is **portable and reviewable** -- any contributor (or student)
-  can open it without EVE-NG and see the intent: which routers, which areas,
-  which links.
+  can open it without EVE-NG and see the intent: which routers, which links,
+  which subnets, where the shared Area 0 segment sits.
 - `.unl` is the **exact EVE-NG state** -- importing it gives the student
   the same node positions, interface assignments, and link IDs the lab
   author used. No manual wiring errors.
@@ -54,18 +54,17 @@ When you update the topology (added/removed nodes, changed links), re-export:
 
 If you're rebuilding manually from `topology.drawio`:
 
-- **Nodes:** R1-R5 (`iosv`), SW-AREA0 (`unmanaged_switch`), PC1 + PC2 (`vpc`)
-- **Area 0 broadcast segment:** R1:Gi0/0, R2:Gi0/0, R3:Gi0/0 all connect to
-  SW-AREA0 (shared `10.0.123.0/24`)
-- **Point-to-point links:**
-  - R2:Gi0/1 <-> R4:Gi0/0 (`10.1.24.0/30`)
-  - R3:Gi0/1 <-> R5:Gi0/0 (`10.2.35.0/30`)
-- **LAN segments:**
-  - R4:Gi0/2 <-> PC1 (`192.168.1.0/24`)
-  - R5:Gi0/1 <-> PC2 (`192.168.2.0/24`)
-- **Startup configs:** in the EVE-NG node dialog, set each router to load from
+- **Nodes:** R1-R5 (all `iosv`), SW-AREA0 (unmanaged switch), PC1 + PC2 (`vpc`)
+- **Shared segment (Area 0 broadcast):**
+  - R1:Gi0/0 <-> SW-AREA0:port1
+  - R2:Gi0/0 <-> SW-AREA0:port2
+  - R3:Gi0/0 <-> SW-AREA0:port3
+- **Point-to-point transits:**
+  - R2:Gi0/1 <-> R4:Gi0/0 (10.1.24.0/30 -- timer-tuned)
+  - R3:Gi0/1 <-> R5:Gi0/0 (10.2.35.0/30)
+- **PC LAN segments (passive-interface on router side):**
+  - R4:Gi0/2 <-> PC1 (192.168.1.0/24)
+  - R5:Gi0/1 <-> PC2 (192.168.2.0/24)
+- **Startup configs:** in the EVE-NG node dialog, set each node to load from
   `/opt/unetlab/labs/.../<node>.cfg` -- or let `setup_lab.py` push them after
   first boot (recommended).
-
-See [`../../baseline.yaml`](../../baseline.yaml) for the full device inventory
-and address plan (shared across all OSPF labs).

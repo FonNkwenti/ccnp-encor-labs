@@ -34,7 +34,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [ ] lab-05-capstone-troubleshoot
 
 ### 2. ospf (7 labs)
-- [x] lab-00-single-area-ospfv2 (built during test run)
+- [x] lab-00-single-area-ospfv2 (rebuilt to current skill standards 2026-04-16)
 - [ ] lab-01-multi-area-ospfv2
 - [ ] lab-02-network-types
 - [ ] lab-03-area-types
