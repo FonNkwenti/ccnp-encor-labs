@@ -1,0 +1,31 @@
+# Auto-generated — do not edit manually. Use /tag-lab to stamp external agent runs.
+lab: lab-05-capstone-troubleshoot
+chapter: switching
+created:
+  date: "2026-04-16"
+  agent: claude-opus-4-6
+  skill: lab-workbook-creator
+  skill_version: "2026-04-13"
+  files:
+    - workbook.md
+    - topology/topology.drawio
+    - topology/lab-05-capstone-troubleshoot.unl
+    - topology/lab-05-capstone-troubleshoot.zip
+    - setup_lab.py
+    - initial-configs/SW1.cfg
+    - initial-configs/SW2.cfg
+    - initial-configs/SW3.cfg
+    - initial-configs/R1.cfg
+    - solutions/SW1.cfg
+    - solutions/SW2.cfg
+    - solutions/SW3.cfg
+    - solutions/R1.cfg
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/inject_scenario_04.py
+    - scripts/fault-injection/inject_scenario_05.py
+    - scripts/fault-injection/inject_scenario_06.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+updated: []
