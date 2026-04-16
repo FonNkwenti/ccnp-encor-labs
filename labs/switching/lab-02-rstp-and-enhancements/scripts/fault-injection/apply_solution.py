@@ -22,7 +22,7 @@ sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
 from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
 
 
-DEFAULT_LAB_PATH = "switching/lab-02-rstp-and-enhancements.unl"
+DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-02-rstp-and-enhancements.unl"
 DEVICES = ["SW1", "SW2", "SW3", "R1"]
 SOLUTIONS_DIR = SCRIPT_DIR.parents[1] / "solutions"
 
@@ -51,7 +51,7 @@ def restore(host: str, name: str, port: int) -> bool:
         return False
 
     try:
-        conn.send_config_set(load_commands(cfg_path))
+        conn.send_config_set(load_commands(cfg_path), cmd_verify=False)
         conn.save_config()
         print(f"[+] {name}: solution applied.")
         return True

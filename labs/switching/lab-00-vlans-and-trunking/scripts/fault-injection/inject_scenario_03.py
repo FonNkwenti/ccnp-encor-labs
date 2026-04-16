@@ -21,7 +21,7 @@ sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
 from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
 
 
-DEFAULT_LAB_PATH = "switching/lab-00-vlans-and-trunking.unl"
+DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-00-vlans-and-trunking.unl"
 DEVICE_NAME = "SW3"
 FAULT_COMMANDS = [
     "interface GigabitEthernet1/1",
@@ -78,7 +78,7 @@ def main() -> int:
         if not args.skip_preflight and not preflight(conn):
             return 4
         print("[*] Injecting fault configuration ...")
-        conn.send_config_set(FAULT_COMMANDS)
+        conn.send_config_set(FAULT_COMMANDS, cmd_verify=False)
         conn.save_config()
     finally:
         conn.disconnect()

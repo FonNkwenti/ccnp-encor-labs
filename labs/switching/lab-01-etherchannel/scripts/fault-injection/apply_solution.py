@@ -28,7 +28,7 @@ sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
 from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
 
 SOLUTIONS_DIR = SCRIPT_DIR.parent.parent / "solutions"
-DEFAULT_LAB_PATH = "switching/lab-01-etherchannel.unl"
+DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-01-etherchannel.unl"
 DEVICES = ["SW1", "SW2", "SW3", "R1"]
 
 
@@ -57,7 +57,7 @@ def restore(host: str, name: str, port: int) -> bool:
 
     try:
         conn = connect_node(host, port)
-        conn.send_config_set(commands)
+        conn.send_config_set(commands, cmd_verify=False)
         conn.save_config()
         conn.disconnect()
         print(f"    [+] {name} restored.")

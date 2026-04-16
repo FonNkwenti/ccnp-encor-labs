@@ -10,7 +10,7 @@ Usage from a lab script (e.g. labs/switching/lab-00-vlans-and-trunking/setup_lab
     from eve_ng import require_host, discover_ports, connect_node
 
     host = require_host(args.host)
-    ports = discover_ports(host, "switching/lab-00-vlans-and-trunking.unl")
+    ports = discover_ports(host, "ccnp-encor/switching/lab-00-vlans-and-trunking.unl")
     conn = connect_node(host, ports["SW1"])
 
 All helpers fail loudly rather than return defaults — wrong host/port/lab
@@ -70,8 +70,8 @@ def discover_ports(
     Args:
         host: EVE-NG server IP/hostname (no scheme).
         lab_path: path of the .unl file on the EVE-NG server, e.g.
-            "switching/lab-00-vlans-and-trunking.unl". EVE-NG's API expects
-            this relative to /opt/unetlab/labs/.
+            "ccnp-encor/switching/lab-00-vlans-and-trunking.unl". EVE-NG's API
+            expects this relative to /opt/unetlab/labs/.
         username/password: EVE-NG web UI credentials (default admin/eve).
         scheme: "http" (default) or "https".
         timeout: per-request timeout in seconds.
@@ -134,9 +134,10 @@ def connect_node(host: str, port: int, timeout: int = 10):
     """Open a Netmiko telnet session to an EVE-NG console port.
 
     Credentials are blank by default — matches the unconfigured IOSv/IOSvL2
-    console on EVE-NG.
+    console on EVE-NG. Escalates to privileged EXEC automatically so that
+    send_config_set() works regardless of whether the node booted to '>' or '#'.
     """
-    return ConnectHandler(
+    conn = ConnectHandler(
         device_type="cisco_ios_telnet",
         host=host,
         port=port,
@@ -144,4 +145,16 @@ def connect_node(host: str, port: int, timeout: int = 10):
         password="",
         secret="",
         timeout=timeout,
+        global_delay_factor=2,
     )
+    # Normalize to privileged EXEC regardless of where the console was left:
+    #   (config)# → exit → # (already enabled, skip enable())
+    #   >         → enable → #
+    #   #         → already there, nothing to do
+    prompt = conn.find_prompt()
+    if "(config" in prompt:
+        conn.exit_config_mode()
+    elif not conn.check_enable_mode():
+        conn.enable()
+    conn.clear_buffer()  # flush syslog messages before caller uses the session
+    return conn

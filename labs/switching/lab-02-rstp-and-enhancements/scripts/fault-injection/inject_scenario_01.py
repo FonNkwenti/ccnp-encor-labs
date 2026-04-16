@@ -28,7 +28,7 @@ sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
 from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
 
 
-DEFAULT_LAB_PATH = "switching/lab-02-rstp-and-enhancements.unl"
+DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-02-rstp-and-enhancements.unl"
 DEVICE_NAME = "SW2"
 FAULT_COMMANDS = [
     "spanning-tree vlan 10 priority 0",
@@ -91,7 +91,7 @@ def main() -> int:
         if not args.skip_preflight and not preflight(conn):
             return 4
         print("[*] Injecting fault configuration ...")
-        conn.send_config_set(FAULT_COMMANDS)
+        conn.send_config_set(FAULT_COMMANDS, cmd_verify=False)
         conn.save_config()
     finally:
         conn.disconnect()
