@@ -28,10 +28,10 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 ### 1. switching (6 labs)
 - [x] lab-00-vlans-and-trunking (built during test run)
 - [x] lab-01-etherchannel
-- [ ] lab-02-rstp
-- [ ] lab-03-mst
-- [ ] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-02-rstp
+- [x] lab-03-mst
+- [x] lab-04-capstone-config
+- [x] lab-05-capstone-troubleshoot
 
 ### 2. ospf (7 labs)
 - [x] lab-00-single-area-ospfv2 (built during test run)
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 3 (switching/lab-00, ospf/lab-00 — test runs; switching/lab-01)
-- **Remaining:** 72
-- **Next up:** switching/lab-02-rstp-and-enhancements
+- **Built:** 7 (switching/lab-00, ospf/lab-00 — test runs; switching/lab-01, lab-02, lab-03, lab-04, lab-05)
+- **Remaining:** 68
+- **Next up:** ospf/lab-01-multi-area-ospfv2
