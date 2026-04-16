@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 """
+DEFERRED (2026-04-16): Not part of the current lab-build workflow.
+
+The project has reverted to operator-provided .unl files: the lab operator
+builds the topology in EVE-NG and exports the .unl manually. Do NOT run
+this script as part of a routine lab build. It is retained for possible
+future refinement — see .agent/skills/eve-ng/SKILL.md §7.
+
+---
+
 Generate EVE-NG .unl files for every lab in a topic from baseline.yaml.
 
 Reads:   labs/<topic>/baseline.yaml
