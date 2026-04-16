@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""
+Fault Injection: Scenario 03 -- Missing Area 2 Network Statement on R3
+
+Target:     R3 (router ospf 1 -- network statement for 10.2.35.0/30)
+Injects:    Removes `network 10.2.35.0 0.0.0.3 area 2` from R3.
+Fault Type: Missing OSPF network statement (ABR loses Area 2 membership)
+
+Result:     R3 no longer participates on the R3-R5 transit link in
+            OSPFv2. R3 is no longer an ABR (only member of Area 0),
+            no adjacency with R5, and no Type 3 LSAs for Area 2
+            prefixes reach Area 0. PC2 becomes unreachable from every
+            other router.
+
+Before running, ensure the lab is in the SOLUTION state:
+    python3 apply_solution.py --host <eve-ng-ip>
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR.parents[3] / "common" / "tools"))
+from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
+
+
+DEFAULT_LAB_PATH = "ospf/lab-01-multi-area-ospfv2.unl"
+DEVICE_NAME = "R3"
+FAULT_COMMANDS = [
+    "router ospf 1",
+    "no network 10.2.35.0 0.0.0.3 area 2",
+]
+PREFLIGHT_CMD = "show running-config | section router ospf 1"
+# Solution marker: Area 2 network statement must be present
+PREFLIGHT_SOLUTION_MARKER = "network 10.2.35.0 0.0.0.3 area 2"
+# Sanity marker: confirms R3 is in its expected ABR state on Area 0
+PREFLIGHT_INTERFACE_MARKER = "network 10.0.123.0 0.0.0.255 area 0"
+
+
+def preflight(conn) -> bool:
+    output = conn.send_command(PREFLIGHT_CMD)
+    if PREFLIGHT_INTERFACE_MARKER not in output:
+        print(f"[!] Pre-flight failed: R3 router ospf 1 missing "
+              f"'{PREFLIGHT_INTERFACE_MARKER}'.")
+        print("    Run apply_solution.py first to restore the known-good config.")
+        return False
+    if PREFLIGHT_SOLUTION_MARKER not in output:
+        print(f"[!] Pre-flight failed: '{PREFLIGHT_SOLUTION_MARKER}' absent.")
+        print("    Scenario 03 appears to be already injected, or Area 2 was never configured.")
+        print("    Restore with apply_solution.py.")
+        return False
+    return True
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Inject Scenario 03 fault (R3 missing Area 2 network)")
+    parser.add_argument("--host", default="192.168.x.x",
+                        help="EVE-NG server IP (required)")
+    parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,
+                        help=f"Lab .unl path (default: {DEFAULT_LAB_PATH})")
+    parser.add_argument("--skip-preflight", action="store_true",
+                        help="Skip the sanity check that target has expected config")
+    args = parser.parse_args()
+
+    host = require_host(args.host)
+
+    print("=" * 60)
+    print("Fault Injection: Scenario 03 (R3 Missing Area 2 Network Statement)")
+    print("=" * 60)
+
+    try:
+        ports = discover_ports(host, args.lab_path)
+    except EveNgError as exc:
+        print(f"[!] {exc}", file=sys.stderr)
+        return 3
+
+    port = ports.get(DEVICE_NAME)
+    if port is None:
+        print(f"[!] {DEVICE_NAME} not found in lab {args.lab_path}.")
+        return 3
+
+    print(f"[*] Connecting to {DEVICE_NAME} on {host}:{port} ...")
+    try:
+        conn = connect_node(host, port)
+    except Exception as exc:
+        print(f"[!] Connection failed: {exc}", file=sys.stderr)
+        return 3
+
+    try:
+        if not args.skip_preflight and not preflight(conn):
+            return 4
+        print("[*] Injecting fault configuration ...")
+        conn.send_config_set(FAULT_COMMANDS)
+        conn.save_config()
+    finally:
+        conn.disconnect()
+
+    print(f"[+] Fault injected on {DEVICE_NAME}. Scenario 03 is now active.")
+    print("=" * 60)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

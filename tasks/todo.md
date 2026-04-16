@@ -35,9 +35,9 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ### 2. ospf (7 labs)
 - [x] lab-00-single-area-ospfv2 (built during test run)
-- [ ] lab-01-multi-area-ospfv2
-- [ ] lab-02-network-types
-- [ ] lab-03-area-types
+- [x] lab-01-multi-area-ospfv2
+- [x] lab-02-network-types
+- [x] lab-03-area-types
 - [ ] lab-04-summarization-filtering
 - [ ] lab-05-capstone-config
 - [ ] lab-06-capstone-troubleshoot
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 7 (switching/lab-00, ospf/lab-00 — test runs; switching/lab-01, lab-02, lab-03, lab-04, lab-05)
-- **Remaining:** 68
-- **Next up:** ospf/lab-01-multi-area-ospfv2
+- **Built:** 10 (switching/lab-00, ospf/lab-00 — test runs; switching/lab-01, lab-02, lab-03, lab-04, lab-05; ospf/lab-01, ospf/lab-02, ospf/lab-03)
+- **Remaining:** 65
+- **Next up:** ospf/lab-04-summarization-filtering
