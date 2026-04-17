@@ -1,0 +1,247 @@
+<mxfile host="65bd71144e">
+    <diagram id="ospf-lab-06" name="OSPF Comprehensive Troubleshooting Capstone II">
+        <mxGraphModel dx="1776" dy="2047" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1400" background="#1a1a2e" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+
+                <!-- Title -->
+                <mxCell id="title" value="&lt;font style=&quot;font-size:17px;&quot; color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Lab 06 — OSPF Comprehensive Troubleshooting: Capstone II&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="12" width="1000" height="35" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════ -->
+                <!-- ZONE BOXES — drawn FIRST (behind everything) -->
+                <!-- ═══════════════════════════════════════════ -->
+
+                <!-- Area 0 (Backbone) — blue zone -->
+                <mxCell id="zone_area0" value="Area 0 (Backbone)" style="rounded=1;arcSize=5;whiteSpace=wrap;html=1;dashed=1;strokeColor=#1565C0;strokeWidth=2;fillColor=#1a3a5c;opacity=35;fontSize=13;fontStyle=1;verticalAlign=top;fontColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="390" y="60" width="820" height="460" as="geometry"/>
+                </mxCell>
+
+                <!-- Area 1 (Totally Stubby) — orange zone -->
+                <mxCell id="zone_area1" value="Area 1 (Totally Stubby)" style="rounded=1;arcSize=5;whiteSpace=wrap;html=1;dashed=1;strokeColor=#E65100;strokeWidth=2;fillColor=#4a1e00;opacity=35;fontSize=13;fontStyle=1;verticalAlign=top;fontColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="220" y="400" width="640" height="700" as="geometry"/>
+                </mxCell>
+
+                <!-- Area 2 (NSSA) — purple zone -->
+                <mxCell id="zone_area2" value="Area 2 (NSSA)" style="rounded=1;arcSize=5;whiteSpace=wrap;html=1;dashed=1;strokeColor=#6A1B9A;strokeWidth=2;fillColor=#2e0d40;opacity=35;fontSize=13;fontStyle=1;verticalAlign=top;fontColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="1010" y="400" width="460" height="700" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════ -->
+                <!-- DEVICES                                      -->
+                <!-- ═══════════════════════════════════════════ -->
+
+                <!-- R1 — Backbone Router -->
+                <mxCell id="R1" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Backbone Router&lt;br&gt;Area 0 only&lt;br&gt;Lo0: 1.1.1.1/32&lt;br&gt;distribute-list in&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];verticalLabelPosition=top;html=1;verticalAlign=bottom;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="770" y="100" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- SW-AREA0 — Unmanaged L2 Switch -->
+                <mxCell id="SW_AREA0" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;SW-AREA0&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Unmanaged Switch&lt;br&gt;Area 0 Broadcast&lt;br&gt;10.0.123.0/24&lt;/font&gt;" style="sketch=0;points=[[0.015,0.015,0],[0.985,0.015,0],[0.985,0.985,0],[0.015,0.985,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0.25,0],[1,0.5,0],[1,0.75,0],[0.75,1,0],[0.5,1,0],[0.25,1,0],[0,0.75,0],[0,0.5,0],[0,0.25,0]];verticalLabelPosition=bottom;html=1;verticalAlign=top;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=workgroup_switch;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="770" y="260" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- R2 — ABR Area 0/1 + Summarization ABR -->
+                <mxCell id="R2" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R2&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;ABR (Area 0/1)&lt;br&gt;Lo0: 2.2.2.2/32&lt;br&gt;area 1 range 10.1.4.0/22&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];labelPosition=left;verticalLabelPosition=middle;html=1;verticalAlign=middle;aspect=fixed;align=right;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="500" y="430" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- R3 — ABR Area 0/2 -->
+                <mxCell id="R3" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R3&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;ABR (Area 0/2)&lt;br&gt;Lo0: 3.3.3.3/32&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];labelPosition=right;verticalLabelPosition=middle;html=1;verticalAlign=middle;aspect=fixed;align=left;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="1100" y="430" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- R4 — Internal Area 1 + Summarization source -->
+                <mxCell id="R4" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R4&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Internal (Area 1)&lt;br&gt;Lo0: 4.4.4.4/32&lt;br&gt;Lo1-4: 10.1.4-7.0/24&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];labelPosition=left;verticalLabelPosition=middle;html=1;verticalAlign=middle;aspect=fixed;align=right;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="680" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- R6 — Internal Area 1 -->
+                <mxCell id="R6" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R6&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Internal (Area 1)&lt;br&gt;Lo0: 6.6.6.6/32&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];labelPosition=right;verticalLabelPosition=middle;html=1;verticalAlign=middle;aspect=fixed;align=left;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="630" y="680" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- R5 — ASBR Area 2 + ASBR summarization -->
+                <mxCell id="R5" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R5&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;ASBR (Area 2)&lt;br&gt;Lo0: 5.5.5.5/32&lt;br&gt;Lo1: 172.16.5.1/24&lt;br&gt;Lo2: 172.16.6.1/24&lt;br&gt;summary-addr 172.16.0.0/16&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];labelPosition=right;verticalLabelPosition=middle;html=1;verticalAlign=middle;aspect=fixed;align=left;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" vertex="1" parent="1">
+                    <mxGeometry x="1100" y="680" width="60" height="60" as="geometry"/>
+                </mxCell>
+
+                <!-- PC1 — Area 1 LAN -->
+                <mxCell id="PC1" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;PC1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;VPC — Area 1 LAN&lt;br&gt;192.168.1.10/24&lt;br&gt;GW: 192.168.1.1&lt;/font&gt;" style="points=[[0.03,0.03,0],[0.5,0,0],[0.97,0.03,0],[1,0.4,0],[0.97,0.745,0],[0.5,1,0],[0.03,0.745,0],[0,0.4,0]];verticalLabelPosition=bottom;sketch=0;html=1;verticalAlign=top;aspect=fixed;align=center;pointerEvents=1;shape=mxgraph.cisco19.workstation;fillColor=#005073;strokeColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="355" y="930" width="50" height="40" as="geometry"/>
+                </mxCell>
+
+                <!-- PC2 — Area 2 LAN -->
+                <mxCell id="PC2" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;PC2&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;VPC — Area 2 LAN&lt;br&gt;192.168.2.10/24&lt;br&gt;GW: 192.168.2.1&lt;/font&gt;" style="points=[[0.03,0.03,0],[0.5,0,0],[0.97,0.03,0],[1,0.4,0],[0.97,0.745,0],[0.5,1,0],[0.03,0.745,0],[0,0.4,0]];verticalLabelPosition=bottom;sketch=0;html=1;verticalAlign=top;aspect=fixed;align=center;pointerEvents=1;shape=mxgraph.cisco19.workstation;fillColor=#005073;strokeColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="1105" y="930" width="50" height="40" as="geometry"/>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════ -->
+                <!-- LINKS                                        -->
+                <!-- ═══════════════════════════════════════════ -->
+
+                <!-- L1: R1 Gi0/0 ↔ SW-AREA0 -->
+                <mxCell id="L1" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="R1" target="SW_AREA0">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L1_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L1">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L1_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/0&lt;br&gt;10.0.123.1/24&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L1">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="55" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L1_dst_lbl" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;port1&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L1">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+
+                <!-- L2: R2 Gi0/0 ↔ SW-AREA0 -->
+                <mxCell id="L2" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="R2" target="SW_AREA0">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="530" y="290"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L2_src_oct" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L2">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L2_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/0&lt;br&gt;10.0.123.2/24&lt;/font&gt;" style="edgeLabel;html=1;align=right;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L2">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="-55" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L2_dst_lbl" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;port2&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L2">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+
+                <!-- L3: R3 Gi0/0 ↔ SW-AREA0 -->
+                <mxCell id="L3" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="R3" target="SW_AREA0">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1130" y="290"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L3_src_oct" value=".3" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L3">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L3_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/0&lt;br&gt;10.0.123.3/24&lt;/font&gt;" style="edgeLabel;html=1;align=left;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L3">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="55" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="L3_dst_lbl" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;port3&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L3">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+
+                <!-- L4: R2 Gi0/1 ↔ R4 Gi0/0 — Area 1 p2p -->
+                <mxCell id="L4" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;" edge="1" parent="1" source="R2" target="R4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L4_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L4">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L4_dst_oct" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L4">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="L4_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/1 — Gi0/0&lt;br&gt;10.1.24.0/30&lt;br&gt;(Area 1 p2p)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L4">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="-55" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- L5: R3 Gi0/1 ↔ R5 Gi0/0 — Area 2 p2p -->
+                <mxCell id="L5" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="R3" target="R5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L5_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L5">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L5_dst_oct" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L5">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="L5_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/1 — Gi0/0&lt;br&gt;10.2.35.0/30&lt;br&gt;(Area 2 p2p)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L5">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="70" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- L6: R4 Gi0/2 ↔ PC1 e0 — Area 1 LAN -->
+                <mxCell id="L6" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="R4" target="PC1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L6_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L6">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L6_dst_oct" value=".10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L6">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="L6_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/2 — e0&lt;br&gt;192.168.1.0/24&lt;br&gt;(Area 1 LAN)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L6">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="-65" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- L7: R5 Gi0/1 ↔ PC2 e0 — Area 2 LAN -->
+                <mxCell id="L7" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="R5" target="PC2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L7_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L7">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L7_dst_oct" value=".10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L7">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="L7_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/1 — e0&lt;br&gt;192.168.2.0/24&lt;br&gt;(Area 2 LAN)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L7">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="70" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- L8: R2 Gi0/2 ↔ R6 Gi0/0 — Area 1 p2p -->
+                <mxCell id="L8" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;" edge="1" parent="1" source="R2" target="R6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L8_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L8">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L8_dst_oct" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L8">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="L8_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/2 — Gi0/0&lt;br&gt;10.1.26.0/30&lt;br&gt;(Area 1 p2p)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L8">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="55" y="0" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- L9: R4 Gi0/1 ↔ R6 Gi0/1 — Area 1 p2p -->
+                <mxCell id="L9" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="R4" target="R6">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="L9_src_oct" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L9">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="L9_dst_oct" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" vertex="1" connectable="0" parent="L9">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="L9_mid" value="&lt;font color=&quot;#AAAAAA&quot; style=&quot;font-size:9px;&quot;&gt;Gi0/1 — Gi0/1&lt;br&gt;10.1.46.0/30&lt;br&gt;(Area 1 p2p)&lt;/font&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];labelBackgroundColor=none;" vertex="1" connectable="0" parent="L9">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint x="0" y="-25" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+
+                <!-- ═══════════════════════════════════════════ -->
+                <!-- LEGEND BOX                                   -->
+                <!-- ═══════════════════════════════════════════ -->
+                <mxCell id="legend" value="&lt;b&gt;&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-size:12px;&quot;&gt;LEGEND&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#FFFFFF&quot; style=&quot;font-size:10px;&quot;&gt;&lt;br&gt;&lt;b&gt;OSPF Areas&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#4FC3F7&quot;&gt;Area 0&lt;/font&gt; — Backbone: R1, R2, R3, SW-AREA0&lt;br&gt;&lt;font color=&quot;#FF7043&quot;&gt;Area 1&lt;/font&gt; — Totally Stubby: R2 (ABR), R4, R6&lt;br&gt;&lt;font color=&quot;#CE93D8&quot;&gt;Area 2&lt;/font&gt; — NSSA: R3 (ABR), R5 (ASBR)&lt;br&gt;&lt;br&gt;&lt;b&gt;Summarization&lt;/b&gt;&lt;br&gt;R2 (ABR): area 1 range 10.1.4.0/22&lt;br&gt;R2: area 1 range 10.1.6.0/24 not-adv&lt;br&gt;R4: Lo1-4 = 10.1.4-7.0/24 (sources)&lt;br&gt;R5 (ASBR): summary-address 172.16.0.0/16&lt;br&gt;&lt;br&gt;&lt;b&gt;Filtering&lt;/b&gt;&lt;br&gt;R1: distribute-list prefix BLOCK_10_1_5 in&lt;br&gt;(blocks 10.1.5.0/24 from RIB on R1)&lt;br&gt;&lt;br&gt;&lt;b&gt;Label Rule&lt;/b&gt;&lt;br&gt;Label on side with no connections;&lt;br&gt;default bottom when all sides used.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#FFFFFF;fontColor=#FFFFFF;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;arcSize=3;" vertex="1" parent="1">
+                    <mxGeometry x="1490" y="580" width="280" height="450" as="geometry"/>
+                </mxCell>
+
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
