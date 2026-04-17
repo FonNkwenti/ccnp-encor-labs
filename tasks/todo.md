@@ -54,7 +54,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-01-ibgp-and-dual-stack
 - [x] lab-02-best-path-selection
 - [x] lab-03-capstone-config
-- [ ] lab-04-capstone-troubleshoot
+- [x] lab-04-capstone-troubleshoot
 
 ### 5. ip-services (6 labs)
 - [ ] lab-00-ntp-and-qos
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 22 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-03)
-- **Remaining:** 53
-- **Next up:** bgp/lab-04-capstone-troubleshoot
+- **Built:** 23 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04)
+- **Remaining:** 52
+- **Next up:** ip-services/lab-00-ntp-and-qos
