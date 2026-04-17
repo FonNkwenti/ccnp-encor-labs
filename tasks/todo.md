@@ -38,12 +38,12 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-01-multi-area-ospfv2
 - [x] lab-02-network-types
 - [x] lab-03-area-types
-- [ ] lab-04-summarization-filtering
-- [ ] lab-05-capstone-config
-- [ ] lab-06-capstone-troubleshoot
+- [x] lab-04-summarization-filtering
+- [x] lab-05-capstone-config
+- [x] lab-06-capstone-troubleshoot
 
 ### 3. eigrp (5 labs)
-- [ ] lab-00-classic-eigrp
+- [x] lab-00-classic-eigrp
 - [ ] lab-01-named-mode-dual-stack
 - [ ] lab-02-stub-summarization-variance
 - [ ] lab-03-capstone-config
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 10 (switching/lab-00, ospf/lab-00 — test runs; switching/lab-01, lab-02, lab-03, lab-04, lab-05; ospf/lab-01, ospf/lab-02, ospf/lab-03)
-- **Remaining:** 65
-- **Next up:** ospf/lab-04-summarization-filtering
+- **Built:** 14 (switching 00-05; ospf 00-06; eigrp/lab-00)
+- **Remaining:** 61
+- **Next up:** eigrp/lab-01-named-mode-dual-stack
