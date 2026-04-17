@@ -50,7 +50,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-04-capstone-troubleshoot
 
 ### 4. bgp (5 labs)
-- [ ] lab-00-ebgp-peering
+- [x] lab-00-ebgp-peering
 - [ ] lab-01-ibgp-and-dual-stack
 - [ ] lab-02-best-path-selection
 - [ ] lab-03-capstone-config
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 18 (switching 00-05; ospf 00-06; eigrp 00-04)
-- **Remaining:** 57
-- **Next up:** bgp/lab-00-ebgp-peering
+- **Built:** 19 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00)
+- **Remaining:** 56
+- **Next up:** bgp/lab-01-ibgp-and-dual-stack
