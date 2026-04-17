@@ -1,0 +1,41 @@
+lab:
+  number: 5
+  folder: lab-05-capstone-troubleshoot
+  title: "IP Services Comprehensive Troubleshooting — Capstone II"
+  topic: ip-services
+  difficulty: Advanced
+  type: capstone_ii
+  time_minutes: 120
+  devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+  blueprint_refs:
+    - "1.4"
+    - "3.3.a"
+    - "3.3.b"
+    - "3.3.c"
+  initial_configs_source: pre-broken (6 concurrent faults)
+  clean_slate: true
+  faults:
+    - id: 1
+      device: R1
+      category: NAT
+      description: "NAT inside/outside interfaces reversed (Gi0/0=outside, Gi0/1=inside)"
+    - id: 2
+      device: R1
+      category: NAT
+      description: "NAT-PAT ACL matches wrong subnet (10.0.13.0 instead of 192.168.1.0)"
+    - id: 3
+      device: R1
+      category: FHRP
+      description: "VRRP track decrement too small (5 instead of 20 — failover won't trigger)"
+    - id: 4
+      device: R2
+      category: NTP
+      description: "NTP authentication key-string mismatch (NTP_KEY_WRONG)"
+    - id: 5
+      device: R2
+      category: FHRP
+      description: "VRRPv3 IPv6 address-family missing (no IPv6 gateway redundancy)"
+    - id: 6
+      device: R3
+      category: OSPF
+      description: "OSPF passive-interface on Gi0/0 blocks R1-R3 adjacency"
