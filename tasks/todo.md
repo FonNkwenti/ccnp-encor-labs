@@ -58,7 +58,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ### 5. ip-services (6 labs)
 - [x] lab-00-ntp-and-qos
-- [ ] lab-01-nat-pat
+- [x] lab-01-nat-pat
 - [ ] lab-02-hsrp
 - [ ] lab-03-vrrp-dual-stack
 - [ ] lab-04-capstone-config
