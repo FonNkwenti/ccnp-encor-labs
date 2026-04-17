@@ -1,0 +1,16 @@
+lab:
+  number: 4
+  folder: lab-04-capstone-config
+  title: "IP Services Full Mastery — Capstone I"
+  topic: ip-services
+  difficulty: Advanced
+  type: capstone_i
+  time_minutes: 120
+  devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+  blueprint_refs:
+    - "1.4"
+    - "3.3.a"
+    - "3.3.b"
+    - "3.3.c"
+  initial_configs_source: baseline.yaml core_topology (IP addressing only)
+  clean_slate: true
