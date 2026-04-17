@@ -69,8 +69,8 @@ def preflight(conn) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Inject Scenario 02 fault")
-    parser.add_argument("--host", default="192.168.1.214",
-                        help="EVE-NG server IP (default: 192.168.1.214)")
+    parser.add_argument("--host", default="192.168.242.128",
+                        help="EVE-NG server IP (default: 192.168.242.128)")
     parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,
                         help=f"Lab .unl path (default: {DEFAULT_LAB_PATH})")
     parser.add_argument("--skip-preflight", action="store_true",

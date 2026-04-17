@@ -71,8 +71,8 @@ def push_device(host: str, name: str, port: int) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Push initial configs for switching lab-04")
-    parser.add_argument("--host", default="192.168.1.214",
-                        help="EVE-NG server IP (default: 192.168.1.214)")
+    parser.add_argument("--host", default="192.168.242.128",
+                        help="EVE-NG server IP (default: 192.168.242.128)")
     parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,
                         help=f"Lab .unl path (default: {DEFAULT_LAB_PATH})")
     args = parser.parse_args()

@@ -43,7 +43,7 @@ python3 apply_solution.py --host <eve-ng-ip>
 
 All scripts accept the same base arguments:
 
-- `--host <ip>` (default: `192.168.1.214`): EVE-NG server IP
+- `--host <ip>` (default: `192.168.242.128`): EVE-NG server IP
 - `--lab-path <path>`: Path of the .unl on EVE-NG (default:
   `switching/lab-05-capstone-troubleshoot.unl`). Override if you imported
   the lab to a different folder.

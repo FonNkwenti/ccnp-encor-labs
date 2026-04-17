@@ -7,7 +7,7 @@ into a terminal to verify console reachability per node.
 
 Usage:
     python labs/common/tools/show_ports.py --lab-path switching/lab-00-vlans-and-trunking.unl
-    python labs/common/tools/show_ports.py --host 192.168.1.214 --lab-path switching/lab-00-vlans-and-trunking.unl
+    python labs/common/tools/show_ports.py --host 192.168.242.128 --lab-path switching/lab-00-vlans-and-trunking.unl
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from eve_ng import EveNgError, discover_ports  # noqa: E402
 
 
-DEFAULT_HOST = "192.168.1.214"
+DEFAULT_HOST = "192.168.242.128"
 
 
 def main() -> int:
