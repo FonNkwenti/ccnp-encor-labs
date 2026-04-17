@@ -1,0 +1,39 @@
+lab:
+  number: 3
+  folder: lab-03-capstone-config
+  title: "BGP Full Protocol Mastery -- Capstone I"
+  topic: bgp
+  exam: "350-401"
+  difficulty: Advanced
+  type: capstone_i
+  clean_slate: true
+  time_minutes: 120
+  blueprint_refs: ["3.2.c"]
+  devices: [R1, R2, R3, R4, PC1, PC2]
+
+skill:
+  version: "2026-04-17"
+  created_by: claude-opus-4-7
+  skill_used: lab-workbook-creator
+
+files:
+  workbook: workbook.md
+  initial_configs:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/R4.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+  solutions:
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/R4.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+  topology: topology/topology.drawio
+  setup_script: setup_lab.py
+  fault_injection:
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
