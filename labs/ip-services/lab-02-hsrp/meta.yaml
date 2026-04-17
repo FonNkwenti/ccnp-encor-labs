@@ -1,0 +1,13 @@
+lab:
+  number: 2
+  folder: lab-02-hsrp
+  title: "HSRP — First Hop Redundancy"
+  topic: ip-services
+  difficulty: Intermediate
+  type: progressive
+  time_minutes: 75
+  devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+  blueprint_refs:
+    - "3.3.c"
+  initial_configs_source: lab-01-nat-pat/solutions
+  clean_slate: false
