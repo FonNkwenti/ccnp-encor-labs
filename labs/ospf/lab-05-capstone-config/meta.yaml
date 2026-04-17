@@ -1,0 +1,48 @@
+lab:
+  number: 5
+  folder: lab-05-capstone-config
+  title: "OSPF Full Protocol Mastery -- Capstone I"
+  topic: ospf
+  difficulty: Advanced
+  type: capstone_i
+  clean_slate: true
+  time_minutes: 120
+  blueprint_refs:
+    - "3.2.a"
+    - "3.2.b"
+  devices: [R1, R2, R3, R4, R5, R6, SW-AREA0, PC1, PC2]
+
+skill:
+  version: "2026-04-17"
+  created_by: claude-sonnet-4-6
+  skill_used: lab-workbook-creator
+
+files:
+  workbook: workbook.md
+  initial_configs:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/R4.cfg
+    - initial-configs/R5.cfg
+    - initial-configs/R6.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+  solutions:
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/R4.cfg
+    - solutions/R5.cfg
+    - solutions/R6.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+  topology: topology/topology.drawio
+  setup_script: setup_lab.py
+  fault_injection:
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/inject_scenario_04.py
+    - scripts/fault-injection/inject_scenario_05.py
+    - scripts/fault-injection/apply_solution.py
