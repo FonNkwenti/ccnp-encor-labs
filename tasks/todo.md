@@ -62,7 +62,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-02-hsrp
 - [x] lab-03-vrrp-dual-stack
 - [x] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-05-capstone-troubleshoot
 
 ### 6. multicast (5 labs)
 - [ ] lab-00-pim-sm-and-igmp
