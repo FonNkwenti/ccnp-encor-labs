@@ -1,0 +1,13 @@
+lab:
+  number: 3
+  folder: lab-03-vrrp-dual-stack
+  title: "VRRP and Dual-Stack Gateway Redundancy"
+  topic: ip-services
+  difficulty: Intermediate
+  type: progressive
+  time_minutes: 75
+  devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+  blueprint_refs:
+    - "3.3.c"
+  initial_configs_source: lab-02-hsrp/solutions
+  clean_slate: false
