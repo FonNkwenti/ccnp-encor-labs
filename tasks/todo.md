@@ -45,9 +45,9 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 ### 3. eigrp (5 labs)
 - [x] lab-00-classic-eigrp
 - [x] lab-01-named-mode-dual-stack
-- [ ] lab-02-stub-summarization-variance
-- [ ] lab-03-capstone-config
-- [ ] lab-04-capstone-troubleshoot
+- [x] lab-02-stub-summarization-variance
+- [x] lab-03-capstone-config
+- [x] lab-04-capstone-troubleshoot
 
 ### 4. bgp (5 labs)
 - [ ] lab-00-ebgp-peering
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 15 (switching 00-05; ospf 00-06; eigrp 00-01)
-- **Remaining:** 60
-- **Next up:** eigrp/lab-02-stub-summarization-variance
+- **Built:** 18 (switching 00-05; ospf 00-06; eigrp 00-04)
+- **Remaining:** 57
+- **Next up:** bgp/lab-00-ebgp-peering
