@@ -1,0 +1,35 @@
+lab:
+  number: 0
+  folder: lab-00-ebgp-peering
+  title: "eBGP Peering Fundamentals"
+  topic: bgp
+  exam: "350-401"
+  difficulty: Foundation
+  type: progressive
+  time_minutes: 60
+  blueprint_refs: ["3.2.c"]
+  devices: [R1, R3, PC1]
+
+skill:
+  version: "2026-04-17"
+  created_by: claude-opus-4-7
+  skill_used: lab-workbook-creator
+
+files:
+  workbook: workbook.md
+  initial_configs:
+    - initial-configs/R1.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/PC1.vpc
+  solutions:
+    - solutions/R1.cfg
+    - solutions/R3.cfg
+    - solutions/PC1.vpc
+  topology: topology/topology.drawio
+  setup_script: setup_lab.py
+  fault_injection:
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
