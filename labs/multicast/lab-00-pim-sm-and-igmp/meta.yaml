@@ -1,0 +1,29 @@
+topic: multicast
+lab_number: 0
+folder: lab-00-pim-sm-and-igmp
+title: "PIM Sparse Mode, IGMP, and RPF Fundamentals"
+type: progressive
+difficulty: Foundation
+time_minutes: 60
+clean_slate: false
+initial_configs_source: baseline.yaml core_topology (IP + OSPF)
+blueprint_refs:
+  - "3.3.d"
+devices:
+  - R1
+  - R2
+  - R3
+  - PC1
+  - PC2
+objectives:
+  - Enable PIM Sparse Mode on all router interfaces
+  - Configure a static RP (R2 Loopback0) on all routers
+  - Verify IGMP v2 membership reports on the receiver LAN (R3 Gi0/2)
+  - Examine the RPF check for a multicast source using show ip rpf
+  - Verify the multicast routing table — shared tree (*,G) and source tree (S,G)
+  - Trace the multicast forwarding path from source to receiver through the RP
+  - Observe SPT switchover behavior
+created:
+  date: "2026-04-17"
+  agent: claude-sonnet-4-6
+  skill: lab-workbook-creator
