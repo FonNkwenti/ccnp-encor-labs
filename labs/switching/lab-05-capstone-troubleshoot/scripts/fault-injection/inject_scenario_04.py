@@ -63,7 +63,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 04 (Superior BPDU / Root Guard on Po1)")
+    print("Fault Injection: Scenario 04")
     print("=" * 60)
 
     try:

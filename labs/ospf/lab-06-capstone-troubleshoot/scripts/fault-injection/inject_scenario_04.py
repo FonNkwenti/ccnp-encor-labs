@@ -55,7 +55,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 04 (Network Type Mismatch on R6 Gi0/0)")
+    print("Fault Injection: Scenario 04")
     print("=" * 60)
 
     try:

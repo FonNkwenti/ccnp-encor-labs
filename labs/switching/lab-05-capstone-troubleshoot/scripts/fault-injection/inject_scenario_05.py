@@ -68,7 +68,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 05 (PC2 Access Port Shutdown)")
+    print("Fault Injection: Scenario 05")
     print("=" * 60)
 
     try:

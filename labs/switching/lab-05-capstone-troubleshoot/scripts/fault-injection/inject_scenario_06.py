@@ -69,7 +69,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 06 (Access-VLAN Misassignment on SW2 Gi1/1)")
+    print("Fault Injection: Scenario 06")
     print("=" * 60)
 
     try:

@@ -961,15 +961,15 @@ Digest should now match SW1 and SW3.
 
 ### Core Implementation
 
-- [ ] Rapid PVST+ baseline captured before any changes (Task 1)
-- [ ] `show spanning-tree summary` on all three switches reads `mst mode (IEEE Standard)` (Task 2)
-- [ ] `show spanning-tree mst configuration` on SW1, SW2, SW3 is byte-for-byte identical — name ENCOR-REGION, revision 1, instance 1 = 10,99, instance 2 = 20,30 (Task 3)
-- [ ] `show spanning-tree mst 1` on SW1 reads `This bridge is the root` (Task 4)
-- [ ] `show spanning-tree mst 2` on SW2 reads `This bridge is the root` (Task 4)
-- [ ] On SW2 the same physical port has different roles per instance — e.g. Gi0/1 is Root for MST 1 and Designated for MST 2 (Task 5)
-- [ ] `show spanning-tree mst configuration digest` returns an identical Digest value on all three switches (Task 6)
-- [ ] Post-MST instance count in `show spanning-tree summary` is 3 (MST 0, 1, 2) — reduced from the per-VLAN count recorded in Task 1 (Task 7)
-- [ ] PC1 pings PC2, 192.168.10.1, and 192.168.20.1 with 0% loss (Task 8)
+- [x] Rapid PVST+ baseline captured before any changes (Task 1)
+- [x] `show spanning-tree summary` on all three switches reads `mst mode (IEEE Standard)` (Task 2)
+- [x] `show spanning-tree mst configuration` on SW1, SW2, SW3 is byte-for-byte identical — name ENCOR-REGION, revision 1, instance 1 = 10,99, instance 2 = 20,30 (Task 3)
+- [x] `show spanning-tree mst 1` on SW1 reads `This bridge is the root` (Task 4)
+- [x] `show spanning-tree mst 2` on SW2 reads `This bridge is the root` (Task 4)
+- [x] On SW2 the same physical port has different roles per instance — e.g. Gi0/1 is Root for MST 1 and Designated for MST 2 (Task 5)
+- [x] `show spanning-tree mst configuration digest` returns an identical Digest value on all three switches (Task 6)
+- [x] Post-MST instance count in `show spanning-tree summary` is 3 (MST 0, 1, 2) — reduced from the per-VLAN count recorded in Task 1 (Task 7)
+- [x] PC1 pings PC2, 192.168.10.1, and 192.168.20.1 with 0% loss (Task 8)
 
 ### Troubleshooting
 

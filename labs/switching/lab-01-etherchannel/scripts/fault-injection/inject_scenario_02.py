@@ -2,14 +2,19 @@
 """
 Fault Injection: Scenario 02 -- Po2 Down Between SW1 and SW3
 
-Target:     SW3 (Gi0/3, Gi1/0 -- Po2 members to SW1)
-Injects:    EtherChannel protocol mismatch -- changes SW3 members from
-            PAgP 'auto' to LACP 'active' (SW1 remains PAgP 'desirable')
-Fault Type: EtherChannel Protocol Mismatch (PAgP vs LACP)
+Target:     SW3 (all EtherChannel members)
+Injects:    EtherChannel protocol mismatch on ALL SW3 bundles:
+              Po2 (Gi0/3, Gi1/0): PAgP 'auto' → LACP 'active'
+                  SW1 remains PAgP 'desirable' → protocol mismatch, no bundle.
+              Po3 (Gi0/1, Gi0/2): static 'on' → LACP 'passive'
+                  SW2 remains static 'on' → static vs LACP, no bundle.
+Fault Type: EtherChannel Protocol Mismatch (PAgP vs LACP on Po2;
+                                            static vs LACP on Po3)
 
-Result:     No bundle forms between SW1 and SW3. Po2 goes down and the
-            VLAN 20 / PC2 segment becomes isolated from the rest of the
-            campus.
+Result:     Both SW3 uplinks (Po2 and Po3) go down, completely isolating
+            SW3 and PC2 from the campus. Faulting only Po2 leaves an
+            alternate path via Po3 (SW2-SW3) in the triangular mesh,
+            so both bundles must be broken to produce the expected symptom.
 
 IOS requires removing the channel-group membership before changing the
 mode to a different protocol family; commands are ordered accordingly.
@@ -32,12 +37,20 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-01-etherchannel.unl"
 DEVICE_NAME = "SW3"
 FAULT_COMMANDS = [
+    # Po2 fault: PAgP auto → LACP active (protocol mismatch with SW1 PAgP desirable)
     "interface GigabitEthernet0/3",
     "no channel-group 2",
     "channel-group 2 mode active",
     "interface GigabitEthernet1/0",
     "no channel-group 2",
     "channel-group 2 mode active",
+    # Po3 fault: static on → LACP passive (eliminates bypass via SW2-SW3)
+    "interface GigabitEthernet0/1",
+    "no channel-group 3",
+    "channel-group 3 mode passive",
+    "interface GigabitEthernet0/2",
+    "no channel-group 3",
+    "channel-group 3 mode passive",
 ]
 PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/3"
 # Solution state uses PAgP auto on SW3's Po2 members
@@ -66,7 +79,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (Po2 Protocol Mismatch PAgP/LACP)")
+    print("Fault Injection: Scenario 02")
     print("=" * 60)
 
     try:

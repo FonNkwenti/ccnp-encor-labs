@@ -60,7 +60,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (R1 VRRP priority 110 -> 100)")
+    print("Fault Injection: Scenario 03")
     print("=" * 60)
 
     try:

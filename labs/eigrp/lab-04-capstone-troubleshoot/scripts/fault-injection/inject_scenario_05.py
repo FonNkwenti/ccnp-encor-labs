@@ -66,7 +66,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 05 (R2 variance reverted to 1)")
+    print("Fault Injection: Scenario 05")
     print("=" * 60)
 
     try:

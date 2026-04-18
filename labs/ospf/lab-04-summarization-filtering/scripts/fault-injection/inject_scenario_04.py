@@ -62,7 +62,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 04 (Missing OSPFv3 IPv6 Area Range on R2)")
+    print("Fault Injection: Scenario 04")
     print("=" * 60)
 
     try:

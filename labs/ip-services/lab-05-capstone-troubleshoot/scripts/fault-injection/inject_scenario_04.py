@@ -48,7 +48,7 @@ def main() -> int:
     args = parser.parse_args()
     host = require_host(args.host)
     print("=" * 60)
-    print("Fault Injection: Scenario 04 (R2 NTP key-string mismatch)")
+    print("Fault Injection: Scenario 04")
     print("=" * 60)
     try:
         ports = discover_ports(host, args.lab_path)

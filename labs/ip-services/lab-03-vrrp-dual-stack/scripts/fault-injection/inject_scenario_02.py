@@ -57,7 +57,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (R2 VRRPv3 IPv6 address-family removed)")
+    print("Fault Injection: Scenario 02")
     print("=" * 60)
 
     try:

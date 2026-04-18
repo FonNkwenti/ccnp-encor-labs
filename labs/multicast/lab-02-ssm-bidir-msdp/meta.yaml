@@ -1,0 +1,52 @@
+topic: multicast
+lab_number: 2
+folder: lab-02-ssm-bidir-msdp
+title: "SSM, Bidirectional PIM, and MSDP"
+type: progressive
+difficulty: Intermediate
+time_minutes: 90
+clean_slate: false
+extends: lab-01-rp-discovery-and-igmpv3
+initial_configs_source: >
+  lab-01-rp-discovery-and-igmpv3/solutions for R1/R2/R3 (verbatim);
+  R4 is a minimal IP + OSPF build (new device, no multicast pre-configured)
+blueprint_refs:
+  - "3.3.d"
+devices:
+  - R1
+  - R2
+  - R3
+  - R4
+  - PC1
+  - PC2
+objectives:
+  - Bring R4 into the multicast fabric as its own single-router PIM domain with static RP self-reference
+  - Fence the two PIM domains with ip pim bsr-border on the four inter-domain interfaces
+  - Enable Source-Specific Multicast cluster-wide for 232.1.1.0/24
+  - Install a static IGMPv3 INCLUDE join on R3 Gi0/2 for (10.1.1.10, 232.1.1.1)
+  - Enable Bidirectional PIM cluster-wide; R2 advertises split rp-candidates (ASM + bidir)
+  - Verify DF election with show ip pim interface df on every segment
+  - Establish MSDP peering between R2 and R4 via Loopback0 with originator-id Loopback0
+  - R4 Lo0 joins 239.1.1.1 so MSDP SA cache becomes demonstrable when sources register at R2
+  - Validate end-to-end forwarding for ASM, SSM, and Bidir modes (three distinct mroute states)
+end_state:
+  rp_primary: 2.2.2.2 (R2 Lo0 — BSR RP for 239.1.1.0/24 ASM + 239.2.2.0/24 Bidir)
+  rp_secondary: 4.4.4.4 (R4 Lo0 — static RP for its own single-router PIM domain)
+  rp_discovery_main_domain: BSR
+  pim_domain_border: R2 Gi0/2, R3 Gi0/3, R4 Gi0/0, R4 Gi0/1 (all carry bsr-border)
+  ssm_range: 232.1.1.0/24
+  bidir_range: 239.2.2.0/24
+  igmp_version_on_receiver_lan: 3
+  static_joins:
+    R3 Gi0/2: [239.1.1.1 (ASM), 239.2.2.1 (Bidir), 232.1.1.1 source 10.1.1.10 (SSM)]
+    R4 Lo0: [239.1.1.1 (MSDP SA demo)]
+  msdp_peers:
+    - R2 Lo0 (2.2.2.2) <-> R4 Lo0 (4.4.4.4)
+fault_scenarios:
+  - scenario_01: R3 SSM range binding removed — source-specific joins rejected
+  - scenario_02: R1 missing ip pim bidir-enable — bidir traffic black-holed at source
+  - scenario_03: R2 missing ip msdp originator-id Loopback0 — R4 SA cache stays empty
+created:
+  date: "2026-04-18"
+  agent: claude-opus-4-7
+  skill: lab-workbook-creator

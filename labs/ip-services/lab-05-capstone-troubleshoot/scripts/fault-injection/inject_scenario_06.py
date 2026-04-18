@@ -50,7 +50,7 @@ def main() -> int:
     args = parser.parse_args()
     host = require_host(args.host)
     print("=" * 60)
-    print("Fault Injection: Scenario 06 (R3 OSPF passive on Gi0/0)")
+    print("Fault Injection: Scenario 06")
     print("=" * 60)
     try:
         ports = discover_ports(host, args.lab_path)

@@ -62,7 +62,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (R4 missing network 192.168.2.0)")
+    print("Fault Injection: Scenario 03")
     print("=" * 60)
 
     try:

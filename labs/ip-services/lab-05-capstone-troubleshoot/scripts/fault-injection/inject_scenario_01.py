@@ -50,7 +50,7 @@ def main() -> int:
     args = parser.parse_args()
     host = require_host(args.host)
     print("=" * 60)
-    print("Fault Injection: Scenario 01 (R1 NAT interfaces reversed)")
+    print("Fault Injection: Scenario 01")
     print("=" * 60)
     try:
         ports = discover_ports(host, args.lab_path)

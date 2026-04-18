@@ -67,7 +67,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (Suboptimal VLAN 20 Path)")
+    print("Fault Injection: Scenario 03")
     print("=" * 60)
 
     try:

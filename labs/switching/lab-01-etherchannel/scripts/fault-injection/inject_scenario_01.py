@@ -57,7 +57,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 01 (Po1 Native VLAN Mismatch)")
+    print("Fault Injection: Scenario 01")
     print("=" * 60)
 
     try:

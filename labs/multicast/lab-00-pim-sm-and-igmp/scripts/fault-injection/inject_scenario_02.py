@@ -37,7 +37,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (Multicast Lab 00)")
+    print("Fault Injection: Scenario 02")
     print("=" * 60)
 
     try:

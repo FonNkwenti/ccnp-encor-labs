@@ -78,7 +78,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (SW2 Drops VLAN 30 from MST Instance 2)")
+    print("Fault Injection: Scenario 03")
     print("=" * 60)
 
     try:

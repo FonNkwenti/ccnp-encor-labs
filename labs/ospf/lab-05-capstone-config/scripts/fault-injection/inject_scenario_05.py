@@ -57,7 +57,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 05 (Wrong Area in area range on R2)")
+    print("Fault Injection: Scenario 05")
     print("=" * 60)
 
     try:

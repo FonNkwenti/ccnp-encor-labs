@@ -69,7 +69,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (Wrong OSPF Priority on R3 Gi0/0)")
+    print("Fault Injection: Scenario 02")
     print("=" * 60)
 
     try:

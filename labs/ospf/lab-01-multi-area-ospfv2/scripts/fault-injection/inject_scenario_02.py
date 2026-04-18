@@ -68,7 +68,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (OSPFv3 Missing on R5 Gi0/0)")
+    print("Fault Injection: Scenario 02")
     print("=" * 60)
 
     try:

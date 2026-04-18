@@ -47,7 +47,7 @@ def main() -> int:
     args = parser.parse_args()
     host = require_host(args.host)
     print("=" * 60)
-    print("Fault Injection: Scenario 05 (R2 VRRPv3 IPv6 AF removed)")
+    print("Fault Injection: Scenario 05")
     print("=" * 60)
     try:
         ports = discover_ports(host, args.lab_path)

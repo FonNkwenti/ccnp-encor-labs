@@ -67,7 +67,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 01 (summary missing on R3)")
+    print("Fault Injection: Scenario 01")
     print("=" * 60)
 
     try:

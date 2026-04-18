@@ -64,7 +64,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 04 (R4 stub receive-only on IPv4)")
+    print("Fault Injection: Scenario 04")
     print("=" * 60)
 
     try:

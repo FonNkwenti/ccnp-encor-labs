@@ -2,8 +2,15 @@
 """
 Fault Injection: Scenario 01 -- Missing Allowed VLAN on Trunk
 
-Target:     SW1 (Gi0/3, Gi1/0 trunks to SW3)
-Injects:    Removes VLAN 20 from the trunk allowed list
+Target:     SW1 (all four switch-facing trunks: Gi0/1, Gi0/2, Gi0/3, Gi1/0)
+Injects:    Removes VLAN 20 from the trunk allowed list on every SW1 egress
+            toward the access layer, blocking all paths from R1 to PC2.
+
+            The topology is a triangular mesh (SW1-SW2-SW3 all interconnected),
+            so faulting only the direct SW1-SW3 links (Gi0/3, Gi1/0) leaves an
+            alternate path via SW1->SW2->SW3 that keeps the ping alive.
+            All four switch-facing ports must be faulted to eliminate the bypass.
+
 Fault Type: Trunk Allowed VLAN Restriction
 
 Before running, ensure the lab is in the SOLUTION state:
@@ -24,6 +31,10 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-00-vlans-and-trunking.unl"
 DEVICE_NAME = "SW1"
 FAULT_COMMANDS = [
+    "interface GigabitEthernet0/1",
+    "switchport trunk allowed vlan 10,30,99",
+    "interface GigabitEthernet0/2",
+    "switchport trunk allowed vlan 10,30,99",
     "interface GigabitEthernet0/3",
     "switchport trunk allowed vlan 10,30,99",
     "interface GigabitEthernet1/0",
@@ -31,7 +42,7 @@ FAULT_COMMANDS = [
 ]
 # Sanity check: target must currently have VLAN 20 in the allowed list
 # (otherwise we're breaking already-broken config)
-PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/3"
+PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/1"
 PREFLIGHT_MUST_CONTAIN = "allowed vlan"
 PREFLIGHT_MUST_INCLUDE_VLAN = "20"
 
@@ -39,14 +50,14 @@ PREFLIGHT_MUST_INCLUDE_VLAN = "20"
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
     if PREFLIGHT_MUST_CONTAIN not in output:
-        print("[!] Pre-flight failed: Gi0/3 has no trunk 'allowed vlan' line.")
+        print("[!] Pre-flight failed: Gi0/1 has no trunk 'allowed vlan' line.")
         print("    Run apply_solution.py first to restore the known-good config.")
         return False
     # Look at the line containing allowed vlan
     for line in output.splitlines():
         if PREFLIGHT_MUST_CONTAIN in line and PREFLIGHT_MUST_INCLUDE_VLAN in line:
             return True
-    print("[!] Pre-flight failed: VLAN 20 not in Gi0/3 allowed list -- already injected?")
+    print("[!] Pre-flight failed: VLAN 20 not in Gi0/1 allowed list -- already injected?")
     return False
 
 
@@ -63,7 +74,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 01 (Missing Allowed VLAN)")
+    print("Fault Injection: Scenario 01")
     print("=" * 60)
 
     try:

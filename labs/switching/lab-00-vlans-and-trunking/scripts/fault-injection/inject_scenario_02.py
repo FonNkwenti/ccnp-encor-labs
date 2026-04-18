@@ -23,6 +23,10 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-00-vlans-and-trunking.unl"
 DEVICE_NAME = "SW2"
+# CDP %NATIVE_VLAN_MISMATCH is guaranteed on Gi0/1 regardless of STP state.
+# VLAN 99 traffic impact depends on STP: if STP elects Gi0/1 as the active SW1-SW2
+# path (Gi0/2 blocked), management VLAN 99 breaks as designed. If STP inverts the
+# roles, the mismatch is silent for traffic but the CDP alarm still fires.
 FAULT_COMMANDS = [
     "interface GigabitEthernet0/1",
     "switchport trunk native vlan 1",
@@ -54,7 +58,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 02 (Native VLAN Mismatch)")
+    print("Fault Injection: Scenario 02")
     print("=" * 60)
 
     try:

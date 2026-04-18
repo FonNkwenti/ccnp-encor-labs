@@ -64,7 +64,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (Passive Interface on R4 Gi0/1)")
+    print("Fault Injection: Scenario 03")
     print("=" * 60)
 
     try:

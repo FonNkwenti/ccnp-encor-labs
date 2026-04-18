@@ -70,7 +70,7 @@ def main() -> int:
     host = require_host(args.host)
 
     print("=" * 60)
-    print("Fault Injection: Scenario 03 (R5 Unscoped Redistribution)")
+    print("Fault Injection: Scenario 03")
     print("=" * 60)
 
     try:
