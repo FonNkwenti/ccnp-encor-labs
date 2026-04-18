@@ -308,14 +308,25 @@ VLAN 20 root SW2) must be in role **Root**.
 
 ### Task 4: Protect SW1's root role with root guard
 
-- On the port-channels on SW1 that face SW2 (Po1) and SW3 (Po2), enable
-  root guard for all VLANs.
+- On **Po2 only** (the port-channel toward SW3), enable root guard on SW1.
+- Do **not** apply root guard to Po1 (toward SW2). SW2 is the legitimate
+  VLAN 20 root at priority 4096 — it will always send superior BPDUs toward
+  SW1 on that link. Applying root guard to Po1 causes Po1 to go
+  `root-inconsistent` for VLAN 20 because IOS root guard is per-interface,
+  not per-VLAN; there is no way to exempt VLAN 20 from the guard on Po1.
 - Confirm that the feature is applied on the logical port-channel
   interface — not on individual member links.
 
+> **Why Po2 is safe but Po1 is not:**
+> SW3 has default priority (32768) for every VLAN — it will never advertise
+> a superior BPDU on any VLAN, so root guard on Po2 is harmless for all
+> VLANs. SW2 has priority 4096 for VLAN 20, making it legitimately superior
+> to SW1 on that VLAN; root guard on Po1 would permanently block VLAN 20.
+
 **Verification:** `show spanning-tree inconsistentports` on SW1 — must be
-empty under normal operation. `show running-config interface Port-channel1`
-must show `spanning-tree guard root`.
+empty under normal operation. `show running-config interface Port-channel2`
+must show `spanning-tree guard root`. `show running-config interface
+Port-channel1` must **not** contain `spanning-tree guard root`.
 
 ---
 
@@ -433,11 +444,22 @@ Number of inconsistent ports (segments) in the system : 0      ! ← must be 0
 ```
 
 ```
+SW1# show running-config interface Port-channel2
+interface Port-channel2
+ ...
+ spanning-tree guard root                             ! ← must be present on Po2
+
 SW1# show running-config interface Port-channel1
 interface Port-channel1
  ...
- spanning-tree guard root                             ! ← must be present
+                                                      ! ← spanning-tree guard root must NOT appear here
 ```
+
+> Root guard is intentionally absent from Po1. SW2 is the VLAN 20 root at
+> priority 4096 and will send superior BPDUs toward SW1 via Po1. Applying
+> root guard to Po1 would permanently put it in `root-inconsistent` for
+> VLAN 20, breaking Engineering traffic. Root guard on Po2 is sufficient:
+> SW3 has default priority for all VLANs and can never become root.
 
 ### Task 5 — PortFast and BPDU guard
 
@@ -661,12 +683,14 @@ show spanning-tree vlan 20
 <summary>Click to view SW1 Configuration</summary>
 
 ```bash
-! SW1
-interface Port-channel1
- spanning-tree guard root
-!
+! SW1 — root guard on Po2 (toward SW3) ONLY
 interface Port-channel2
  spanning-tree guard root
+
+! Do NOT configure spanning-tree guard root on Port-channel1.
+! SW2 is the legitimate VLAN 20 root at priority 4096.  Enabling root guard
+! on Po1 causes Po1 to go root-inconsistent for VLAN 20 because IOS applies
+! root guard per-interface (not per-VLAN) and cannot exempt VLAN 20 from the check.
 ```
 
 </details>
@@ -675,9 +699,9 @@ interface Port-channel2
 <summary>Click to view Verification Commands</summary>
 
 ```bash
-show spanning-tree inconsistentports
-show running-config interface Port-channel1
-show running-config interface Port-channel2
+show spanning-tree inconsistentports          ! must be empty (0 inconsistencies)
+show running-config interface Port-channel2   ! must show spanning-tree guard root
+show running-config interface Port-channel1   ! must NOT show spanning-tree guard root
 ```
 
 </details>
@@ -899,7 +923,7 @@ SW3# show spanning-tree vlan 20
 - [ ] All three switches are in `rapid-pvst mode` (Task 1)
 - [ ] `show spanning-tree root` shows SW1's MAC for VLAN 10/30/99 and SW2's MAC for VLAN 20 (Task 2)
 - [ ] Port roles on SW2 match prediction — Po1 is Root for VLAN 10, Po3 is Designated (Task 3)
-- [ ] `show running-config interface Port-channel1` on SW1 shows `spanning-tree guard root` (Task 4)
+- [ ] `show running-config interface Port-channel2` on SW1 shows `spanning-tree guard root`; Po1 does **not** have root guard (Task 4)
 - [ ] `show spanning-tree interface Gi1/1 detail` on SW2 and SW3 both show `portfast edge mode` and `Bpdu guard is enabled` (Task 5)
 - [ ] Flapping PC1's access port does NOT increment the topology change counter on SW1 (Task 6)
 - [ ] STP output shows only Po1/Po2/Po3 — never individual member links like Gi0/1 (Task 7)
