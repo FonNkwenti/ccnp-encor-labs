@@ -65,7 +65,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-05-capstone-troubleshoot
 
 ### 6. multicast (5 labs)
-- [ ] lab-00-pim-sm-and-igmp
+- [x] lab-00-pim-sm-and-igmp
 - [ ] lab-01-rp-discovery-and-igmpv3
 - [ ] lab-02-ssm-bidir-msdp
 - [ ] lab-03-capstone-config
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 23 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04)
-- **Remaining:** 52
-- **Next up:** ip-services/lab-00-ntp-and-qos
+- **Built:** 30 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00)
+- **Remaining:** 45
+- **Next up:** multicast/lab-01-rp-discovery-and-igmpv3
