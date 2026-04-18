@@ -362,6 +362,13 @@ RPF information for ? (10.1.1.10)
 
 ### Task 7 — Multicast Routing Table (after traffic)
 
+> **Source-address note:** The ping below sources from R1's Gi0/2 IP
+> (10.1.1.1), so the (S,G) entry is keyed on `10.1.1.1` — not PC1's
+> 10.1.1.10 used in the Task 6 RPF example. Both addresses live in
+> 10.1.1.0/24, so the RPF interface result is identical. R1 is standing
+> in as the multicast source here because VPCS cannot generate real
+> multicast streams.
+
 ```
 R1# ping 239.1.1.1 repeat 20 source GigabitEthernet0/2
 
@@ -655,11 +662,11 @@ Root cause: R3 had a wrong RP address configured (3.3.3.3 — R3's own loopback)
 
 ### Ticket 3 — R2 Cannot Forward Traffic from the R1-Side of the Network
 
-All routers report PIM neighbors, and the RP address is consistent. However, `show ip mroute` on R2 shows that whenever traffic from 10.1.1.10 arrives, it is dropped (RPF failure). The (S,G) entry shows RPF failure flags. R3's mroute shows no (S,G) entry either.
+R3 has joined group 239.1.1.1 and the RP address is consistent across all routers. However, after R1 sends multicast traffic, `show ip mroute 239.1.1.1` on R2 stays empty — no (*,G) traffic flowing, no (S,G) entry building — and R3's mroute shows no (S,G) entry either. OSPF is fully converged and all unicast reachability is intact. Something on R2's R1-facing side is no longer participating in PIM.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
 
-**Success criteria:** After your fix, `show ip mroute 239.1.1.1` on R2 shows (S,G) entry with incoming interface GigabitEthernet0/0, RPF flag clear, and traffic forwarding to R3.
+**Success criteria:** After your fix, `show ip mroute 239.1.1.1` on R2 shows an (S,G) entry with incoming interface GigabitEthernet0/0 and traffic forwarding to R3.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
