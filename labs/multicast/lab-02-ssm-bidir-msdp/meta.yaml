@@ -8,8 +8,9 @@ time_minutes: 90
 clean_slate: false
 extends: lab-01-rp-discovery-and-igmpv3
 initial_configs_source: >
-  lab-01-rp-discovery-and-igmpv3/solutions for R1/R2/R3 (verbatim);
-  R4 is a minimal IP + OSPF build (new device, no multicast pre-configured)
+  lab-01-rp-discovery-and-igmpv3/solutions for R1/R2/R3, with R2 and R3 extended
+  to add the new L6/L7 underlay (IP + OSPF only, no PIM — the border is a Task 2
+  exercise); R4 is a minimal IP + OSPF build (new device, no multicast pre-configured)
 blueprint_refs:
   - "3.3.d"
 devices:

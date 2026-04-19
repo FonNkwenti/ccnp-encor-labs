@@ -16,8 +16,10 @@ Result:     Both SW3 uplinks (Po2 and Po3) go down, completely isolating
             alternate path via Po3 (SW2-SW3) in the triangular mesh,
             so both bundles must be broken to produce the expected symptom.
 
-IOS requires removing the channel-group membership before changing the
-mode to a different protocol family; commands are ordered accordingly.
+Two-phase injection: all 'no channel-group' removals are sent first, then
+a 3-second pause allows IOS log messages to flush before the new
+channel-group modes are applied. Interleaving removes and re-adds in a
+single send_config_set causes Netmiko to lose prompt sync mid-set.
 
 Before running, ensure the lab is in the SOLUTION state:
     python3 apply_solution.py --host <eve-ng-ip>
@@ -27,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -36,21 +39,21 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-01-etherchannel.unl"
 DEVICE_NAME = "SW3"
-FAULT_COMMANDS = [
-    # Po2 fault: PAgP auto → LACP active (protocol mismatch with SW1 PAgP desirable)
-    "interface GigabitEthernet0/3",
-    "no channel-group 2",
-    "channel-group 2 mode active",
-    "interface GigabitEthernet1/0",
-    "no channel-group 2",
-    "channel-group 2 mode active",
-    # Po3 fault: static on → LACP passive (eliminates bypass via SW2-SW3)
-    "interface GigabitEthernet0/1",
-    "no channel-group 3",
-    "channel-group 3 mode passive",
-    "interface GigabitEthernet0/2",
-    "no channel-group 3",
-    "channel-group 3 mode passive",
+# Phase 1: remove all channel-group memberships
+FAULT_COMMANDS_REMOVE = [
+    "interface GigabitEthernet0/3", "no channel-group",
+    "interface GigabitEthernet1/0", "no channel-group",
+    "interface GigabitEthernet0/1", "no channel-group",
+    "interface GigabitEthernet0/2", "no channel-group",
+]
+# Phase 2: apply new (fault) modes
+FAULT_COMMANDS_ADD = [
+    # Po2: LACP active — mismatches SW1's PAgP desirable
+    "interface GigabitEthernet0/3", "channel-group 2 mode active",
+    "interface GigabitEthernet1/0", "channel-group 2 mode active",
+    # Po3: LACP passive — mismatches SW2's static on; eliminates bypass path
+    "interface GigabitEthernet0/1", "channel-group 3 mode passive",
+    "interface GigabitEthernet0/2", "channel-group 3 mode passive",
 ]
 PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/3"
 # Solution state uses PAgP auto on SW3's Po2 members
@@ -103,9 +106,15 @@ def main() -> int:
     try:
         if not args.skip_preflight and not preflight(conn):
             return 4
-        print("[*] Injecting fault configuration ...")
-        conn.send_config_set(FAULT_COMMANDS, cmd_verify=False)
-        conn.save_config()
+        print("[*] Phase 1: removing channel-group memberships ...")
+        conn.send_config_set(FAULT_COMMANDS_REMOVE, cmd_verify=False)
+        print("[*] Waiting for IOS to flush topology change messages ...")
+        time.sleep(3)
+        print("[*] Phase 2: applying fault modes ...")
+        conn.send_config_set(FAULT_COMMANDS_ADD, cmd_verify=False)
+        time.sleep(5)   # let IOS finish emitting topology-change syslog
+        conn.clear_buffer()
+        conn.send_command_timing("write memory", read_timeout=30)
     finally:
         conn.disconnect()
 

@@ -258,7 +258,7 @@ Configure the network to deliver three distinct multicast services (ASM, SSM, bi
 - R3's receiver LAN (Gi0/2) is already running IGMPv3 from Lab 01 — confirm this is still the case.
 - Install a static source-specific join on R3 Gi0/2 for group 232.1.1.1 with source 10.1.1.10 (PC1). This simulates an IGMPv3 receiver without needing to script VPCS.
 
-**Verification:** `show ip pim ssm-mapping` on any router (or `show running-config | include ssm`) must confirm the SSM range. `show ip igmp groups detail` on R3 must show 232.1.1.1 with source 10.1.1.10 in INCLUDE mode. Ping `232.1.1.1 source 10.1.1.10` from R1 and confirm R3's `(S,G)` entry builds via RPF toward R1 — **not** via the RP.
+**Verification:** `show ip pim ssm-mapping` on any router (or `show running-config | include ssm`) must confirm the SSM range. `show ip igmp groups detail` on R3 must show 232.1.1.1 with source 10.1.1.10 in INCLUDE mode. Ping `232.1.1.1` **from PC1** (source 10.1.1.10 — PC1 owns that IP, R1 does not) and confirm R3 installs an `(S,G)` mroute via RPF toward R1 — **not** via the RP. A ping from R1 cannot work here because R1 does not own 10.1.1.10 and IOS won't let you spoof a non-local source.
 
 ---
 
@@ -357,7 +357,7 @@ Group mode: INCLUDE                                                       ! ← 
   10.1.1.10        00:01:42  stopped   Yes  4S                            ! ← source 10.1.1.10 bound
 ```
 
-After `ping 232.1.1.1 source 10.1.1.10` from R1:
+After `ping 232.1.1.1` from PC1 (source 10.1.1.10):
 
 ```bash
 R3# show ip mroute 232.1.1.1
@@ -366,6 +366,8 @@ R3# show ip mroute 232.1.1.1
   Outgoing interface list:
     GigabitEthernet0/2, Forward/Sparse, 00:00:05/00:03:24
 ```
+
+> Why from PC1 and not R1? R3's IGMPv3 INCLUDE filter is bound to source **10.1.1.10**, which is PC1's address. R1 cannot originate traffic with that source — it's not one of R1's interface IPs, and IOS refuses non-local `source` arguments. Send the SSM test from the VPCS host that actually owns 10.1.1.10.
 
 ### Task 4 — Bidir RP active and DF elected
 
@@ -668,8 +670,9 @@ interface GigabitEthernet0/2
 ```bash
 show ip pim ssm-mapping
 show ip igmp groups detail
-ping 232.1.1.1 source 10.1.1.10 repeat 5   ! from R1
-show ip mroute 232.1.1.1
+! ping must be sent from PC1 (which owns 10.1.1.10), not from R1:
+! PC1> ping 232.1.1.1
+show ip mroute 232.1.1.1                   ! expect (10.1.1.10, 232.1.1.1) with non-zero OIL counter
 ```
 </details>
 
@@ -773,14 +776,16 @@ show ip mroute 239.1.1.1                   ! on R4
 <summary>Click to view Verification Commands</summary>
 
 ```bash
-! From R1:
+! From R1 (ASM and Bidir — R1 can source these from its own LAN IP):
 ping 239.1.1.1 source 10.1.1.1 repeat 5      ! ASM
-ping 232.1.1.1 source 10.1.1.10 repeat 5     ! SSM (note: source MUST be 10.1.1.10)
 ping 239.2.2.1 source 10.1.1.1 repeat 5      ! Bidir
+
+! SSM must be sent from PC1 (source 10.1.1.10 — PC1 owns it, R1 does not):
+! PC1> ping 232.1.1.1
 
 ! On R3 and R4:
 show ip mroute 239.1.1.1
-show ip mroute 232.1.1.1
+show ip mroute 232.1.1.1                     ! expect (10.1.1.10, 232.1.1.1), non-zero OIL counter
 show ip mroute 239.2.2.1
 show ip msdp sa-cache
 ```
@@ -808,7 +813,7 @@ Operations reports that R3's IGMPv3 source-specific join for `232.1.1.1 from 10.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_01.py`
 
-**Success criteria:** `show ip igmp groups 232.1.1.1 detail` on R3 shows INCLUDE mode with source 10.1.1.10 bound, and `ping 232.1.1.1 source 10.1.1.10` from R1 causes R3 to install an `(S,G)` mroute entry.
+**Success criteria:** `show ip igmp groups 232.1.1.1 detail` on R3 shows INCLUDE mode with source 10.1.1.10 bound, and `ping 232.1.1.1` from PC1 (source 10.1.1.10) causes R3 to install an `(S,G)` mroute entry with a non-zero OIL packet counter.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
@@ -838,7 +843,7 @@ ip access-list standard SSM_RANGE
  permit 232.1.1.0 0.0.0.255
 ```
 
-Verify with `show ip pim ssm-mapping` and re-test with `ping 232.1.1.1 source 10.1.1.10`.
+Verify with `show ip pim ssm-mapping` and re-test with `ping 232.1.1.1` from PC1 (source 10.1.1.10 — R3's INCLUDE filter requires that exact source).
 </details>
 
 ---
@@ -939,7 +944,7 @@ MSDP Source-Active Cache - 1 entries
 - [ ] R4 `show ip pim bsr-router` confirms no BSR learned from R2's domain
 - [ ] SSM range ACL applied on R1/R2/R3/R4
 - [ ] R3 Gi0/2 has IGMPv3 and a static-group `(232.1.1.1, 10.1.1.10)` join
-- [ ] `ping 232.1.1.1 source 10.1.1.10` from R1 creates a `(S,G)`-only entry on R3 (no `(*,G)`)
+- [ ] `ping 232.1.1.1` from PC1 (source 10.1.1.10) creates an `(S,G)`-only entry on R3 with non-zero OIL packet counter (no `(*,G)` — SSM has no shared tree)
 - [ ] `ip pim bidir-enable` on R1/R2/R3/R4
 - [ ] R2 advertises two RP-candidates — one SM for 239.1.1.0/24, one Bidir for 239.2.2.0/24
 - [ ] R3 Gi0/2 joins 239.2.2.1

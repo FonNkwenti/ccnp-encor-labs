@@ -981,25 +981,29 @@ Po2 as `SU`. SW2 can ping SW3's management IP 192.168.99.3. PC1 can ping PC2.
 <summary>Click to view Diagnosis Steps</summary>
 
 ```bash
-! 1. Check bundle state on SW2 — Po3 will show SD
+! 1. Check bundle state on SW2 — Po3 shows SU (static 'on' bundles unconditionally)
+!    but SW3's side shows SD. Start on SW3 where the fault actually manifests.
 SW2# show etherchannel summary
 
-! 2. Check bundle state on SW1 — Po2 is also down (SW3 is fully isolated)
+! 2. Check bundle state on SW3 — Po2 and Po3 both SD (SW3 is fully isolated)
+SW3# show etherchannel summary
+
+! 3. Check SW1 — Po2 SD (Gi0/3 I, Gi1/0 I = stand-alone, not bundled)
 SW1# show etherchannel summary
 
-! 3. For Po3 (static bundle) check member mode consistency
+! 4. For Po3 (static bundle) check member mode consistency
 SW2# show run interface Gi0/3
 SW3# show run interface Gi0/1
 ! SW2 shows 'channel-group 3 mode on'; SW3 shows 'channel-group 3 mode passive'
 ! Static 'on' vs LACP 'passive' — neither side negotiates, no bundle forms
 
-! 4. For Po2 (PAgP bundle) check member mode on SW3
+! 5. For Po2 (PAgP bundle) check member mode on SW3
 SW1# show run interface Gi0/3
 SW3# show run interface Gi0/3
-! SW1 shows 'channel-group 2 mode desirable'; SW3 shows 'channel-group 2 mode on'
-! Static 'on' vs PAgP 'desirable' — static port ignores PAgP frames, no bundle
+! SW1 shows 'channel-group 2 mode desirable'; SW3 shows 'channel-group 2 mode passive'
+! LACP 'passive' vs PAgP 'desirable' — incompatible protocols, both sides go to SD/stand-alone
 
-! 5. Check port-channel interface states on SW3
+! 6. Check port-channel interface states on SW3
 SW3# show interfaces port-channel2
 SW3# show interfaces port-channel3
 ! Both 'line protocol is down' — confirms SW3 is completely isolated
@@ -1010,8 +1014,9 @@ SW3# show interfaces port-channel3
 <summary>Click to view Fix</summary>
 
 The fault is on SW3: Po3 members were changed to LACP `passive` (mismatches SW2's static
-`on`) and Po2 members were changed to static `on` (mismatches SW1's PAgP `desirable`).
-Both SW3 uplinks fail because static `on` ignores negotiation protocols. Restore both.
+`on` — neither side negotiates, no bundle) and Po2 members were changed to LACP `passive`
+(mismatches SW1's PAgP `desirable` — incompatible protocols, both sides go SD). Restore both
+to their solution modes.
 
 ```bash
 SW3(config)# interface GigabitEthernet0/1

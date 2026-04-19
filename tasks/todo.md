@@ -68,8 +68,8 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-00-pim-sm-and-igmp
 - [x] lab-01-rp-discovery-and-igmpv3
 - [x] lab-02-ssm-bidir-msdp
-- [ ] lab-03-capstone-config
-- [ ] lab-04-capstone-troubleshoot
+- [x] lab-03-capstone-config
+- [x] lab-04-capstone-troubleshoot
 
 ### 7. virtualization (6 labs)
 - [ ] lab-00-vrf-lite
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 32 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-02)
-- **Remaining:** 43
-- **Next up:** multicast/lab-03-capstone-config
+- **Built:** 34 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04)
+- **Remaining:** 41
+- **Next up:** virtualization/lab-00-vrf-lite
