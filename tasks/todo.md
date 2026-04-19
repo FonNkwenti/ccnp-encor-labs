@@ -89,7 +89,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ### 9. security (6 labs)
 - [x] lab-00-device-access
-- [ ] lab-01-aaa
+- [x] lab-01-aaa
 - [ ] lab-02-acls
 - [ ] lab-03-copp
 - [ ] lab-04-capstone-config
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 47 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00)
-- **Remaining:** 28
-- **Next up:** security/lab-01-aaa
+- **Built:** 48 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01)
+- **Remaining:** 27
+- **Next up:** security/lab-02-acls
