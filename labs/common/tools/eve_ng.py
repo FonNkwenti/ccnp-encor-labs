@@ -158,3 +158,27 @@ def connect_node(host: str, port: int, timeout: int = 10):
         conn.enable()
     conn.clear_buffer()  # flush syslog messages before caller uses the session
     return conn
+
+
+def erase_device_config(host: str, name: str, port: int) -> bool:
+    """Send 'write erase' to clear a device's startup-config.
+
+    Handles the IOS [confirm] prompt automatically. Returns True on
+    success, False on any connection or command failure.
+    """
+    print(f"[*] {name}: erasing config...")
+    try:
+        conn = connect_node(host, port)
+    except Exception as exc:
+        print(f"[!] {name}: connection failed -- {exc}")
+        return False
+    try:
+        conn.send_command("write erase", expect_string=r"\[confirm\]")
+        conn.send_command("\n", expect_string=r"#")
+        print(f"[+] {name}: config erased.")
+        return True
+    except Exception as exc:
+        print(f"[!] {name}: reset failed -- {exc}")
+        return False
+    finally:
+        conn.disconnect()
