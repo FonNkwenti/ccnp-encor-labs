@@ -1,0 +1,36 @@
+lab: lab-02-gre-tunnels
+title: "GRE Tunneling Over a Shared Transport"
+topic: virtualization
+difficulty: Intermediate
+time_minutes: 75
+clean_slate: false
+extends: lab-01-vrf-dual-stack
+initial_configs_source: >
+  lab-01-vrf-dual-stack/solutions verbatim for R1/R2; R3 extended with
+  L6 underlay link (Gi0/2, 10.0.34.1/30, OSPF process 1 — the R3-R4
+  segment is pre-wired so tunnel endpoints can reach each other from the
+  start); R4 is a new device with IP addressing and OSPF process 1 only
+  (no Tunnel0, no OSPF process 2 — those are the lab-02 exercises).
+blueprint_refs:
+  - "2.2"
+  - "2.2.b"
+devices:
+  - R1
+  - R2
+  - R3
+  - R4
+  - PC1
+  - PC2
+objectives:
+  - Configure a GRE tunnel (Tunnel0) between R1 and R4 using loopback sources
+  - Verify tunnel is up with show interface Tunnel0 and show ip route
+  - Run OSPF process 2 over the GRE tunnel for dynamic overlay routing
+  - Verify that R3 (transport) sees only encapsulated GRE packets, not inner payload
+  - Configure IPv6 over the GRE tunnel (dual-stack overlay)
+  - Demonstrate that GRE supports multicast (OSPF hellos run over tunnel)
+  - Verify tunnel path with traceroute — overlay vs underlay hop count
+meta:
+  created:
+    date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: lab-workbook-creator
