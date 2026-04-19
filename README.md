@@ -79,7 +79,109 @@ API port discovery).
   [`.agent/skills/eve-ng/SKILL.md`](.agent/skills/eve-ng/SKILL.md) Section 8
   are present under **System -> System status -> Installed Images**
 
-### 4. Pick a lab
+### 4. Pick a lab — recommended progression
+
+Follow this order to build foundational knowledge before advancing to complex topics.
+Each lab builds on prior concepts within its domain.
+
+**Foundation (Start here)**
+- `labs/network-design/lab-00-design-principles` — Enterprise network design, 2/3-tier, fabric
+- `labs/network-design/lab-01-high-availability` — Redundancy and FHRP concepts
+
+**Layer 2 & Switching (Infrastructure foundation)**
+- `labs/switching/lab-00-vlans-and-trunking` — VLANs, 802.1Q trunks
+- `labs/switching/lab-01-etherchannel` — Link aggregation
+- `labs/switching/lab-02-rstp-and-enhancements` — RSTP, root guard, BPDU guard
+- `labs/switching/lab-03-mst` — Multi-Spanning-Tree
+- `labs/switching/lab-04-capstone-config` — Capstone: configure L2 design
+- `labs/switching/lab-05-capstone-troubleshoot` — Capstone: troubleshoot L2
+
+**Virtualization (Before Layer 3 routing)**
+- `labs/virtualization/lab-00-vrf-lite` — VRF data plane separation
+- `labs/virtualization/lab-01-vrf-dual-stack` — VRF with IPv4/IPv6
+- `labs/virtualization/lab-02-gre-tunnels` — GRE tunneling
+- `labs/virtualization/lab-03-ipsec-and-gre-over-ipsec` — IPsec encryption
+- `labs/virtualization/lab-04-capstone-config` — Capstone: configure tunneling
+- `labs/virtualization/lab-05-capstone-troubleshoot` — Capstone: troubleshoot tunneling
+
+**Layer 3 Routing (Core routing protocols)**
+- `labs/ospf/lab-00-single-area-ospfv2` — OSPFv2 single area fundamentals
+- `labs/ospf/lab-01-multi-area-ospfv2` — OSPFv2 multi-area
+- `labs/ospf/lab-02-network-types` — OSPF network types (broadcast, point-to-point, etc.)
+- `labs/ospf/lab-03-area-types` — OSPF area types (normal, stub, NSSA, transit)
+- `labs/ospf/lab-04-summarization-filtering` — OSPF route summarization and filtering
+- `labs/ospf/lab-05-capstone-config` — Capstone: configure complex OSPF
+- `labs/ospf/lab-06-capstone-troubleshoot` — Capstone: troubleshoot OSPF
+- `labs/eigrp/lab-00-classic-eigrp` — EIGRP classic mode
+- `labs/eigrp/lab-01-named-mode-dual-stack` — EIGRP named mode with IPv4/IPv6
+- `labs/eigrp/lab-02-stub-summarization-variance` — EIGRP stubs, summarization, variance
+- `labs/eigrp/lab-03-capstone-config` — Capstone: configure EIGRP
+- `labs/eigrp/lab-04-capstone-troubleshoot` — Capstone: troubleshoot EIGRP
+- `labs/bgp/lab-00-ebgp-peering` — eBGP peer relationships
+- `labs/bgp/lab-01-ibgp-and-dual-stack` — iBGP, dual-stack BGP
+- `labs/bgp/lab-02-best-path-selection` — BGP best path algorithm
+- `labs/bgp/lab-03-capstone-config` — Capstone: configure BGP
+- `labs/bgp/lab-04-capstone-troubleshoot` — Capstone: troubleshoot BGP
+
+**IP Services (Application layer services)**
+- `labs/ip-services/lab-00-ntp-and-qos` — NTP time sync, QoS
+- `labs/ip-services/lab-01-nat-pat` — NAT/PAT translation
+- `labs/ip-services/lab-02-hsrp` — HSRP active/standby redundancy
+- `labs/ip-services/lab-03-vrrp-dual-stack` — VRRP with dual-stack
+- `labs/ip-services/lab-04-capstone-config` — Capstone: configure IP services
+- `labs/ip-services/lab-05-capstone-troubleshoot` — Capstone: troubleshoot IP services
+
+**Multicast (IP Services advanced)**
+- `labs/multicast/lab-00-pim-sm-and-igmp` — PIM sparse-mode, IGMP
+- `labs/multicast/lab-01-rp-discovery-and-igmpv3` — RP discovery, IGMPv3
+- `labs/multicast/lab-02-ssm-bidir-msdp` — SSM, bidirectional, MSDP
+- `labs/multicast/lab-03-capstone-config` — Capstone: configure multicast
+- `labs/multicast/lab-04-capstone-troubleshoot` — Capstone: troubleshoot multicast
+
+**Network Assurance (Monitoring & diagnostics)**
+- `labs/network-assurance/lab-00-diagnostics` — ping, traceroute, debug, syslog
+- `labs/network-assurance/lab-01-flexible-netflow` — NetFlow v5/v9 collection
+- `labs/network-assurance/lab-02-span-rspan` — SPAN, RSPAN traffic capture
+- `labs/network-assurance/lab-03-ip-sla` — IP SLA probes and alerting
+- `labs/network-assurance/lab-04-capstone-config` — Capstone: design assurance
+- `labs/network-assurance/lab-05-capstone-troubleshoot` — Capstone: troubleshoot assurance
+
+**Security (Device & infrastructure hardening)**
+- `labs/security/lab-00-device-access` — Console, SSH, privilege levels
+- `labs/security/lab-01-aaa` — AAA (TACACS+, RADIUS) authentication/authorization
+- `labs/security/lab-02-acls` — Standard and extended ACLs
+- `labs/security/lab-03-copp` — Control Plane Policing
+- `labs/security/lab-04-capstone-config` — Capstone: secure infrastructure
+- `labs/security/lab-05-capstone-troubleshoot` — Capstone: troubleshoot security
+
+**Overlay Technologies (Network virtualization)**
+- `labs/overlay-technologies/lab-00-device-virtualization` — Hypervisors, virtual switching
+- `labs/overlay-technologies/lab-01-lisp-and-vxlan` — LISP, VXLAN encapsulation
+- `labs/overlay-technologies/lab-02-capstone-review` — Capstone: review overlay concepts
+
+**SD-Networking (Modern architecture & automation foundation)**
+- `labs/sd-networking/lab-00-sdwan-fabric-bringup` — SD-WAN fabric startup
+- `labs/sd-networking/lab-01-sdwan-omp-and-policies` — Overlay Management Protocol (OMP)
+- `labs/sd-networking/lab-02-sdwan-data-plane` — SD-WAN data forwarding
+- `labs/sd-networking/lab-03-sd-access-concepts` — SD-Access control/data planes
+- `labs/sd-networking/lab-04-capstone-config` — Capstone: configure SD-x
+- `labs/sd-networking/lab-05-capstone-troubleshoot` — Capstone: troubleshoot SD-x
+
+**Security Concepts (Design & architecture)**
+- `labs/security-concepts/lab-00-security-design` — Threat defense, endpoint, NGFW
+- `labs/security-concepts/lab-01-catalyst-center-and-apis` — Catalyst Center APIs
+- `labs/security-concepts/lab-02-capstone-review` — Capstone: security design review
+
+**Automation (Capstone skills — do last)**
+- `labs/automation/lab-00-eem-applets` — EEM event-driven automation
+- `labs/automation/lab-01-python-and-json` — Python scripting and JSON
+- `labs/automation/lab-02-netconf` — NETCONF device configuration
+- `labs/automation/lab-03-restconf` — RESTCONF REST-based config
+- `labs/automation/lab-04-capstone-config` — Capstone: automation & config
+- `labs/automation/lab-05-capstone-troubleshoot` — Capstone: automation troubleshooting
+
+**[Optional] Demo Labs**
+- `labs/ospf/lab-00-single-area-ospfv2(demo)` — Demonstration version with solutions
 
 ```bash
 cd labs/switching/lab-00-vlans-and-trunking
