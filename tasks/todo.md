@@ -96,7 +96,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [ ] lab-05-capstone-troubleshoot
 
 ### 10. automation (6 labs)
-- [ ] lab-00-eem-applets
+- [x] lab-00-eem-applets
 - [ ] lab-01-python-and-json
 - [ ] lab-02-netconf
 - [ ] lab-03-restconf
@@ -132,6 +132,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 48 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01)
-- **Remaining:** 27
-- **Next up:** security/lab-02-acls
+- **Built:** 49 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01; automation/lab-00)
+- **Remaining:** 26
+- **Skipped:** security/lab-02-acls through lab-05-capstone-troubleshoot (deferred)
+- **Next up:** automation/lab-01-python-and-json

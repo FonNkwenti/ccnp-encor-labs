@@ -1,0 +1,38 @@
+topic: automation
+lab: lab-00-eem-applets
+title: "EEM Applets for On-Box Automation"
+blueprint_refs: ["6.6"]
+difficulty: Foundation
+type: progressive
+
+created:
+  date: "2026-04-19"
+  agent: claude-sonnet-4-6
+  skill: lab-workbook-creator
+  skill_version: "2026-04-19"
+  files:
+    - workbook.md
+    - setup_lab.py
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+    - topology/topology.drawio
+
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: inject-faults
+    skill_version: "2026-04-19"
+    files:
+      - scripts/fault-injection/inject_scenario_01.py
+      - scripts/fault-injection/inject_scenario_02.py
+      - scripts/fault-injection/inject_scenario_03.py
+      - scripts/fault-injection/apply_solution.py
+      - scripts/fault-injection/README.md
