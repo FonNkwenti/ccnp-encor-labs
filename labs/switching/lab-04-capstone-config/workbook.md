@@ -490,6 +490,7 @@ interface GigabitEthernet0/0
  switchport nonegotiate
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -505,6 +506,7 @@ vlan 30
 vlan 99
  name NATIVE_MGMT
 ```
+
 </details>
 
 ### Objective 2: EtherChannel bundles — LACP, PAgP, static (blueprint 3.1.b)
@@ -561,6 +563,7 @@ interface Port-channel2
  switchport trunk allowed vlan 10,20,30,99
  switchport nonegotiate
 ```
+
 </details>
 
 <details>
@@ -577,6 +580,7 @@ interface GigabitEthernet0/3
 interface GigabitEthernet1/0
  channel-group 3 mode on
 ```
+
 </details>
 
 <details>
@@ -593,6 +597,7 @@ interface GigabitEthernet1/0
 interface range GigabitEthernet0/1 - 2
  channel-group 3 mode on
 ```
+
 </details>
 
 <details>
@@ -603,6 +608,7 @@ show etherchannel summary
 show etherchannel port-channel
 show interfaces Port-channel1 switchport
 ```
+
 </details>
 
 ### Objective 3: Rapid PVST+ & root engineering (blueprint 3.1.c)
@@ -625,6 +631,7 @@ spanning-tree vlan 10,30,99 priority 28672
 spanning-tree mode rapid-pvst
 spanning-tree vlan 20 priority 28672
 ```
+
 </details>
 
 <details>
@@ -655,6 +662,7 @@ interface GigabitEthernet1/1
 interface GigabitEthernet0/0
  spanning-tree guard root
 ```
+
 </details>
 
 <details>
@@ -667,6 +675,7 @@ show spanning-tree root
 show spanning-tree inconsistentports
 show spanning-tree interface Gi1/1 portfast
 ```
+
 </details>
 
 ### Objective 4: Router-on-a-stick (blueprint 3.1.a)
@@ -693,6 +702,7 @@ interface GigabitEthernet0/0.99
  encapsulation dot1Q 99 native
  ip address 192.168.99.254 255.255.255.0
 ```
+
 </details>
 
 ### Objective 5: Access ports + management SVI
@@ -722,6 +732,7 @@ interface Vlan99
 interface range GigabitEthernet1/2 - 3
  shutdown
 ```
+
 </details>
 
 > Full per-device solutions also live in `solutions/SW1.cfg`, `SW2.cfg`, `SW3.cfg`, `R1.cfg`.
@@ -759,6 +770,7 @@ The NOC ran a hardening pass on SW1 and restricted the allowed VLAN list on the 
 1. `show interfaces trunk` on SW1 — examine the **Vlans allowed on trunk** column for Gi0/0 and compare it to Po1 and Po2.
 2. Notice that Gi0/0 is missing VLANs 10 and 20 from the allowed list. R1's sub-interfaces Gi0/0.10 and Gi0/0.20 are still up/up but receive no tagged frames from the network.
 3. Confirm with `show interfaces GigabitEthernet0/0 switchport` on SW1 → look at *Trunking VLANs Enabled*.
+
 </details>
 
 <details>
@@ -789,6 +801,7 @@ Monitoring flagged that `show etherchannel summary` reports Po2 in `(SD)` — me
 2. `show etherchannel port-channel` on each side — compare protocol. SW1 is PAgP (`desirable`); if SW3 reports LACP, the two ends are speaking different aggregation protocols.
 3. `show running-config interface Gi0/3` on SW3 — confirm the wrong mode (`passive` = LACP).
 4. Remember the PAgP matrix: `desirable + desirable` ✓, `desirable + auto` ✓, `auto + auto` ✗. LACP and PAgP are incompatible regardless of mode.
+
 </details>
 
 <details>
@@ -822,6 +835,7 @@ SW3's PC2 port is down. The user reports their switch-hub went in yesterday to "
 2. `show errdisable recovery` — note whether auto-recovery is enabled (it isn't by default). In a real event this is where you'd confirm the cause is `bpduguard`.
 3. In production: `show logging | include BPDUGUARD` confirms the BPDU-source event and identifies the rogue device.
 4. A PC-only access port should never receive a BPDU — the presence of one means a switch or hub is plugged into the port. Remove the rogue device before recovering.
+
 </details>
 
 <details>
@@ -844,26 +858,26 @@ Confirm `show interfaces status` shows `connected / 20` and PC2 pings `192.168.2
 
 ### Core Implementation
 
-- [ ] VLANs 10, 20, 30, 99 present on SW1, SW2, SW3 with matching names
-- [ ] Every inter-switch physical link is a member of Po1, Po2, or Po3
-- [ ] `show etherchannel summary` → `Po1(SU)`, `Po2(SU)`, `Po3(SU)` on all relevant switches
-- [ ] All trunks: native VLAN 99, allowed list `10,20,30,99`, `nonegotiate`
-- [ ] `spanning-tree mode rapid-pvst` on every switch
-- [ ] SW1 is root for VLAN 10, 30, 99 (`show spanning-tree vlan 10` → "This bridge is the root")
-- [ ] SW2 is root for VLAN 20
-- [ ] Secondary priorities explicitly set (28672) — no device at default 32768 for a VLAN it backs up
-- [ ] PC-facing access ports have `portfast` and `bpduguard enable`
-- [ ] Root guard applied on SW1 Gi0/0 only (NOT Po1/Po2 — split-root topology prevents it)
-- [ ] R1 sub-interfaces `.10/.20/.30/.99` all up/up; `.99` has the `native` keyword
-- [ ] PC1 `ping 192.168.20.10` succeeds (ttl=63 → crossed R1 once)
-- [ ] Every switch can ping 1.1.1.1 from its VLAN 99 SVI
-- [ ] `show spanning-tree inconsistentports` is empty on every switch
-- [ ] Spare interfaces on each switch are `shutdown`
+- [x] VLANs 10, 20, 30, 99 present on SW1, SW2, SW3 with matching names
+- [x] Every inter-switch physical link is a member of Po1, Po2, or Po3
+- [x] `show etherchannel summary` → `Po1(SU)`, `Po2(SU)`, `Po3(SU)` on all relevant switches
+- [x] All trunks: native VLAN 99, allowed list `10,20,30,99`, `nonegotiate`
+- [x] `spanning-tree mode rapid-pvst` on every switch
+- [x] SW1 is root for VLAN 10, 30, 99 (`show spanning-tree vlan 10` → "This bridge is the root")
+- [x] SW2 is root for VLAN 20
+- [x] Secondary priorities explicitly set (28672) — no device at default 32768 for a VLAN it backs up
+- [x] PC-facing access ports have `portfast` and `bpduguard enable`
+- [x] Root guard applied on SW1 Gi0/0 only (NOT Po1/Po2 — split-root topology prevents it)
+- [x] R1 sub-interfaces `.10/.20/.30/.99` all up/up; `.99` has the `native` keyword
+- [x] PC1 `ping 192.168.20.10` succeeds (ttl=63 → crossed R1 once)
+- [x] Every switch can ping 1.1.1.1 from its VLAN 99 SVI
+- [x] `show spanning-tree inconsistentports` is empty on every switch
+- [x] Spare interfaces on each switch are `shutdown`
 
 ### Troubleshooting
 
-- [ ] Ticket 1 — allowed VLAN pruning on SW1 Gi0/0 diagnosed and fixed; PC1 ↔ PC2 ping passes
-- [ ] Ticket 2 — EtherChannel mode mismatch diagnosed; Po2 `(SU)`
-- [ ] Ticket 3 — BPDU-guard err-disable resolved; rogue switch removed; port recovered
+- [x] Ticket 1 — allowed VLAN pruning on SW1 Gi0/0 diagnosed and fixed; PC1 ↔ PC2 ping passes
+- [x] Ticket 2 — EtherChannel mode mismatch diagnosed; Po2 `(SU)`
+- [x] Ticket 3 — BPDU-guard err-disable resolved; rogue switch removed; port recovered
 
 ---
