@@ -73,7 +73,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ### 7. virtualization (6 labs)
 - [x] lab-00-vrf-lite
-- [ ] lab-01-vrf-dual-stack
+- [x] lab-01-vrf-dual-stack
 - [ ] lab-02-gre-tunnels
 - [ ] lab-03-ipsec-and-gre-over-ipsec
 - [ ] lab-04-capstone-config
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 35 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00)
-- **Remaining:** 40
-- **Next up:** virtualization/lab-01-vrf-dual-stack
+- **Built:** 36 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-01)
+- **Remaining:** 39
+- **Next up:** virtualization/lab-02-gre-tunnels

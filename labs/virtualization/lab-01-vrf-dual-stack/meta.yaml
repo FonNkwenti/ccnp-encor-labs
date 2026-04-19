@@ -1,0 +1,32 @@
+lab: lab-01-vrf-dual-stack
+title: "VRF with Dual-Stack and Inter-VRF Routing"
+topic: virtualization
+difficulty: Intermediate
+time_minutes: 75
+clean_slate: false
+extends: lab-00-vrf-lite
+initial_configs_source: >
+  lab-00-vrf-lite/solutions verbatim for R1/R2/R3 (IPv4 VRF-Lite complete,
+  no IPv6 AF — dual-stack and inter-VRF leaking are the lab-01 exercises).
+  PC1/PC2 initial-configs carry IPv4 only (IPv6 added in solutions).
+blueprint_refs:
+  - "2.2"
+  - "2.2.a"
+devices:
+  - R1
+  - R2
+  - R3
+  - PC1
+  - PC2
+objectives:
+  - Add address-family ipv6 to VRF CUSTOMER-A on R1, R2, R3
+  - Enable ipv6 unicast-routing globally on R1, R2, R3
+  - Assign IPv6 addresses to VRF-bound transit and LAN interfaces
+  - Configure per-VRF IPv6 static routes for CUSTOMER-A inter-site reachability
+  - Configure inter-VRF route leaking on R1 using /32 cross-VRF static routes
+  - Verify dual-stack VRF routing and inter-VRF connectivity
+meta:
+  created:
+    date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: lab-workbook-creator
