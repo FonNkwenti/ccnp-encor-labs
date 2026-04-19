@@ -1,0 +1,48 @@
+lab: lab-05-capstone-troubleshoot
+title: "VRF and Tunneling Comprehensive Troubleshooting — Capstone II"
+topic: virtualization
+difficulty: Advanced
+time_minutes: 120
+clean_slate: true
+extends: lab-04-capstone-config
+blueprint_refs:
+  - all
+devices:
+  - R1
+  - R2
+  - R3
+  - R4
+  - PC1
+  - PC2
+objectives:
+  - Diagnose and fix 5 concurrent VRF and tunneling faults
+  - Troubleshoot VRF interface misassignment (R2 LAN interface in global table)
+  - Fix missing VRF IPv6 address family (R3 CUSTOMER-A missing ipv6 AF)
+  - Diagnose GRE tunnel down caused by missing OSPF network statement (R3)
+  - Resolve GRE-over-IPsec profile binding missing from R1 Tunnel0
+  - Fix IKEv2 PSK mismatch (R4 wrong pre-shared key)
+meta:
+  created:
+    date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: lab-workbook-creator
+    skill_version: "2026-04-18"
+    files:
+      - workbook.md
+      - topology/topology.drawio
+      - setup_lab.py
+      - initial-configs/R1.cfg
+      - initial-configs/R2.cfg
+      - initial-configs/R3.cfg
+      - initial-configs/R4.cfg
+      - initial-configs/PC1.vpc
+      - initial-configs/PC2.vpc
+      - solutions/R1.cfg
+      - solutions/R2.cfg
+      - solutions/R3.cfg
+      - solutions/R4.cfg
+      - solutions/PC1.vpc
+      - solutions/PC2.vpc
+      - scripts/fault-injection/apply_solution.py
+      - scripts/fault-injection/README.md
+  updated: []
