@@ -1,0 +1,39 @@
+lab: lab-04-capstone-config
+title: "VRF and Tunneling Full Mastery — Capstone I"
+topic: virtualization
+difficulty: Advanced
+time_minutes: 120
+clean_slate: true
+extends: null
+blueprint_refs:
+  - all
+devices:
+  - R1
+  - R2
+  - R3
+  - R4
+  - PC1
+  - PC2
+objectives:
+  - Configure VRF CUSTOMER-A and CUSTOMER-B with dual-stack (IPv4 + IPv6) from scratch
+  - Build VRF-Lite transit across R1-R3-R2 with per-VRF routing
+  - Configure GRE tunnel between R1 and R4 carrying overlay traffic
+  - Protect the GRE tunnel with IPsec using IKEv2 (GRE-over-IPsec)
+  - Verify end-to-end reachability — PC1 to PC2 via VRF, R1 to R4 via encrypted tunnel
+  - Demonstrate VRF isolation, tunnel overlay vs underlay, and IPsec SA status
+meta:
+  created:
+    date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: lab-workbook-creator
+  updated:
+    - date: "2026-04-19"
+      agent: claude-sonnet-4-6
+      skill: inject-faults
+      skill_version: "2026-04-18"
+      files:
+        - scripts/fault-injection/inject_scenario_01.py
+        - scripts/fault-injection/inject_scenario_02.py
+        - scripts/fault-injection/inject_scenario_03.py
+        - scripts/fault-injection/apply_solution.py
+        - scripts/fault-injection/README.md
