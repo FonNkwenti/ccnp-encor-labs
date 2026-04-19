@@ -776,11 +776,11 @@ Verify with `show interfaces trunk` on SW1 that Gi0/0 now shows `10,20,30,99` in
 
 ### Ticket 2 — A Distribution Bundle Stays Down
 
-`show etherchannel summary` shows Po2 in `(SD)` — members exist but the bundle never came up. All other bundles are healthy. PC2 loses reachability to R1 when Po3 would normally take the detour.
+Monitoring flagged that `show etherchannel summary` reports Po2 in `(SD)` — members exist but the bundle never came up. No user complaints yet: VLAN 20 traffic still reaches R1 via Po3→SW2→Po1 (redundancy is masking the outage), and VLAN 10/30/99 re-converged through SW2 as well. Your job is to restore Po2 before a second failure takes the network down — in production this kind of silent bundle failure is exactly what monitoring, not user tickets, must catch.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_02.py`
 
-**Success criteria:** `show etherchannel summary` shows Po2 `(SU)` with both members `(P)`. PC2 reaches R1's VLAN 20 gateway (`192.168.20.1`).
+**Success criteria:** `show etherchannel summary` on both SW1 and SW3 shows Po2 `(SU)` with both member ports `(P)`, and `show etherchannel port-channel` reports PAgP (not LACP) on both ends.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
