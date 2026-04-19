@@ -17,7 +17,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR.parents[4] / "common" / "tools"))
-from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
+from eve_ng import EveNgError, connect_node, discover_ports, erase_device_config, require_host  # noqa: E402
 
 DEFAULT_LAB_PATH = "multicast/lab-01-rp-discovery-and-igmpv3.unl"
 DEVICES = ["R1", "R2", "R3"]
@@ -61,6 +61,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Restore Multicast lab-01 to solution state")
     parser.add_argument("--host", default="192.168.1.214")
     parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH)
+    parser.add_argument("--reset", action="store_true",
+                        help="Erase device configs before pushing solution (guaranteed clean slate)")
     args = parser.parse_args()
     host = require_host(args.host)
     print("=" * 60)
@@ -72,6 +74,22 @@ def main() -> int:
         print(f"[!] {exc}", file=sys.stderr)
         return 3
     fail = 0
+
+    if args.reset:
+        print("\nPhase 1: Resetting devices...")
+        reset_fail = 0
+        for name in DEVICES:
+            port = ports.get(name)
+            if port is None:
+                print(f"[!] {name}: not found in lab {args.lab_path} — skipping reset")
+                reset_fail += 1
+                continue
+            if not erase_device_config(host, name, port):
+                reset_fail += 1
+        print(f"[=] Phase 1 complete: {len(DEVICES) - reset_fail} reset, {reset_fail} failed.")
+        fail += reset_fail
+        print(f"\nPhase 2: Pushing solution configs...")
+
     for name in DEVICES:
         port = ports.get(name)
         if port is None:
