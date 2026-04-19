@@ -1,29 +1,22 @@
 #!/usr/bin/env python3
 """
-Fault Injection: Scenario 01 -- Native VLAN Mismatch on Po1 (SW2 side)
+Fault Injection: Scenario 01 -- Allowed VLAN Pruning on SW1 Gi0/0 (R1 Uplink)
 
-Target:     SW2 (Port-channel1 and its physical members Gi0/1, Gi0/2)
-Injects:    'switchport trunk native vlan 1' on Po1 and both of its
-            physical members. SW1 still carries native VLAN 99, so the
-            two ends of the bundle now disagree on the native VLAN.
-Fault Type: Native VLAN mismatch on a trunk
+Target:     SW1 GigabitEthernet0/0 (the router-on-a-stick trunk to R1)
+Injects:    Changes the allowed VLAN list from '10,20,30,99' to '30,99',
+            removing the Sales (VLAN 10) and Engineering (VLAN 20) VLANs
+            from the router uplink.
+Fault Type: Allowed VLAN list misconfiguration on R1-facing trunk
 
-Result:     - %CDP-4-NATIVE_VLAN_MISMATCH syslog messages fire every 60 s
-              on both SW1 and SW2.
-            - Untagged traffic (VLAN 99 management, plus the management
-              SVI reachability across the bundle) is black-holed on Po1.
-            - `show interfaces trunk` on SW1 and SW2 show different
-              Native vlan values for Po1.
-            - PC1 <-> PC2 end-to-end ping breaks because VLAN 99
-              (management) is effectively severed between SW1 and SW2
-              and VLAN 20 hair-pinning through SW3 is not guaranteed
-              when Po1 drops untagged/native flow metadata.
-
-The fault is applied on BOTH the physical members AND the Port-channel
-interface so the running-config stays consistent and student
-`show interfaces trunk` output for Po1 actually reflects native 1
-(otherwise the Port-channel overrides what members show individually
-once renegotiated).
+Result:     - R1's sub-interfaces Gi0/0.10 and Gi0/0.20 receive no tagged
+              frames; both VLAN 10 and VLAN 20 gateways become unreachable.
+            - PC1 (VLAN 10) cannot ping its gateway 192.168.10.1.
+            - PC2 (VLAN 20) cannot ping its gateway 192.168.20.1.
+            - PC1 <-> PC2 inter-VLAN ping fails completely. R1 is the sole
+              routing point; L2 redundancy via EtherChannels cannot compensate
+              for a missing L3 hop.
+            - 'show interfaces trunk' on SW1 shows Gi0/0 carrying only
+              VLANs 30,99 instead of 10,20,30,99.
 
 Before running, ensure the lab is in the SOLUTION state:
     python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>
@@ -41,32 +34,20 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-04-capstone-config.unl"
-DEVICE_NAME = "SW2"
+DEVICE_NAME = "SW1"
 FAULT_COMMANDS = [
-    "interface Port-channel1",
-    "switchport trunk native vlan 1",
-    "interface GigabitEthernet0/1",
-    "switchport trunk native vlan 1",
-    "interface GigabitEthernet0/2",
-    "switchport trunk native vlan 1",
+    "interface GigabitEthernet0/0",
+    "switchport trunk allowed vlan 30,99",
 ]
-PREFLIGHT_CMD = "show running-config interface Port-channel1"
-# Solution marker: SW2 Po1 has description LACP_PO1_TO_SW1 and native vlan 99
-PREFLIGHT_SOLUTION_MARKER = "LACP_PO1_TO_SW1"
-PREFLIGHT_NATIVE_99_MARKER = "switchport trunk native vlan 99"
-# Fault marker: if already present, the fault is already injected -- bail out
-PREFLIGHT_FAULT_MARKER = "switchport trunk native vlan 1\n"
+PREFLIGHT_CMD = "show running-config interface GigabitEthernet0/0"
+PREFLIGHT_SOLUTION_MARKER = "switchport trunk allowed vlan 10,20,30,99"
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
     if PREFLIGHT_SOLUTION_MARKER not in output:
-        print(f"[!] Pre-flight failed: SW2 Po1 does not have expected description "
+        print(f"[!] Pre-flight failed: SW1 Gi0/0 does not have "
               f"'{PREFLIGHT_SOLUTION_MARKER}'.")
-        print("    Run apply_solution.py first to restore the known-good config.")
-        return False
-    if PREFLIGHT_NATIVE_99_MARKER not in output:
-        print(f"[!] Pre-flight failed: SW2 Po1 does not have '{PREFLIGHT_NATIVE_99_MARKER}'.")
         print("    Run apply_solution.py first to restore the known-good config.")
         return False
     return True

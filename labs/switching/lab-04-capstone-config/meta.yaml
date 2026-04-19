@@ -25,4 +25,12 @@ created:
     - scripts/fault-injection/inject_scenario_03.py
     - scripts/fault-injection/apply_solution.py
     - scripts/fault-injection/README.md
-updated: []
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: inject-faults
+    skill_version: "2026-04-19"
+    note: "Ticket 1 fault redesigned: native VLAN mismatch cannot break tagged PC traffic; replaced with allowed VLAN pruning on SW1 Gi0/0 which reliably breaks inter-VLAN routing regardless of L2 redundancy."
+    files:
+      - scripts/fault-injection/inject_scenario_01.py
+      - workbook.md

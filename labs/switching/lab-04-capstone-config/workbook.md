@@ -61,7 +61,7 @@ Rapid PVST+ runs one 802.1w instance per VLAN. Each VLAN elects its own root. Pr
 | BPDU guard | Same PC-facing ports | Err-disable on any BPDU (rogue-switch protection) |
 | Root guard | Designated ports facing neighbour switches (bundles) | Blocks into `root-inconsistent` if a superior BPDU arrives |
 
-Root guard goes on the **distribution-side** of each bundle (SW1's Po1/Po2 and the R1 trunk). BPDU guard goes on the **host-facing** access ports only — never on an inter-switch link.
+Root guard goes on ports where the local switch is root for **every** VLAN on that port and no neighbour should ever challenge it. In this topology SW1 is not root for VLAN 20, so Po1 and Po2 carry legitimate superior BPDUs from SW2. Enabling root guard on those bundles would put them into `root-inconsistent` for VLAN 20. Only SW1's **Gi0/0** (R1-facing trunk) qualifies — R1 never participates in STP elections and will never send a superior BPDU. BPDU guard goes on the **host-facing** access ports only — never on an inter-switch link.
 
 ### Router-on-a-stick inter-VLAN routing
 
@@ -215,7 +215,7 @@ Everything else — port assignments, bundle numbering, interface descriptions �
 - SW2 priority 4096 for VLAN 20; priority 28672 for VLANs 10/30/99.
 - SW3 priority 28672 for VLAN 20 (other VLANs: default).
 - PC-facing access ports: `switchport mode access`, `access vlan 10/20`, `spanning-tree portfast`, `spanning-tree bpduguard enable`.
-- `spanning-tree guard root` on SW1's R1-facing trunk (Gi0/0), Po1, and Po2.
+- `spanning-tree guard root` on SW1's R1-facing trunk (Gi0/0) **only**. Do NOT apply root guard to Po1 or Po2 — SW2 is root for VLAN 20 and sends legitimate superior BPDUs on those bundles; enabling root guard there would put them into `root-inconsistent` for VLAN 20, violating the empty `show spanning-tree inconsistentports` acceptance test.
 - R1 Gi0/0 with no IP; sub-interfaces `.10/.20/.30/.99` each with `encapsulation dot1Q <id> [native for 99]` and the VLAN gateway IP.
 - Spare switch interfaces (any Gi not in use) must be `shutdown`.
 - Management SVI on VLAN 99: SW1 .1, SW2 .2, SW3 .3; R1 .99 gateway .254.
@@ -396,7 +396,7 @@ interface <uplink>
 | `spanning-tree bpduguard enable` | Err-disable if a BPDU arrives |
 | `spanning-tree guard root` | Block if superior BPDU arrives (goes `root-inconsistent`) |
 
-> **Exam tip:** BPDU guard and root guard are opposites. BPDU guard assumes the port should NEVER see a BPDU (edge). Root guard assumes the port SHOULD see BPDUs but only from inferior bridges (uplinks into the core).
+> **Exam tip:** BPDU guard and root guard are opposites. BPDU guard assumes the port should NEVER see a BPDU (edge). Root guard assumes the port SHOULD see BPDUs but only from inferior bridges (uplinks into the core). Root guard is **per-port, not per-VLAN** — if any VLAN's legitimate root bridge is reachable through that port, enabling root guard will block that VLAN. In a split-root topology (different VLANs rooted on different switches), root guard can only be applied on ports where the local switch is root for every VLAN on that trunk.
 
 ### Router-on-a-Stick
 
@@ -649,12 +649,10 @@ interface GigabitEthernet1/1
  spanning-tree bpduguard enable
  no shutdown
 !
-! SW1 — Root guard on distribution links
+! SW1 — Root guard on R1-facing trunk ONLY
+! Po1/Po2 cannot use root guard: SW2 is root for VLAN 20 and sends superior
+! BPDUs on those bundles — enabling root guard would block VLAN 20 traffic.
 interface GigabitEthernet0/0
- spanning-tree guard root
-interface Port-channel1
- spanning-tree guard root
-interface Port-channel2
  spanning-tree guard root
 ```
 </details>
@@ -747,31 +745,31 @@ python3 scripts/fault-injection/apply_solution.py      # restore
 
 ---
 
-### Ticket 1 — PC1 and PC2 Lose Reachability After Mgmt Change
+### Ticket 1 — PC1 and PC2 Lose Reachability After Router Uplink Change
 
-The NOC moved the native VLAN on one of the distribution trunks and now end-to-end connectivity is broken even though all bundles still show `(SU)`. Management complains that CDP logs are flooding with native VLAN warnings.
+The NOC ran a hardening pass on SW1 and restricted the allowed VLAN list on the router-facing trunk. Inter-VLAN connectivity is now completely broken — neither PC can reach the other VLAN and both fail to ping their gateways. All EtherChannel bundles still show `(SU)` and all trunks are up. No L2 faults are visible.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_01.py`
 
-**Success criteria:** PC1 pings PC2, `show interfaces trunk` shows matching native VLAN 99 on both ends of every bundle, and CDP native-VLAN mismatch messages stop.
+**Success criteria:** PC1 pings PC2 (`ttl=63`), both PCs can reach their gateways (192.168.10.1 and 192.168.20.1), and `show interfaces trunk` on SW1 shows Gi0/0 carrying VLANs `10,20,30,99`.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
-1. `show interfaces trunk` on every switch — compare the **Native vlan** column per bundle.
-2. Look at syslog (`show logging | include NATIVE_VLAN`) for CDP mismatch messages identifying the two ports.
-3. Identify the trunk end that is NOT set to 99. Confirm with `show interfaces <id> switchport` → look at *Trunking Native Mode VLAN*.
+1. `show interfaces trunk` on SW1 — examine the **Vlans allowed on trunk** column for Gi0/0 and compare it to Po1 and Po2.
+2. Notice that Gi0/0 is missing VLANs 10 and 20 from the allowed list. R1's sub-interfaces Gi0/0.10 and Gi0/0.20 are still up/up but receive no tagged frames from the network.
+3. Confirm with `show interfaces GigabitEthernet0/0 switchport` on SW1 → look at *Trunking VLANs Enabled*.
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
 ```bash
-interface <broken-interface>
- switchport trunk native vlan 99
+SW1(config)# interface GigabitEthernet0/0
+SW1(config-if)# switchport trunk allowed vlan 10,20,30,99
 ```
 
-Apply to both the physical member(s) and the `Port-channel` interface so the running-config stays consistent. Verify CDP warnings stop within 60 s.
+Verify with `show interfaces trunk` on SW1 that Gi0/0 now shows `10,20,30,99` in the allowed column. PC1 should immediately be able to ping PC2 once R1's sub-interfaces receive tagged frames again.
 </details>
 
 ---
@@ -855,7 +853,7 @@ Confirm `show interfaces status` shows `connected / 20` and PC2 pings `192.168.2
 - [ ] SW2 is root for VLAN 20
 - [ ] Secondary priorities explicitly set (28672) — no device at default 32768 for a VLAN it backs up
 - [ ] PC-facing access ports have `portfast` and `bpduguard enable`
-- [ ] Root guard applied on SW1 Gi0/0, Po1, Po2
+- [ ] Root guard applied on SW1 Gi0/0 only (NOT Po1/Po2 — split-root topology prevents it)
 - [ ] R1 sub-interfaces `.10/.20/.30/.99` all up/up; `.99` has the `native` keyword
 - [ ] PC1 `ping 192.168.20.10` succeeds (ttl=63 → crossed R1 once)
 - [ ] Every switch can ping 1.1.1.1 from its VLAN 99 SVI
@@ -864,7 +862,7 @@ Confirm `show interfaces status` shows `connected / 20` and PC2 pings `192.168.2
 
 ### Troubleshooting
 
-- [ ] Ticket 1 — native VLAN mismatch diagnosed and fixed; CDP warnings gone
+- [ ] Ticket 1 — allowed VLAN pruning on SW1 Gi0/0 diagnosed and fixed; PC1 ↔ PC2 ping passes
 - [ ] Ticket 2 — EtherChannel mode mismatch diagnosed; Po2 `(SU)`
 - [ ] Ticket 3 — BPDU-guard err-disable resolved; rogue switch removed; port recovered
 

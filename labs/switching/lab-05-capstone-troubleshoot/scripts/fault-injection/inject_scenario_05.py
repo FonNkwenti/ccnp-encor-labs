@@ -38,7 +38,6 @@ FAULT_COMMANDS = [
 ]
 PREFLIGHT_CMD = "show running-config interface GigabitEthernet1/1"
 PREFLIGHT_SOLUTION_MARKER = "ACCESS_PC2_VLAN20"
-PREFLIGHT_NOT_SHUT_MARKER = "no shutdown"
 
 
 def preflight(conn) -> bool:
@@ -48,10 +47,12 @@ def preflight(conn) -> bool:
               f"'{PREFLIGHT_SOLUTION_MARKER}'.")
         print("    Run apply_solution.py first to restore the known-good config.")
         return False
-    if PREFLIGHT_NOT_SHUT_MARKER not in output:
-        print(f"[!] Pre-flight failed: SW3 Gi1/1 is already shutdown.")
-        print("    Run apply_solution.py first to restore the known-good config.")
-        return False
+    # IOS never writes 'no shutdown' to running-config — check for explicit 'shutdown' instead.
+    for line in output.splitlines():
+        if line.strip() == "shutdown":
+            print("[!] Pre-flight failed: SW3 Gi1/1 is already shut.")
+            print("    Scenario 05 may already be injected. Restore with apply_solution.py.")
+            return False
     return True
 
 

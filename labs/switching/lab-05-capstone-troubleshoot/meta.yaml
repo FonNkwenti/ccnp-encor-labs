@@ -28,4 +28,11 @@ created:
     - scripts/fault-injection/inject_scenario_06.py
     - scripts/fault-injection/apply_solution.py
     - scripts/fault-injection/README.md
-updated: []
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: inject-faults
+    skill_version: "2026-04-19"
+    note: "Ticket 5 preflight bug fixed: was checking for 'no shutdown' which IOS never writes to running-config; replaced with explicit 'shutdown' line detection."
+    files:
+      - scripts/fault-injection/inject_scenario_05.py
