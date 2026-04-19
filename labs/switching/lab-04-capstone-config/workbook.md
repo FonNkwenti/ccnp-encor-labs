@@ -786,20 +786,20 @@ Verify with `show interfaces trunk` on SW1 that Gi0/0 now shows `10,20,30,99` in
 <summary>Click to view Diagnosis Steps</summary>
 
 1. `show etherchannel summary` on SW1 and SW3 — note the protocol column.
-2. `show etherchannel port-channel` on each side — compare protocol (SW1 should report PAgP, SW3 should report PAgP). If one side reports LACP or no protocol, mode is wrong.
-3. `show running-config interface Gi0/3` (or the affected member) on the broken side.
-4. Remember the PAgP matrix: `desirable + desirable` ✓, `desirable + auto` ✓, `auto + auto` ✗.
+2. `show etherchannel port-channel` on each side — compare protocol. SW1 is PAgP (`desirable`); if SW3 reports LACP, the two ends are speaking different aggregation protocols.
+3. `show running-config interface Gi0/3` on SW3 — confirm the wrong mode (`passive` = LACP).
+4. Remember the PAgP matrix: `desirable + desirable` ✓, `desirable + auto` ✓, `auto + auto` ✗. LACP and PAgP are incompatible regardless of mode.
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-Re-set the member mode to match the PAgP plan (SW1 = desirable, SW3 = auto):
+SW3's Po2 members were changed to LACP `passive`; return them to PAgP `auto`:
 
 ```bash
-interface range Gi0/3 , Gi1/0
- no channel-group <N> mode <wrong>
- channel-group 2 mode <desirable|auto>
+SW3(config)# interface range Gi0/3 , Gi1/0
+SW3(config-if-range)# no channel-group 2
+SW3(config-if-range)# channel-group 2 mode auto
 ```
 
 Wait ~15 s for PAgP to re-negotiate and verify `Po2(SU)`.
@@ -809,7 +809,7 @@ Wait ~15 s for PAgP to re-negotiate and verify `Po2(SU)`.
 
 ### Ticket 3 — An Access Port Went Err-Disabled
 
-SW3's PC2 port is err-disabled. `show interfaces status err-disabled` lists `bpduguard` as the cause. The user reports their switch-hub went in yesterday to "add more ports" at the desk.
+SW3's PC2 port is down. The user reports their switch-hub went in yesterday to "add more ports" at the desk. In production a BPDU arriving on a PortFast port with `bpduguard enable` would err-disable it (`show interfaces status err-disabled` → cause `bpduguard`). In this EVE-NG simulation the port is administratively shut, so `show interfaces status` shows `disabled` — the recovery procedure is identical.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
 
@@ -818,10 +818,10 @@ SW3's PC2 port is err-disabled. `show interfaces status err-disabled` lists `bpd
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
-1. `show interfaces status err-disabled` on SW3 — confirm Gi1/1 / cause `bpduguard`.
-2. `show errdisable recovery` — note whether auto-recovery is enabled (it isn't by default).
-3. `show logging | include BPDUGUARD` — confirm the BPDU-source event.
-4. Physically remove the rogue switch/hub (simulated by the recovery script). A PC-only port should never see a BPDU.
+1. `show interfaces status` on SW3 — confirm Gi1/1 is `disabled` (this simulation) or `err-disabled` (real BPDU-guard event). Either way, the port is not forwarding.
+2. `show errdisable recovery` — note whether auto-recovery is enabled (it isn't by default). In a real event this is where you'd confirm the cause is `bpduguard`.
+3. In production: `show logging | include BPDUGUARD` confirms the BPDU-source event and identifies the rogue device.
+4. A PC-only access port should never receive a BPDU — the presence of one means a switch or hub is plugged into the port. Remove the rogue device before recovering.
 </details>
 
 <details>
@@ -830,9 +830,9 @@ SW3's PC2 port is err-disabled. `show interfaces status err-disabled` lists `bpd
 After the rogue device is removed, bounce the port:
 
 ```bash
-interface GigabitEthernet1/1
- shutdown
- no shutdown
+SW3(config)# interface GigabitEthernet1/1
+SW3(config-if)# shutdown
+SW3(config-if)# no shutdown
 ```
 
 Confirm `show interfaces status` shows `connected / 20` and PC2 pings `192.168.20.1`. BPDU guard stays enabled — it is the correct long-term defence.
