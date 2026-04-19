@@ -88,14 +88,17 @@ def main() -> int:
 
     if args.reset:
         print("\nPhase 1: Resetting devices...")
+        reset_fail = 0
         for name in DEVICES:
             port = ports.get(name)
             if port is None:
                 print(f"[!] {name}: not found in lab {args.lab_path} — skipping reset")
-                fail += 1
+                reset_fail += 1
                 continue
             if not erase_device_config(host, name, port):
-                fail += 1
+                reset_fail += 1
+        print(f"[=] Phase 1 complete: {len(DEVICES) - reset_fail} reset, {reset_fail} failed.")
+        fail += reset_fail
         print(f"\nPhase 2: Pushing initial configs...")
 
     for name in DEVICES:
