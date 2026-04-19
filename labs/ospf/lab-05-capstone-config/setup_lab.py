@@ -24,7 +24,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR.parents[2] / "common" / "tools"))
-from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noqa: E402
+from eve_ng import EveNgError, connect_node, discover_ports, erase_device_config, require_host  # noqa: E402
 
 
 DEFAULT_LAB_PATH = "ospf/lab-05-capstone-config.unl"
@@ -75,6 +75,8 @@ def main() -> int:
                         help="EVE-NG server IP (default: %(default)s)")
     parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,
                         help=f"Lab .unl path (default: {DEFAULT_LAB_PATH})")
+    parser.add_argument("--reset", action="store_true",
+                        help="Erase device configs before pushing initial configs")
     args = parser.parse_args()
 
     host = require_host(args.host)
@@ -90,6 +92,19 @@ def main() -> int:
         return 3
 
     fail = 0
+
+    if args.reset:
+        print("\nPhase 1: Resetting devices...")
+        for name in DEVICES:
+            port = ports.get(name)
+            if port is None:
+                print(f"[!] {name}: not found in lab {args.lab_path} — skipping reset")
+                fail += 1
+                continue
+            if not erase_device_config(host, name, port):
+                fail += 1
+        print(f"\nPhase 2: Pushing initial configs...")
+
     for name in DEVICES:
         port = ports.get(name)
         if port is None:
