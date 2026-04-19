@@ -81,7 +81,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ### 8. network-assurance (6 labs)
 - [x] lab-00-diagnostics
-- [ ] lab-01-flexible-netflow
+- [x] lab-01-flexible-netflow
 - [ ] lab-02-span-rspan
 - [ ] lab-03-ip-sla
 - [ ] lab-04-capstone-config
@@ -132,6 +132,6 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 41 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00)
-- **Remaining:** 34
-- **Next up:** network-assurance/lab-01-flexible-netflow
+- **Built:** 42 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-01)
+- **Remaining:** 33
+- **Next up:** network-assurance/lab-02-span-rspan
