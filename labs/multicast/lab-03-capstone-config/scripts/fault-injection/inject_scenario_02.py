@@ -26,6 +26,10 @@ FAULT: dict[str, list[str]] = {
         "interface GigabitEthernet0/2",
         "no ip pim bsr-border",
     ],
+    "R4": [
+        "interface GigabitEthernet0/0",
+        "no ip pim bsr-border",
+    ],
 }
 
 

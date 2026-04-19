@@ -35,3 +35,9 @@ created:
     - scripts/fault-injection/README.md
     - meta.yaml
 updated: []
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    note: fault-injection audit fix — corrected inject scripts and workbook success criteria
+    files:
+      - workbook.md

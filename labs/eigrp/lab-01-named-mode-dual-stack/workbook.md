@@ -750,11 +750,12 @@ Verify:
 
 ---
 
-### Ticket 2 — IPv6 route to R1 disappears from R3, IPv4 still works
+### Ticket 2 — R3 Loses Its Direct IPv6 EIGRP Adjacency to R1
 
-On R3, `show ipv6 route eigrp` no longer includes `2001:DB8:FF::1/128`. Curiously,
-`show ip route eigrp` on R3 still has `1.1.1.1/32` installed via Gi0/0, so the physical
-R1-R3 link is healthy. R3 can still reach R1 over IPv4.
+On R3, `show ipv6 eigrp neighbors` no longer lists R1 (via Gi0/0). `show ip route eigrp`
+still shows `1.1.1.1/32` and the physical R1-R3 link is healthy — the fault is IPv6-only.
+The IPv6 route `2001:DB8:FF::1/128` may still appear via R2 (alternate path), but the
+direct adjacency on Gi0/0 is gone.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_02.py`
 
@@ -768,9 +769,11 @@ R1-R3 link is healthy. R3 can still reach R1 over IPv4.
 <summary>Click to view Diagnosis Steps</summary>
 
 1. From R3: `show ip eigrp neighbors` → both R1 and R2 present (IPv4 is fine).
-2. From R3: `show ipv6 eigrp neighbors` → only R2 via Gi0/1. R1 is missing.
-3. The R1-R3 link is carrying IPv4 EIGRP but not IPv6 EIGRP — so IPv6 has been disabled
-   at the EIGRP level on R3 Gi0/0, while IPv4 remains active.
+2. From R3: `show ipv6 eigrp neighbors` → only R2 via Gi0/1. R1 is missing on Gi0/0.
+3. Note: `2001:DB8:FF::1/128` may still appear via R2 (triangle topology provides an
+   alternate path), but the direct adjacency on Gi0/0 is gone — the fault IS present.
+4. The R1-R3 link is carrying IPv4 EIGRP but not IPv6 EIGRP — IPv6 has been disabled
+   at the EIGRP level on R3 Gi0/0 while IPv4 remains active.
 4. `show running-config | section router eigrp` on R3:
    ```
    router eigrp EIGRP-LAB

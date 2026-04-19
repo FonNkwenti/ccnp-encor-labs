@@ -617,36 +617,35 @@ Wait ~15 seconds for PAgP to converge and re-verify `Po2(SU)` with both members 
 
 ---
 
-### Ticket 4 — SW1 Reports a Root-Inconsistent Port on Po1
+### Ticket 4 — SW1 Reports a Root-Inconsistent Port on Po2
 
-`show spanning-tree inconsistentports` on SW1 shows `Po1` in `Root Inconsistent` state, and `show logging` has a recent `%SPANTREE-2-ROOTGUARD_BLOCK` message referencing Po1 / VLAN 10. VLAN 10 traffic between SW1 and SW2 is completely blocked on Po1 — even though the bundle itself is `(SU)` and the allowed list looks correct after Ticket 2's fix.
+`show spanning-tree inconsistentports` on SW1 shows `Po2` in `Root Inconsistent` state, and `show logging` has a recent `%SPANTREE-2-ROOTGUARD_BLOCK` message referencing Po2 / VLAN 10. VLAN 10 traffic between SW1 and SW3 is completely blocked on Po2.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_04.py`
 
-**Success criteria:** `show spanning-tree inconsistentports` is empty on SW1. `show spanning-tree vlan 10` on SW1 shows "This bridge is the root" with priority 4096. `show spanning-tree vlan 10` on SW2 shows SW1 as root (not SW2 itself).
+**Success criteria:** `show spanning-tree inconsistentports` is empty on SW1. `show spanning-tree vlan 10` on SW1 shows "This bridge is the root" with priority 4096. `show spanning-tree vlan 10` on SW3 shows SW1 as root (not SW3 itself).
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
-1. `show spanning-tree inconsistentports` on SW1 — confirm Po1 / VLAN 10 in Root Inconsistent.
+1. `show spanning-tree inconsistentports` on SW1 — confirm Po2 / VLAN 10 in Root Inconsistent.
 2. `show logging | include ROOTGUARD` — confirms the protection fired and names the VLAN.
-3. `show spanning-tree vlan 10` on SW2 — look at the Bridge ID priority line. If it reads `priority 10 (priority 0 sys-id-ext 10)`, SW2 has been configured to claim root for VLAN 10 (priority 0 always wins).
-4. Compare: `show running-config | include spanning-tree vlan` on SW2 — confirm the offending `spanning-tree vlan 10 priority 0` line.
-5. Recall the design: SW1 = root for VLANs 10/30/99 (priority 4096). SW2 must be secondary (priority 28672), never primary for VLAN 10.
+3. `show spanning-tree vlan 10` on SW3 — look at the Bridge ID priority line. If it reads `priority 10 (priority 0 sys-id-ext 10)`, SW3 has been configured to claim root for VLAN 10 (priority 0 always wins).
+4. Compare: `show running-config | include spanning-tree vlan` on SW3 — confirm the offending `spanning-tree vlan 10 priority 0` line.
+5. Recall the design: SW1 = root for VLANs 10/30/99 (priority 4096). SW3 has no legitimate root claim — root guard on SW1 Po2 protects this boundary.
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-The fault is on **SW2**: `spanning-tree vlan 10 priority 0` was applied, making SW2 the bridge with priority 0 (sys-id-ext 10) = bridge ID 10. SW1 (priority 4096) sees the superior BPDU on Po1 and Root guard fires.
+The fault is on **SW3**: `spanning-tree vlan 10 priority 0` was applied, making SW3 the bridge with priority 0 (sys-id-ext 10) = bridge ID 10. SW1 (priority 4096) sees the superior BPDU on Po2 and Root guard fires.
 
 ```bash
-! SW2
+! SW3
 no spanning-tree vlan 10 priority 0
-spanning-tree vlan 10,30,99 priority 28672
 ```
 
-This restores SW2 to the intended secondary role (priority 28672 — beats the default 32768 but loses to SW1's 4096). Root guard automatically clears the inconsistent state within seconds once SW2 stops sending superior BPDUs.
+This removes SW3's spurious root claim. Root guard automatically clears the inconsistent state within seconds once SW3 stops sending superior BPDUs for VLAN 10.
 
 Verify with `show spanning-tree inconsistentports` (must be empty) and `show spanning-tree vlan 10` on both switches — SW1 is "this bridge is the root".
 </details>
@@ -742,7 +741,7 @@ Verify with `show vlan brief` on SW2 (Gi1/1 should now appear under VLAN 10) and
 - [ ] Ticket 1 — Native VLAN mismatch on Po2 resolved; CDP warnings stop
 - [ ] Ticket 2 — Allowed VLAN list on Po1 restored; VLAN 10 traffic flows
 - [ ] Ticket 3 — Po2 member channel-group mode corrected; bundle forms
-- [ ] Ticket 4 — SW2 VLAN 10 priority corrected; Root guard clears
+- [ ] Ticket 4 — SW3 VLAN 10 priority 0 removed; SW1 Po2 root guard clears
 - [ ] Ticket 5 — SW3 Gi1/1 no-shut; PC2 reconnects
 - [ ] Ticket 6 — SW2 Gi1/1 access VLAN corrected; PC1 reaches its gateway
 

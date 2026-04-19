@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Fault Injection: Scenario 04 -- Superior BPDU Triggers Root Guard on SW1 Po1
+Fault Injection: Scenario 04 -- Superior BPDU Triggers Root Guard on SW1 Po2
 
-Target:     SW2 (global spanning-tree priority tuning)
-Injects:    'spanning-tree vlan 10 priority 0' on SW2, making SW2 the
+Target:     SW3
+Injects:    'spanning-tree vlan 10 priority 0' on SW3, making SW3 the
             bridge with the lowest possible bridge ID for VLAN 10 and
-            sending a superior BPDU across Po1 to SW1. SW1's Po1 has
+            sending a superior BPDU across Po2 to SW1. SW1's Po2 has
             root-guard enabled.
 Fault Type: Superior BPDU received on a root-guard-protected port
 
 Result:     - %SPANTREE-2-ROOTGUARD_BLOCK syslog on SW1.
             - `show spanning-tree inconsistentports` on SW1 lists
-              Po1 as Root Inconsistent for VLAN 10.
-            - VLAN 10 traffic across Po1 is blocked until SW2 stops
+              Po2 as Root Inconsistent for VLAN 10.
+            - VLAN 10 traffic across Po2 is blocked until SW3 stops
               claiming root for that VLAN.
 
 Before running, ensure the lab is in the SOLUTION state:
@@ -31,21 +31,24 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-05-capstone-troubleshoot.unl"
-DEVICE_NAME = "SW2"
+DEVICE_NAME = "SW3"
 FAULT_COMMANDS = [
-    "no spanning-tree vlan 10,30,99 priority 28672",
-    "spanning-tree vlan 30,99 priority 28672",
     "spanning-tree vlan 10 priority 0",
 ]
 PREFLIGHT_CMD = "show running-config | include spanning-tree vlan"
-PREFLIGHT_SOLUTION_MARKER = "spanning-tree vlan 10,30,99 priority 28672"
+PREFLIGHT_SOLUTION_MARKER = "spanning-tree vlan 20 priority 28672"
+PREFLIGHT_FAULT_MARKER = "spanning-tree vlan 10 priority 0"
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
     if PREFLIGHT_SOLUTION_MARKER not in output:
-        print(f"[!] Pre-flight failed: SW2 is missing '{PREFLIGHT_SOLUTION_MARKER}'.")
+        print(f"[!] Pre-flight failed: SW3 is missing '{PREFLIGHT_SOLUTION_MARKER}'.")
         print("    Run apply_solution.py first to restore the known-good config.")
+        return False
+    if PREFLIGHT_FAULT_MARKER in output:
+        print(f"[!] Pre-flight failed: '{PREFLIGHT_FAULT_MARKER}' already present on SW3.")
+        print("    Scenario 04 appears to be already injected. Restore with apply_solution.py.")
         return False
     return True
 

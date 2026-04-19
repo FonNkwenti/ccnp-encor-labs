@@ -741,7 +741,7 @@ Operations reports that outbound traffic from PC1 toward R4's networks is leavin
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_01.py`
 
-**Success criteria:** `show bgp ipv4 unicast 172.16.4.0` on R1 shows LocPref 200 on the selected path; `show bgp ipv4 unicast 172.16.4.0` on R2 shows the iBGP path from R1 as best; traceroute from PC1 transits R1 -> R3 -> R4.
+**Success criteria:** `show bgp ipv4 unicast 172.16.4.0` on R1 shows LocPref 200 on the selected path. `show bgp ipv4 unicast 172.16.4.0` on R2 shows the iBGP-learned path from R1 as best (`>`). `traceroute 172.16.4.1 source 2.2.2.2` from R2 transits R1's loopback (1.1.1.1) as next-hop, confirming R2 exits via R1.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>

@@ -660,22 +660,22 @@ Root cause: R3 had a wrong RP address configured (3.3.3.3 — R3's own loopback)
 
 ---
 
-### Ticket 3 — R2 Cannot Forward Traffic from the R1-Side of the Network
+### Ticket 3 — R2 mroute Is Completely Empty
 
-R3 has joined group 239.1.1.1 and the RP address is consistent across all routers. However, after R1 sends multicast traffic, `show ip mroute 239.1.1.1` on R2 stays empty — no (*,G) traffic flowing, no (S,G) entry building — and R3's mroute shows no (S,G) entry either. OSPF is fully converged and all unicast reachability is intact. Something on R2's R1-facing side is no longer participating in PIM.
+R3 has joined group 239.1.1.1 and the RP address is consistent across all routers. However, after R1 sends multicast traffic, `show ip mroute 239.1.1.1` on R2 is completely empty — no (*,G), no (S,G) — and R3's mroute shows no entries either. OSPF is fully converged and all unicast reachability is intact.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
 
-**Success criteria:** After your fix, `show ip mroute 239.1.1.1` on R2 shows an (S,G) entry with incoming interface GigabitEthernet0/0 and traffic forwarding to R3.
+**Success criteria:** After your fix, `show ip mroute 239.1.1.1` on R2 shows both a (*,G) entry and an (S,G) entry, with traffic forwarding to R3.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
-1. `show ip rpf 10.1.1.10` on R2 — verify the RPF interface matches where traffic is arriving
-2. `show ip pim interface` on R2 — check that the RPF interface (Gi0/0) has PIM enabled
-3. `show ip pim neighbor` on R2 — check neighbors on Gi0/0
-4. Key clue: Gi0/0 on R2 is in the PIM interface table but shows 0 neighbors, or Gi0/0 does not appear at all
-5. The RPF check succeeds at the unicast level (OSPF still sees the route) but PIM cannot receive traffic on a non-PIM interface
+1. `show ip pim interface` on R2 — check which interfaces have PIM enabled
+2. `show ip pim neighbor` on R2 — verify R2 has PIM neighbors on its transit links (Gi0/0 toward R1, Gi0/1 toward R3)
+3. Key clue: both Gi0/0 and Gi0/1 are missing from `show ip pim interface`, or show 0 neighbors — R2 has no PIM adjacencies and cannot participate in the shared tree
+4. `show ip rpf 10.1.1.10` on R2 — the RPF interface is determined but PIM cannot use a non-PIM ingress interface
+5. PIM requires `ip pim sparse-mode` on the ingress interface to accept multicast traffic, regardless of the unicast routing table
 </details>
 
 <details>
@@ -685,9 +685,11 @@ R3 has joined group 239.1.1.1 and the RP address is consistent across all router
 ! R2
 interface GigabitEthernet0/0
  ip pim sparse-mode
+interface GigabitEthernet0/1
+ ip pim sparse-mode
 ```
 
-Root cause: PIM Sparse Mode was removed from R2's Gi0/0 interface (the link toward R1). Although OSPF still selects Gi0/0 as the path to reach R1/PC1's subnet, PIM will not accept multicast traffic on an interface that does not have `ip pim sparse-mode`. The RPF check fails because the ingress interface is not a PIM interface.
+Root cause: PIM Sparse Mode was removed from both of R2's transit interfaces (Gi0/0 toward R1, Gi0/1 toward R3). With no PIM-enabled interfaces, R2 cannot form adjacencies, build the shared tree, or accept multicast traffic on any incoming interface. Removing PIM from a single interface in a triangle topology is insufficient — traffic reroutes via the remaining PIM-enabled leg. Both interfaces must be removed to produce the mroute-empty symptom.
 </details>
 
 ---
@@ -712,4 +714,4 @@ Root cause: PIM Sparse Mode was removed from R2's Gi0/0 interface (the link towa
 
 - [ ] Ticket 1 diagnosed and resolved (source-facing PIM interface)
 - [ ] Ticket 2 diagnosed and resolved (wrong RP address on receiver router)
-- [ ] Ticket 3 diagnosed and resolved (PIM missing on RP-to-source link)
+- [ ] Ticket 3 diagnosed and resolved (PIM missing on both R2 transit interfaces)

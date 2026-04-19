@@ -845,17 +845,19 @@ python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # restore
 
 ---
 
-### Ticket 1 -- iBGP Peer Established but R1 Has No Route to 172.16.3.0/24
+### Ticket 1 -- R2's iBGP Advertisement Has an Inaccessible Next-Hop on R1
 
 R1's iBGP session to R2 is up (`show ip bgp summary` shows numeric state).
-`show ip bgp 172.16.3.0/24` on R1 lists a path via R2 (next-hop 10.0.23.2), but
-`show ip route 172.16.3.0` returns "subnet not in table." PC1 cannot reach
-172.16.3.1. R2 itself has the prefix installed correctly.
+`show ip bgp 172.16.3.0/24` on R1 lists the iBGP path via R2, but the next-hop
+(`10.0.23.2`) is shown as `inaccessible` — R1 has no IGP route to that address.
+R2 itself has the prefix installed correctly.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_01.py`
 
-**Success criteria:** R1 must install 172.16.3.0/24 into the RIB. PC1 must
-ping 172.16.3.1.
+**Success criteria:** `show ip bgp 172.16.3.0/24` on R1 shows the iBGP path with
+next-hop `2.2.2.2` (R2's loopback, resolvable via OSPF) and no `r` (next-hop
+inaccessible) flag. Both the iBGP path and R1's own eBGP path appear valid in the
+BGP table.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>

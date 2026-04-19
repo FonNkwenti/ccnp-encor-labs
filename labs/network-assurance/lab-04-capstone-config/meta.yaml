@@ -39,3 +39,9 @@ updated:
       - scripts/fault-injection/inject_scenario_03.py
       - scripts/fault-injection/apply_solution.py
       - scripts/fault-injection/README.md
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    note: fault-injection audit fix — corrected inject scripts and workbook success criteria
+    files:
+      - workbook.md

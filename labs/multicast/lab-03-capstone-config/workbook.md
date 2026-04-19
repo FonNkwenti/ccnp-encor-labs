@@ -754,9 +754,12 @@ R4# show run interface GigabitEthernet0/1
 ```bash
 R2(config)# interface GigabitEthernet0/2
 R2(config-if)# ip pim bsr-border
+
+R4(config)# interface GigabitEthernet0/0
+R4(config-if)# ip pim bsr-border
 ```
 
-Root cause: `ip pim bsr-border` was removed from R2 Gi0/2, which is one of the two main-domain→R4-domain seams. BSR messages from R2's bootstrap process leaked through L6 into R4's PIM domain, giving R4 the main-domain RP mapping. The domain boundary is only as strong as its weakest border interface — all four (R2 Gi0/2, R3 Gi0/3, R4 Gi0/0, R4 Gi0/1) must have `bsr-border`.
+Root cause: `ip pim bsr-border` was removed from both R2 Gi0/2 and R4 Gi0/0 — both ends of the R2↔R4 inter-domain link. A single `bsr-border` on either end is sufficient to block Bootstrap messages; to create the leak, both ends must be removed. The domain boundary is only as strong as its weakest border interface — all four (R2 Gi0/2, R3 Gi0/3, R4 Gi0/0, R4 Gi0/1) must have `bsr-border`.
 </details>
 
 ---
@@ -824,5 +827,5 @@ Root cause: `ip msdp originator-id Loopback0` was removed on R2. MSDP SA message
 ### Troubleshooting
 
 - [ ] Ticket 1 — ASM SPT restored after diagnosing missing PIM mode on R3 Gi0/1
-- [ ] Ticket 2 — R4 RP mapping restored to static-only after fixing bsr-border on R2 Gi0/2
+- [ ] Ticket 2 — R4 RP mapping restored to static-only after fixing bsr-border on R2 Gi0/2 and R4 Gi0/0
 - [ ] Ticket 3 — MSDP SA cache populated on R4 after restoring originator-id on R2

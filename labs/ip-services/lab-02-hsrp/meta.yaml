@@ -11,3 +11,11 @@ lab:
     - "3.3.c"
   initial_configs_source: lab-01-nat-pat/solutions
   clean_slate: false
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    note: fault-injection audit fix — corrected inject scripts and workbook success criteria
+    files:
+      - scripts/fault-injection/inject_scenario_02.py
+      - workbook.md

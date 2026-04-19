@@ -879,7 +879,7 @@ R5# show running-config | section router ospf
 
 ! Step 3: Check LSDB on R5
 R5# show ip ospf database external
-! If two Type 7 LSAs (/24 each): summary-address not working correctly
+! If two Type 5 LSAs (/24 each): summary-address not working correctly (R5 is in a regular area — LSAs are Type 5, not Type 7)
 ```
 
 </details>

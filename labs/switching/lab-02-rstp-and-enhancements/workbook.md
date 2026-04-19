@@ -765,11 +765,11 @@ target device isn't in the expected solution state. Always restore with
 
 ---
 
-### Ticket 1 — VLAN 10 connectivity broken between SW1 and SW2
+### Ticket 1 — VLAN 10 connectivity broken between SW1 and SW3
 
 Users in VLAN 10 (Sales) on PC1's side cannot reach the R1 gateway
 (192.168.10.1) or anything in VLAN 30. VLAN 20 traffic through the same
-path works normally. SW1 logs show Po1 changing STP states for VLAN 10.
+path works normally. SW1 logs show Po2 changing STP states for VLAN 10.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>`
 
@@ -779,32 +779,33 @@ again; `show spanning-tree inconsistentports` on SW1 is empty.
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
-1. On SW1: `show spanning-tree inconsistentports` — Po1 listed with
+1. On SW1: `show spanning-tree inconsistentports` — Po2 listed with
    inconsistency `root-inconsistent` for VLAN 10.
-2. On SW1: `show spanning-tree vlan 10` — Po1 state is `BKN*` (broken /
+2. On SW1: `show spanning-tree vlan 10` — Po2 state is `BKN*` (broken /
    blocking) instead of `FWD`.
-3. On SW2: `show spanning-tree vlan 10` — SW2 reports itself as root for
+3. On SW3: `show spanning-tree vlan 10` — SW3 reports itself as root for
    VLAN 10 with priority 0. This is the smoking gun.
-4. On SW2: `show running-config | include spanning-tree vlan 10` — an
+4. On SW3: `show running-config | include spanning-tree vlan 10` — an
    unexpected `spanning-tree vlan 10 priority 0` line is present.
 5. Recall the design: SW1 is supposed to be root for VLAN 10 with
    priority 4096; any switch advertising lower priority through a
-   root-guard-protected port will be blocked.
+   root-guard-protected port will be blocked. Root guard is on SW1 Po2
+   (the PAgP link toward SW3).
 
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-Remove the unauthorised priority override on SW2:
+Remove the unauthorised priority override on SW3:
 
 ```bash
-! SW2
+! SW3
 no spanning-tree vlan 10 priority 0
 ```
 
-Once SW2 stops advertising superior BPDUs, SW1's root guard releases
-Po1 from `root-inconsistent` automatically after the BPDU timeout.
+Once SW3 stops advertising superior BPDUs, SW1's root guard releases
+Po2 from `root-inconsistent` automatically after the BPDU timeout.
 Verify:
 
 ```bash
@@ -931,6 +932,6 @@ SW3# show spanning-tree vlan 20
 
 ### Troubleshooting
 
-- [ ] Ticket 1 solved: SW1's root guard reason understood; `show spanning-tree inconsistentports` clean
+- [ ] Ticket 1 solved: SW3 priority 0 removed; SW1 Po2 root guard clears; `show spanning-tree inconsistentports` clean
 - [ ] Ticket 2 solved: all three switches back on `rapid-pvst`
 - [ ] Ticket 3 solved: SW3's VLAN 20 root port is Po3, not Po2

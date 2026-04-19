@@ -25,6 +25,8 @@ FAULT: dict[str, list[str]] = {
     "R2": [
         "interface GigabitEthernet0/0",
         " no ip pim sparse-mode",
+        "interface GigabitEthernet0/1",
+        " no ip pim sparse-mode",
     ],
 }
 

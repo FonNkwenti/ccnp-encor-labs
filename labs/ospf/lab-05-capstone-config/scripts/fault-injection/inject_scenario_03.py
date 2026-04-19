@@ -3,11 +3,12 @@
 Fault Injection: Scenario 03 -- External Routes from R5 Absent from Area 0
 
 Target:     R3 (ABR Area 0/2)
-Injects:    Changes `area 2 nssa` to `area 2 nssa no-summary` on R3.
-            The no-summary keyword on an NSSA ABR suppresses Type 3 LSAs
-            AND prevents Type 7 to Type 5 translation. External routes
-            from R5 stop appearing in Area 0.
-Fault Type: NSSA ABR no-summary Suppresses Type 5 Translation
+Injects:    Removes `area 2 nssa` from R3's OSPF configuration entirely.
+            Without the NSSA designation, R3 no longer participates in
+            Type 7/Type 5 translation. Additionally, R5 continues to send
+            Type 7 LSAs (N-bit set), but R3 now treats Area 2 as a regular
+            area and ignores Type 7 LSAs -- no translation occurs.
+Fault Type: NSSA designation removed from ABR
 
 Before running, ensure the lab is in the solution state:
     python3 apply_solution.py --host <eve-ng-ip>
@@ -29,23 +30,24 @@ DEVICE_NAME = "R3"
 FAULT_COMMANDS = [
     "router ospf 1",
     "no area 2 nssa",
-    "area 2 nssa no-summary",
 ]
 PREFLIGHT_CMD = "show running-config | section router ospf"
 PREFLIGHT_SOLUTION_MARKER = "area 2 nssa"
+PREFLIGHT_FAULT_MARKER = "area 2 nssa"  # absence of this line = fault already injected
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
-    if PREFLIGHT_SOLUTION_MARKER not in output:
-        print(f"[!] Pre-flight failed: R3 missing '{PREFLIGHT_SOLUTION_MARKER}' in ospf config.")
+    nssa_lines = [l.strip() for l in output.splitlines() if "area 2 nssa" in l]
+    if not nssa_lines:
+        print("[!] Pre-flight failed: R3 has no 'area 2 nssa' in OSPF config.")
         print("    Run apply_solution.py first to restore the known-good config.")
         return False
     return True
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Inject Scenario 03 (NSSA no-summary on R3 blocks Type 5)")
+    parser = argparse.ArgumentParser(description="Inject Scenario 03 (NSSA removed from R3 ABR)")
     parser.add_argument("--host", default="192.168.242.128",
                         help="EVE-NG server IP (default: %(default)s)")
     parser.add_argument("--lab-path", default=DEFAULT_LAB_PATH,

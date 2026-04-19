@@ -1016,11 +1016,11 @@ R4# show ip route ospf
 
 ### Ticket 3 — External Routes from R5 Are Not Appearing in Area 0 Routing Tables
 
-A monitoring alert shows that R1 and R2 have lost the 172.16.0.0/16 route. R5 appears healthy and R3's neighbor table shows R5 as a full neighbor.
+A monitoring alert shows that R1 and R2 have lost the 172.16.0.0/16 route. R3 reports its Area 2 neighbor R5 is no longer in a FULL state.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
 
-**Success criteria:** `show ip route ospf` on R1 shows `O E2 172.16.0.0/16`.
+**Success criteria:** `show ip route ospf` on R1 shows `O E2 172.16.0.0/16`. `show ip ospf neighbor` on R3 shows R5 as FULL.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
@@ -1029,21 +1029,20 @@ A monitoring alert shows that R1 and R2 have lost the 172.16.0.0/16 route. R5 ap
 R1# show ip route ospf | include 172.16
 ! Output is empty — external routes missing
 
-R3# show ip ospf database external
-! Empty — Type 5 LSAs not present in Area 0
-
-R3# show ip ospf database nssa-external
-! Check if Type 7 LSAs are present in Area 2 LSDB on R3
-! If Type 7 present but not translated: ABR translation issue
+R3# show ip ospf neighbor
+! R5 is MISSING or not in FULL state — adjacency lost
 
 R3# show ip ospf
-! Check: Area 2 — should say "NSSA" not "NSSA no-redistribution" or "NSSA no-summary"
-! The fault: R3 was configured with "area 2 nssa no-summary"
-! "no-summary" on NSSA ABR suppresses Type 3 LSAs AND prevents Type 5 translation
-! Result: Type 7 LSAs exist in Area 2 but are never translated to Type 5 for Area 0
+! Check Area 2 listing: it should say "Area 2 [NSSA]"
+! If it does NOT say NSSA, the NSSA flag was removed from R3's config
 
-R5# show ip ospf database nssa-external
-! Type 7 LSA for 172.16.0.0 should be here — confirms the problem is at R3 ABR
+R5# show ip ospf neighbor
+! R3 may be missing or in INIT/EXSTART due to N-bit mismatch
+
+R5# show ip ospf | include Area
+! R5's Area 2 says NSSA — confirms the mismatch: R5 expects NSSA, R3 does not
+! Symptom: N-bit in hello packets must match; if R3 no longer sets N-bit,
+! the OSPF adjacency with R5 cannot progress past INIT/EXSTART.
 ```
 </details>
 
@@ -1051,20 +1050,25 @@ R5# show ip ospf database nssa-external
 <summary>Click to view Fix</summary>
 
 ```bash
-! On R3: remove the no-summary keyword from NSSA config
+! On R3: restore the NSSA designation for Area 2
 configure terminal
 router ospf 1
- no area 2 nssa no-summary
  area 2 nssa
 end
 
-! Verify:
+! Verify adjacency recovers:
+R3# show ip ospf neighbor
+! R5 should be FULL again
+
+! Verify routes return:
 R3# show ip ospf database external
-! 172.16.0.0 Type 5 LSA should now appear
+! 172.16.0.0 Type 5 LSA should appear
 
 R1# show ip route ospf | include 172
 ! O E2 172.16.0.0/16 should appear
 ```
+
+Root cause: `area 2 nssa` was removed from R3's OSPF configuration. R3 is the ABR between Area 0 and Area 2. Without the NSSA designation, R3 no longer sets the N-bit in its Area 2 hello packets. OSPF adjacency requires the N-bit to match — R5 (which still has `area 2 nssa`) sets N-bit=1, while R3 now sends N-bit=0. The adjacency fails, and all Area 2 routes (including 172.16.0.0/16) disappear.
 </details>
 
 ---

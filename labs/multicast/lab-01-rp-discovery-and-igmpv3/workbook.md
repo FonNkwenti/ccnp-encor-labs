@@ -660,38 +660,41 @@ R1# show ip pim rp mapping      ! ← RP 2.2.2.2 via bootstrap
 
 ---
 
-### Ticket 2 — Receiver LAN Sees IGMP Queries but Reports Are Ignored
+### Ticket 2 — Receiver LAN Is Not a Member of the Multicast Group
 
-R3 reports `show ip igmp groups Gi0/2` missing the 239.1.1.1 entry. The interface is up, BSR is healthy, and R1 can ping R3 unicast without issue. On R3, `debug ip igmp` shows membership reports being received but immediately discarded. The operations team suspects an IGMP version mismatch introduced by a config export that overwrote interface settings.
+R3 reports `show ip igmp groups Gi0/2` missing the 239.1.1.1 entry. The interface is up, BSR is healthy, and R1 can ping R3 unicast without issue. Without a group membership entry, R3 generates no IGMP reports and its OIL for 239.1.1.1 collapses — multicast traffic stops being delivered to the receiver LAN.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_02.py`
 
-**Success criteria:** `show ip igmp interface Gi0/2` on R3 shows IGMP host version 3 and router version 3. `show ip igmp groups Gi0/2` lists 239.1.1.1.
+**Success criteria:** `show ip igmp groups GigabitEthernet0/2` on R3 lists 239.1.1.1. `show ip mroute 239.1.1.1` on R3 shows Gi0/2 in the OIL.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
-1. `show ip igmp interface GigabitEthernet0/2` → note the "Current IGMP router version" value.
-2. `show running-config interface GigabitEthernet0/2` → look for `ip igmp version <n>`.
-3. If version is 2, the IGMPv3 membership reports from the self-join are being rejected as malformed.
+1. `show ip igmp groups GigabitEthernet0/2` on R3 — confirm 239.1.1.1 is absent.
+2. `show ip mroute 239.1.1.1` on R3 — (*,G) entry exists but OIL is empty (no outgoing interface toward the receiver).
+3. `show running-config interface GigabitEthernet0/2` on R3 — look for `ip igmp join-group` statement; it will be missing.
+4. Without a join-group, R3 never sends IGMP membership reports for 239.1.1.1 — the upstream OIL prunes the group.
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-Restore IGMPv3 on the receiver interface:
+Restore the static IGMP group membership on the receiver interface:
 
 ```bash
 R3(config)# interface GigabitEthernet0/2
-R3(config-if)# ip igmp version 3
+R3(config-if)# ip igmp join-group 239.1.1.1
 ```
 
 Verify:
 
 ```bash
-R3# show ip igmp interface GigabitEthernet0/2    ! ← router version 3
 R3# show ip igmp groups GigabitEthernet0/2       ! ← 239.1.1.1 present
+R3# show ip mroute 239.1.1.1                     ! ← Gi0/2 in OIL
 ```
+
+Root cause: `ip igmp join-group 239.1.1.1` was removed from R3 Gi0/2. With no group membership, R3 generates no IGMP reports, the upstream OIL is pruned, and multicast traffic for that group is no longer forwarded out Gi0/2.
 </details>
 
 ---
@@ -755,5 +758,5 @@ R1# ping 239.1.1.1 repeat 5 source GigabitEthernet0/2
 ### Troubleshooting
 
 - [ ] Ticket 1 — Branch routers report no RP mapping (resolved)
-- [ ] Ticket 2 — Receiver LAN sees IGMP queries but reports are ignored (resolved)
+- [ ] Ticket 2 — Receiver LAN group membership restored (resolved)
 - [ ] Ticket 3 — BSR election succeeds but no RP is distributed (resolved)

@@ -957,7 +957,7 @@ During a routine check, you notice that `show ip sla summary` on R1 shows all th
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
 
-**Success criteria:** `show ip sla summary` shows all three operations marked `*` (active) with return code OK and RTT values populated.
+**Success criteria:** `show ip sla summary` shows all three operations marked `*` (active) with return code OK and RTT values populated. `show track 1` shows State: Up. `show ip route 10.1.23.0` shows the track-conditioned static route installed.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
@@ -1018,4 +1018,4 @@ Verify: Within 30 seconds, `show ip sla summary` shows all three operations as `
 
 - [ ] **Ticket 1:** Identified wrong exporter destination (2.2.2.3); corrected to 2.2.2.2 and verified exports succeed
 - [ ] **Ticket 2:** Identified VLAN 500 missing from trunk allowed list; added and verified RSPAN traffic crosses to SW2
-- [ ] **Ticket 3:** Identified probes stuck in pending state; rescheduled with `start-time now` and verified all return OK
+- [ ] **Ticket 3:** Identified probes stuck in pending state; rescheduled with `start-time now`; verified SLA active, Track 1 Up, static route 10.1.23.0/30 installed

@@ -856,39 +856,41 @@ Verify with `show ip route vrf CUSTOMER-A` on both, then `ping vrf CUSTOMER-A 19
 
 ---
 
-### Ticket 3 — PC1 Cannot Reach Its Default Gateway
+### Ticket 3 — PC1 Can Ping Its Gateway but Cannot Reach PC2
 
-A junior engineer reports that PC1 cannot ping its default gateway (192.168.1.1). Both the
-router and the PC appear to be up. All other VRF functions on R1 seem intact.
+PC1 can ping its default gateway (192.168.1.1) but cannot reach PC2 (192.168.2.10). Other
+VRF functions on R1 appear intact. The R1 Gi0/2 interface is up and has the correct IP address.
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_03.py --host <eve-ng-ip>`
 
-**Success criteria:** PC1 can ping 192.168.1.1 and `show ip vrf interfaces` on R1 shows
+**Success criteria:** PC1 can ping PC2 (192.168.2.10) and `show ip vrf interfaces` on R1 shows
 Gi0/2 as a member of CUSTOMER-A.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
 ```bash
-! 1. Check R1 LAN interface from PC1
-PC1> ping 192.168.1.1
-! No response
+! 1. Confirm PC1 can ping its gateway but not PC2
+PC1> ping 192.168.1.1   ! succeeds — R1 Gi0/2 still has the IP; ARP delivers the reply
+PC1> ping 192.168.2.10  ! fails — transit routing through CUSTOMER-A VRF is broken
 
 ! 2. Check R1 global routing table — does 192.168.1.0/24 appear there?
 R1# show ip route
 ! C 192.168.1.0/24 is directly connected, GigabitEthernet0/2
-! ← subnet is in GLOBAL table, not in CUSTOMER-A
+! ← subnet is in GLOBAL table, not in CUSTOMER-A VRF
 
 ! 3. Confirm VRF interface membership
 R1# show ip vrf interfaces
-! Gi0/2 is absent from CUSTOMER-A — it's in the global table
+! Gi0/2 is absent from CUSTOMER-A — interface was moved to the global routing table
 
 ! 4. Check running config
 R1# show running-config interface GigabitEthernet0/2
-! No "vrf forwarding CUSTOMER-A" line — interface was moved to global table
+! No "vrf forwarding CUSTOMER-A" line — vrf forwarding was removed
 
-! Root cause: vrf forwarding removed from R1 Gi0/2 — LAN is now in global table,
-! invisible to PC1 which expects to reach a VRF-aware gateway
+! Root cause: vrf forwarding was removed from R1 Gi0/2. The IP address stays on the
+! interface (IOS moves it to the global table), so ARP and gateway pings still work.
+! However, traffic arriving from PC1 on Gi0/2 now enters the global routing table,
+! not CUSTOMER-A — the VRF static routes to 192.168.2.0/24 are invisible here.
 ```
 </details>
 
@@ -936,4 +938,4 @@ Verify with `show ip vrf interfaces` (Gi0/2 must show CUSTOMER-A) and PC1 `ping 
 
 - [ ] Ticket 1 resolved: CUSTOMER-A VRF restored on R3, PC1-PC2 reachability confirmed
 - [ ] Ticket 2 resolved: static routes restored on R1 and R2, routing table verified
-- [ ] Ticket 3 resolved: R1 Gi0/2 back in CUSTOMER-A, PC1 gateway reachable
+- [ ] Ticket 3 resolved: R1 Gi0/2 back in CUSTOMER-A, PC1-PC2 reachability confirmed

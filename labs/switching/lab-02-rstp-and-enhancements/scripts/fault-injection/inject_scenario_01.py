@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-Fault Injection: Scenario 01 -- Root Guard Trips on SW1 Po1
+Fault Injection: Scenario 01 -- Superior BPDU Triggers Root Guard on SW1 Po2
 
-Target:     SW2
-Injects:    'spanning-tree vlan 10 priority 0' -- SW2 advertises itself
+Target:     SW3
+Injects:    'spanning-tree vlan 10 priority 0' -- SW3 advertises itself
             as a superior root for VLAN 10, triggering SW1's root-guard
-            on Po1 to enter root-inconsistent state.
+            on Po2 (the SW1<->SW3 PAgP link) to enter root-inconsistent state.
 Fault Type: Rogue root bridge / root-guard violation
 
-Result:     VLAN 10 traffic between SW1 and SW2 is blocked (root guard
-            blocks the superior BPDU on Po1). PC1 (VLAN 10) loses
-            inter-VLAN reachability through R1. VLAN 20/30/99 continue
-            to work normally.
+Result:     - %SPANTREE-2-ROOTGUARD_BLOCK syslog on SW1.
+            - `show spanning-tree inconsistentports` on SW1 lists
+              Po2 as Root Inconsistent for VLAN 10.
+            - VLAN 10 traffic across Po2 is blocked until SW3 stops
+              claiming root for that VLAN. PC1 (VLAN 10) loses
+              inter-VLAN reachability through R1.
 
 Before running, ensure the lab is in the SOLUTION state:
     python3 apply_solution.py --host <eve-ng-ip>
@@ -29,25 +31,18 @@ from eve_ng import EveNgError, connect_node, discover_ports, require_host  # noq
 
 
 DEFAULT_LAB_PATH = "ccnp-encor/switching/lab-02-rstp-and-enhancements.unl"
-DEVICE_NAME = "SW2"
+DEVICE_NAME = "SW3"
 FAULT_COMMANDS = [
     "spanning-tree vlan 10 priority 0",
 ]
-PREFLIGHT_CMD = "show running-config | include spanning-tree"
-# Solution marker: SW2 is the primary root for VLAN 20 only
-PREFLIGHT_SOLUTION_MARKER = "spanning-tree vlan 20 priority 4096"
-# Fault marker: if already present, the fault is already injected -- bail out
+PREFLIGHT_CMD = "show running-config | include spanning-tree vlan"
 PREFLIGHT_FAULT_MARKER = "spanning-tree vlan 10 priority 0"
 
 
 def preflight(conn) -> bool:
     output = conn.send_command(PREFLIGHT_CMD)
-    if PREFLIGHT_SOLUTION_MARKER not in output:
-        print(f"[!] Pre-flight failed: SW2 does not have '{PREFLIGHT_SOLUTION_MARKER}'.")
-        print("    Run apply_solution.py first to restore the known-good config.")
-        return False
     if PREFLIGHT_FAULT_MARKER in output:
-        print(f"[!] Pre-flight failed: '{PREFLIGHT_FAULT_MARKER}' already present.")
+        print(f"[!] Pre-flight failed: '{PREFLIGHT_FAULT_MARKER}' already present on SW3.")
         print("    Scenario 01 appears to be already injected. Restore with apply_solution.py.")
         return False
     return True

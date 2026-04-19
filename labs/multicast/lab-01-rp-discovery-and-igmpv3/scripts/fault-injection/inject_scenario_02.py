@@ -24,8 +24,7 @@ DEFAULT_LAB_PATH = "multicast/lab-01-rp-discovery-and-igmpv3.unl"
 FAULT: dict[str, list[str]] = {
     "R3": [
         "interface GigabitEthernet0/2",
-        " no ip igmp version 3",
-        " ip igmp version 2",
+        " no ip igmp join-group 239.1.1.1",
     ],
 }
 

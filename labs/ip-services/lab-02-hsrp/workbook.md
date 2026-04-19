@@ -639,7 +639,7 @@ Following a brief power cycle on R1, R2 is now the HSRP Active router. R1 is bac
 
 **Inject:** `python3 scripts/fault-injection/inject_scenario_02.py`
 
-**Success criteria:** After simulating R1 failure and recovery (shutdown/no shutdown Gi0/0), R1 automatically reclaims Active state within a few seconds.
+**Success criteria:** After your fix, R1 automatically reclaims Active state. `show standby GigabitEthernet0/0` on R1 shows "State is Active" and "Preemption enabled".
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
