@@ -4,7 +4,7 @@
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="&lt;font style=&quot;font-size:17px;&quot; color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Lab 02: GRE Tunneling Over a Shared Transport&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                <mxCell id="title" value="&lt;font style=&quot;font-size:17px;&quot; color=&quot;#FFFFFF&quot;&gt;&lt;b&gt;Lab 05: VRF and Tunneling Comprehensive Troubleshooting — Capstone II&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="200" y="16" width="900" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="zone_global" value="Global Underlay (OSPF Process 1)" style="rounded=1;arcSize=5;whiteSpace=wrap;html=1;dashed=1;strokeColor=#00838F;strokeWidth=2;fillColor=#003d45;opacity=25;fontSize=11;fontStyle=1;verticalAlign=top;fontColor=#FFFFFF;" parent="1" vertex="1">

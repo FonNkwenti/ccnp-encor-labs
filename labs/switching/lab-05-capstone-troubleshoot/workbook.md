@@ -461,6 +461,7 @@ spanning-tree vlan 10,30,99 priority 28672
 interface GigabitEthernet1/1
  switchport access vlan 10
 ```
+
 </details>
 
 <details>
@@ -483,6 +484,7 @@ interface GigabitEthernet0/3
 interface GigabitEthernet1/1
  no shutdown
 ```
+
 </details>
 
 > Full per-device solutions also live in `solutions/SW1.cfg`, `SW2.cfg`, `SW3.cfg`, `R1.cfg`.
@@ -526,6 +528,7 @@ The NOC dashboard is lit up with a periodic `%CDP-4-NATIVE_VLAN_MISMATCH` messag
 3. `show interfaces trunk` on SW3 — Po2 **Native vlan** column.
 4. Diff the two. The value that is not 99 is the one to fix.
 5. `show running-config interface Port-channel2` and its members on the broken side — confirm the offending `switchport trunk native vlan 1` line.
+
 </details>
 
 <details>
@@ -562,6 +565,7 @@ Sales users report they can see each other on PC1's segment but cannot reach the
 3. `show interfaces trunk` on SW1 — Po1 **Vlans allowed on trunk** column.
 4. `show interfaces trunk` on SW2 — Po1 **Vlans allowed on trunk** column.
 5. Diff the two. Whichever side is missing VLAN 10 is the broken end.
+
 </details>
 
 <details>
@@ -598,6 +602,7 @@ Last night's change window included an "EtherChannel refresh" on SW3. This morni
 3. `show etherchannel port-channel | section Port-channel2` on SW3 — note Protocol and each member's mode.
 4. Recall the mode matrix: Po2 is PAgP (SW1 desirable + SW3 auto). If one end is reporting LACP, a member was re-configured with an LACP mode (`active` or `passive`). LACP and PAgP cannot bundle together.
 5. Check `show running-config interface GigabitEthernet0/3` on SW3 — look for the offending `channel-group 2 mode passive` line.
+
 </details>
 
 <details>
@@ -633,6 +638,7 @@ Wait ~15 seconds for PAgP to converge and re-verify `Po2(SU)` with both members 
 3. `show spanning-tree vlan 10` on SW3 — look at the Bridge ID priority line. If it reads `priority 10 (priority 0 sys-id-ext 10)`, SW3 has been configured to claim root for VLAN 10 (priority 0 always wins).
 4. Compare: `show running-config | include spanning-tree vlan` on SW3 — confirm the offending `spanning-tree vlan 10 priority 0` line.
 5. Recall the design: SW1 = root for VLANs 10/30/99 (priority 4096). SW3 has no legitimate root claim — root guard on SW1 Po2 protects this boundary.
+
 </details>
 
 <details>
@@ -667,6 +673,7 @@ A weekend tech was "tidying cables" on SW3 and the Engineering user who sits beh
 2. `show interfaces GigabitEthernet1/1` on SW3 — look for `administratively down, line protocol is down`.
 3. `show errdisable recovery` — confirm no err-disable cause is active (this is a pure shutdown, not a bpduguard event; the workbook scenario describes it as a "simulated BPDU-guard err-disable" but the current state is just `shutdown`).
 4. `show running-config interface GigabitEthernet1/1` on SW3 — confirm the `shutdown` line and that PortFast + BPDU guard are still in place.
+
 </details>
 
 <details>
@@ -699,6 +706,7 @@ PC1 reports it cannot reach `192.168.10.1`. Its IP is `192.168.10.10/24` and the
 3. `show interfaces GigabitEthernet1/1 switchport` on SW2 — look at **Access Mode VLAN**. Is it `10 (SALES)` or something else?
 4. `show vlan brief` on SW2 — what VLAN does Gi1/1 currently belong to?
 5. Cross-check the design: the cabling table shows PC1 in VLAN 10.
+
 </details>
 
 <details>
@@ -721,28 +729,28 @@ Verify with `show vlan brief` on SW2 (Gi1/1 should now appear under VLAN 10) and
 
 ### Core Implementation
 
-- [ ] `show interfaces trunk` on every switch: native VLAN 99 on every trunk and member
-- [ ] `show interfaces trunk` on every switch: allowed list `10,20,30,99` on every trunk
-- [ ] `show etherchannel summary` on SW1/SW2/SW3: `Po1(SU)`, `Po2(SU)`, `Po3(SU)` — every member `(P)`
-- [ ] `show etherchannel port-channel`: Po1 = LACP both ends, Po2 = PAgP both ends, Po3 = static both ends
-- [ ] `show spanning-tree inconsistentports`: empty on every switch
-- [ ] `show spanning-tree vlan 10` on SW1: "This bridge is the root" — priority 4106 (4096 + sys-id-ext 10)
-- [ ] `show spanning-tree vlan 20` on SW2: "This bridge is the root"
-- [ ] `show interfaces status` on SW2: Gi1/1 `connected`, VLAN 10
-- [ ] `show interfaces status` on SW3: Gi1/1 `connected`, VLAN 20
-- [ ] PC1 `ping 192.168.10.1` succeeds
-- [ ] PC1 `ping 192.168.20.10` succeeds (ttl=63)
-- [ ] PC2 `ping 192.168.20.1` succeeds
-- [ ] Every switch pings `1.1.1.1` from its VLAN 99 SVI
-- [ ] `show logging | include NATIVE_VLAN|ROOTGUARD|BPDUGUARD|ERR_DISABLE` shows no new events in the last minute
+- [x] `show interfaces trunk` on every switch: native VLAN 99 on every trunk and member
+- [x] `show interfaces trunk` on every switch: allowed list `10,20,30,99` on every trunk
+- [x] `show etherchannel summary` on SW1/SW2/SW3: `Po1(SU)`, `Po2(SU)`, `Po3(SU)` — every member `(P)`
+- [x] `show etherchannel port-channel`: Po1 = LACP both ends, Po2 = PAgP both ends, Po3 = static both ends
+- [x] `show spanning-tree inconsistentports`: empty on every switch
+- [x] `show spanning-tree vlan 10` on SW1: "This bridge is the root" — priority 4106 (4096 + sys-id-ext 10)
+- [x] `show spanning-tree vlan 20` on SW2: "This bridge is the root"
+- [x] `show interfaces status` on SW2: Gi1/1 `connected`, VLAN 10
+- [x] `show interfaces status` on SW3: Gi1/1 `connected`, VLAN 20
+- [x] PC1 `ping 192.168.10.1` succeeds
+- [x] PC1 `ping 192.168.20.10` succeeds (ttl=63)
+- [x] PC2 `ping 192.168.20.1` succeeds
+- [x] Every switch pings `1.1.1.1` from its VLAN 99 SVI
+- [x] `show logging | include NATIVE_VLAN|ROOTGUARD|BPDUGUARD|ERR_DISABLE` shows no new events in the last minute
 
 ### Troubleshooting
 
-- [ ] Ticket 1 — Native VLAN mismatch on Po2 resolved; CDP warnings stop
-- [ ] Ticket 2 — Allowed VLAN list on Po1 restored; VLAN 10 traffic flows
-- [ ] Ticket 3 — Po2 member channel-group mode corrected; bundle forms
-- [ ] Ticket 4 — SW3 VLAN 10 priority 0 removed; SW1 Po2 root guard clears
-- [ ] Ticket 5 — SW3 Gi1/1 no-shut; PC2 reconnects
-- [ ] Ticket 6 — SW2 Gi1/1 access VLAN corrected; PC1 reaches its gateway
+- [x] Ticket 1 — Native VLAN mismatch on Po2 resolved; CDP warnings stop
+- [x] Ticket 2 — Allowed VLAN list on Po1 restored; VLAN 10 traffic flows
+- [x] Ticket 3 — Po2 member channel-group mode corrected; bundle forms
+- [x] Ticket 4 — SW3 VLAN 10 priority 0 removed; SW1 Po2 root guard clears
+- [x] Ticket 5 — SW3 Gi1/1 no-shut; PC2 reconnects
+- [x] Ticket 6 — SW2 Gi1/1 access VLAN corrected; PC1 reaches its gateway
 
 ---
