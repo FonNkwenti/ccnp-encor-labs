@@ -20,8 +20,9 @@ def _run_git_ls_others() -> str:
 
 def get_files_touched() -> list[str]:
     try:
-        tracked = _run_git_diff_labs()
+        # Untracked first — skill builds create new files; pre-existing diffs follow
         untracked = _run_git_ls_others()
-        return [f.strip() for f in (tracked + untracked).splitlines() if f.strip()]
+        tracked = _run_git_diff_labs()
+        return [f.strip() for f in (untracked + tracked).splitlines() if f.strip()]
     except Exception:
         return []
