@@ -57,8 +57,8 @@ def main() -> None:
         duration = round(time.monotonic() - start_time, 2)
         invocation_id = str(uuid.uuid4())
 
-        context = resolve_lab_context()
         files = get_files_touched()
+        context = resolve_lab_context(files_hint=files, skill_name=skill_name)
         usage = extract_usage(session_id) if session_id else {
             "input": 0, "output": 0, "cache_creation": 0, "cache_read": 0, "model": "unknown"
         }
