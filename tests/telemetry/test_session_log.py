@@ -86,3 +86,53 @@ def test_returns_zeros_on_malformed_log(tmp_path):
 
     assert result["input"] == 0
     assert result["model"] == "unknown"
+
+
+SKILL_DURATION_LINES = [
+    json.dumps({
+        "type": "assistant",
+        "uuid": "asst-uuid-001",
+        "timestamp": "2026-04-20T07:00:00.000Z",
+        "message": {
+            "model": "claude-sonnet-4-6",
+            "usage": {"input_tokens": 100, "output_tokens": 50,
+                      "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0},
+            "content": [
+                {"type": "tool_use", "name": "Skill", "id": "toolu_abc",
+                 "input": {"skill": "lab-workbook-creator"}}
+            ],
+        },
+    }),
+    json.dumps({
+        "type": "user",
+        "uuid": "user-uuid-001",
+        "timestamp": "2026-04-20T07:02:30.000Z",
+        "sourceToolAssistantUUID": "asst-uuid-001",
+        "toolUseResult": {"stdout": "done", "stderr": "", "interrupted": False},
+        "message": {"content": [{"type": "tool_result", "tool_use_id": "toolu_abc"}]},
+    }),
+]
+
+
+def test_extracts_skill_duration_from_session_log(tmp_path):
+    session_id = "dur-session"
+    project_dir = tmp_path / "projects" / "somehash"
+    project_dir.mkdir(parents=True)
+    (project_dir / f"{session_id}.jsonl").write_text("\n".join(SKILL_DURATION_LINES))
+
+    with patch("scripts.lib.telemetry.session_log._find_project_dir", return_value=project_dir):
+        result = extract_usage(session_id)
+
+    assert result["duration_seconds"] == pytest.approx(150.0, rel=1e-3)
+
+
+def test_duration_zero_when_no_skill_result(tmp_path):
+    session_id = "no-result-session"
+    project_dir = tmp_path / "projects" / "somehash"
+    project_dir.mkdir(parents=True)
+    (project_dir / f"{session_id}.jsonl").write_text("\n".join(SAMPLE_SESSION_LINES))
+
+    with patch("scripts.lib.telemetry.session_log._find_project_dir", return_value=project_dir):
+        result = extract_usage(session_id)
+
+    assert result["duration_seconds"] == 0.0

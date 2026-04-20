@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import sys
-import time
 import traceback
 import uuid
 from datetime import datetime, timezone
@@ -34,8 +33,6 @@ def _log_error(msg: str) -> None:
 
 
 def main() -> None:
-    start_time = time.monotonic()
-
     try:
         payload = json.load(sys.stdin)
     except Exception as e:
@@ -54,14 +51,15 @@ def main() -> None:
             success = False
             error_msg = tool_response[:500]
 
-        duration = round(time.monotonic() - start_time, 2)
         invocation_id = str(uuid.uuid4())
 
         files = get_files_touched()
         context = resolve_lab_context(files_hint=files, skill_name=skill_name)
         usage = extract_usage(session_id) if session_id else {
-            "input": 0, "output": 0, "cache_creation": 0, "cache_read": 0, "model": "unknown"
+            "input": 0, "output": 0, "cache_creation": 0, "cache_read": 0,
+            "model": "unknown", "duration_seconds": 0.0,
         }
+        duration = usage.get("duration_seconds", 0.0)
 
         entry = build_entry(
             skill_name=skill_name,
