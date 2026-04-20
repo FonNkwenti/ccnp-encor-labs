@@ -24,3 +24,9 @@ __pycache__/
 
 # Scratch/reference drawio at repo root (not a committed lab asset)
 /style-guide-reference.drawio
+
+# Telemetry logs (large, machine-generated — gitignored by default)
+logs/telemetry.jsonl
+logs/telemetry-errors.log
+logs/_spike-*.json
+logs/_spike-*.txt
