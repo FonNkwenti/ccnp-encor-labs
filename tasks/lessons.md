@@ -5,6 +5,30 @@ New entries at the top. Review at the start of each session.
 
 ---
 
+## 2026-04-20 — Always update topology.drawio title even when reusing an unchanged topology
+
+**Correction:** When Step 5a (reuse gate) copies `topology.drawio` verbatim from the
+previous lab, the embedded diagram title in the `<mxCell id="title" value="...">` cell
+was not being updated. The skill instruction said "do NOT update the embedded title."
+User explicitly required the title be updated to reflect the current lab number and name.
+
+**Rule:**
+- When copying `topology.drawio` from lab N-1 to lab N (reuse gate passed), ALWAYS
+  update the `value="..."` attribute of the `<mxCell id="title">` cell to match the
+  current lab's title.
+- Format: `Lab NN: <Topic> — <Subtitle>` (consistent with workbook.md H1).
+- The skill's "do NOT update title" instruction is overridden by this user preference.
+
+**Why:** Students see the diagram title first. A stale title ("Lab 03: RESTCONF...")
+on a Lab 04 diagram creates confusion and appears as an authoring error.
+
+**Touched:**
+- `labs/automation/lab-04-capstone-config/topology/topology.drawio` — title corrected
+  from "Lab 03: RESTCONF and REST API Interpretation" to "Lab 04: Automation Capstone — Full Protocol Mastery"
+- This rule now applies to all future labs in all topics.
+
+---
+
 ## 2026-04-18 — Fault injection scripts must not log the root cause
 
 **Correction:** Fault injection scripts in `labs/<topic>/lab-NN-<slug>/scripts/fault-injection/`

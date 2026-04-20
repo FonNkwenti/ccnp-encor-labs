@@ -1,0 +1,64 @@
+topic: automation
+lab_number: 5
+lab_slug: lab-05-capstone-troubleshoot
+type: capstone_ii
+clean_slate: true
+
+blueprint_refs:
+  - "4.6 - Interpret Python scripts with Netmiko, NETCONF, and RESTCONF"
+  - "6.1 - Describe characteristics of network automation"
+  - "6.2 - Compare traditional networks with controller-based networking"
+  - "6.5 - Describe characteristics of REST-based APIs"
+  - "6.6 - Interpret REST API HTTP response codes and results in JSON/YANG"
+
+devices:
+  - hostname: R1
+    platform: csr1000v
+    role: API Gateway / NETCONF+RESTCONF target
+  - hostname: R2
+    platform: csr1000v
+    role: RESTCONF target / OSPF transit
+  - hostname: R3
+    platform: iosv
+    role: EEM host
+
+faults:
+  - id: 1
+    device: R1
+    type: missing_feature
+    description: netconf-yang removed — NETCONF service not running
+  - id: 2
+    device: R2
+    type: misconfiguration
+    description: ip http authentication local removed — RESTCONF returns 401
+  - id: 3
+    device: R3
+    type: misconfiguration
+    description: EEM SYSLOG-MONITOR pattern is wrong — applet never triggers
+  - id: 4
+    device: R2
+    type: routing_fault
+    description: passive-interface GigabitEthernet1 in OSPF — R1-R2 adjacency down
+  - id: 5
+    device: R1
+    type: missing_feature
+    description: netconf-yang feature candidate-datastore absent — latent until Fault 1 resolved
+
+created:
+  date: "2026-04-20"
+  agent: claude-sonnet-4-6
+  skill: lab-workbook-creator
+  skill_version: "2026-04-20"
+  files:
+    - workbook.md
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - topology/topology.drawio
+    - setup_lab.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+    - meta.yaml

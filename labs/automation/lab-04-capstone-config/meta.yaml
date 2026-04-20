@@ -1,0 +1,59 @@
+topic: automation
+lab_number: 4
+folder: lab-04-capstone-config
+title: "Automation Capstone — Full Protocol Mastery"
+type: capstone_i
+difficulty: Advanced
+time_minutes: 120
+clean_slate: true
+blueprint_refs:
+  - "4.6"
+  - "6.1"
+  - "6.2"
+  - "6.5"
+  - "6.6"
+devices:
+  - R1
+  - R2
+  - R3
+  - PC1
+  - PC2
+objectives:
+  - Configure OSPF process 1 on all routers and verify full convergence
+  - Enable SSHv2 and restrict VTY to SSH on all routers
+  - Enable NETCONF with candidate datastore on R1 and R2
+  - Enable RESTCONF with HTTPS and local authentication on R1 and R2
+  - Write a Python ncclient script to get-config, edit-config, and commit on R1
+  - Write a Python requests script demonstrating all RESTCONF verbs and response codes on R2
+  - Configure EEM syslog-triggered and cron-triggered applets on R3
+  - Construct and submit valid ietf-interfaces and Cisco-IOS-XE-native JSON payloads
+fault_scenarios:
+  - scenario_01: R1 NETCONF subsystem disabled — Python script hangs and never completes
+  - scenario_02: R2 HTTP authentication removed — all API requests fail immediately
+  - scenario_03: R3 EEM applet syslog pattern broken — EEM messages absent from log
+created:
+  date: "2026-04-19"
+  agent: claude-sonnet-4-6
+  skill: lab-workbook-creator
+  files:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/scripts/capstone_netconf.py
+    - solutions/scripts/capstone_restconf.py
+    - workbook.md
+    - setup_lab.py
+    - topology/topology.drawio
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    files:
+      - scripts/fault-injection/inject_scenario_01.py
+      - scripts/fault-injection/inject_scenario_02.py
+      - scripts/fault-injection/inject_scenario_03.py
+      - scripts/fault-injection/apply_solution.py
+      - scripts/fault-injection/README.md

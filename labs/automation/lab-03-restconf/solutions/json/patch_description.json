@@ -1,0 +1,6 @@
+{
+  "ietf-interfaces:interface": {
+    "name": "Loopback30",
+    "description": "Updated via RESTCONF PATCH"
+  }
+}

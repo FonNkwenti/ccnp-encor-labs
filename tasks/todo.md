@@ -101,7 +101,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [x] lab-02-netconf
 - [x] lab-03-restconf
 - [x] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-05-capstone-troubleshoot
 
 ### 11. network-design (5 labs — hybrid)
 - [ ] lab-00-design-principles (reference)
@@ -132,7 +132,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 53 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01; automation/lab-00 through lab-04)
-- **Remaining:** 22
+- **Built:** 54 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01; automation/lab-00 through lab-05)
+- **Remaining:** 21
 - **Skipped:** security/lab-02-acls through lab-05-capstone-troubleshoot (deferred)
-- **Next up:** automation/lab-05-capstone-troubleshoot
+- **Next up:** network-design/lab-00-design-principles
