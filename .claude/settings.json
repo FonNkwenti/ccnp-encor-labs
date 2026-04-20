@@ -9,7 +9,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 scripts/_hook-spike.py"
+            "command": "python3 scripts/log-telemetry.py"
           }
         ]
       }
