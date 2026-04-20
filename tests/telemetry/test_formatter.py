@@ -1,6 +1,6 @@
 import json
 import pytest
-from scripts.lib.telemetry.formatter import build_entry
+from scripts.lib.telemetry.formatter import build_entry, _compute_cost
 
 
 def _sample_entry():
@@ -94,3 +94,47 @@ def test_advisor_defaults_to_not_used():
     assert entry["advisor"]["used"] is False
     assert entry["advisor"]["savings_tokens"] == 0
     assert entry["advisor"]["cost_tokens"] == 0
+
+
+def test_cost_usd_present_in_entry():
+    entry = _sample_entry()
+    assert "cost_usd" in entry
+    assert "total" in entry["cost_usd"]
+
+
+def test_cost_computed_for_haiku():
+    # input: 4250 * $0.80/MTok, output: 1820 * $4.00/MTok
+    tokens = {"input": 4250, "output": 1820, "cache_creation": 0, "cache_read": 0}
+    cost = _compute_cost(tokens, "claude-haiku-4-5-20251001")
+    assert cost["input"] == pytest.approx(0.0034, rel=1e-4)
+    assert cost["output"] == pytest.approx(0.00728, rel=1e-4)
+    assert cost["total"] == pytest.approx(0.01068, rel=1e-4)
+
+
+def test_cost_computed_for_sonnet_with_cache():
+    # cache_creation: 106416 * $3.75/MTok dominates
+    tokens = {"input": 10, "output": 585, "cache_creation": 106416, "cache_read": 0}
+    cost = _compute_cost(tokens, "claude-sonnet-4-6")
+    assert cost["cache_creation"] == pytest.approx(0.39906, rel=1e-4)
+    assert cost["total"] == pytest.approx(0.407865, rel=1e-4)
+
+
+def test_cost_zero_for_unknown_model():
+    tokens = {"input": 1000, "output": 500, "cache_creation": 0, "cache_read": 0}
+    cost = _compute_cost(tokens, "unknown")
+    assert cost["total"] == 0.0
+
+
+def test_cost_usd_in_entry_matches_compute_cost():
+    entry = build_entry(
+        skill_name="lab-workbook-creator",
+        invocation_id="uuid-cost-test",
+        context={"chapter": "ospf", "name": "lab-00", "phase": "Phase 3 - Build"},
+        usage={"input": 4250, "output": 1820, "cache_creation": 0, "cache_read": 0,
+               "model": "claude-haiku-4-5-20251001"},
+        files_touched=[],
+        duration_seconds=10.0,
+        success=True,
+        error=None,
+    )
+    assert entry["cost_usd"]["total"] == pytest.approx(0.01068, rel=1e-4)
