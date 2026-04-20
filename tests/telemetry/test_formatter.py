@@ -69,6 +69,26 @@ def test_error_entry_has_error_message():
     assert entry["execution"]["error"] == "Skill timed out"
 
 
+def test_effort_level_captured_from_usage():
+    entry = build_entry(
+        skill_name="spec-creator",
+        invocation_id="test-uuid-1234",
+        context={"chapter": "ospf", "name": "lab-00", "phase": "Phase 2 - Spec"},
+        usage={"input": 100, "output": 50, "cache_creation": 0, "cache_read": 0,
+               "model": "claude-haiku-4-5-20251001", "speed": "fast"},
+        files_touched=[],
+        duration_seconds=10.0,
+        success=True,
+        error=None,
+    )
+    assert entry["effort_level"] == "fast"
+
+
+def test_effort_level_defaults_to_unknown():
+    entry = _sample_entry()
+    assert entry["effort_level"] == "unknown"
+
+
 def test_advisor_defaults_to_not_used():
     entry = _sample_entry()
     assert entry["advisor"]["used"] is False

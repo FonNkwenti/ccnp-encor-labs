@@ -24,6 +24,7 @@ def build_entry(
             "invocation_id": invocation_id,
         },
         "model": usage.get("model", "unknown"),
+        "effort_level": usage.get("speed", "unknown"),
         "tokens": {
             "input": usage.get("input", 0),
             "output": usage.get("output", 0),

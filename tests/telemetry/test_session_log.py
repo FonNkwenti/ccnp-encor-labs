@@ -15,7 +15,8 @@ SAMPLE_SESSION_LINES = [
                 "input_tokens": 4250,
                 "output_tokens": 1820,
                 "cache_creation_input_tokens": 100,
-                "cache_read_input_tokens": 200
+                "cache_read_input_tokens": 200,
+                "speed": "fast"
             }
         }
     }),
@@ -49,6 +50,19 @@ def test_extracts_model_from_last_assistant_turn(tmp_path):
         result = extract_usage(session_id)
 
     assert result["model"] == "claude-haiku-4-5-20251001"
+
+
+def test_extracts_speed_from_last_assistant_turn(tmp_path):
+    session_id = "test-session-abc123"
+    project_dir = tmp_path / "projects" / "somehash"
+    project_dir.mkdir(parents=True)
+    log_file = project_dir / f"{session_id}.jsonl"
+    log_file.write_text("\n".join(SAMPLE_SESSION_LINES))
+
+    with patch("scripts.lib.telemetry.session_log._find_project_dir", return_value=project_dir):
+        result = extract_usage(session_id)
+
+    assert result["speed"] == "fast"
 
 
 def test_returns_zeros_when_session_not_found(tmp_path):

@@ -6,7 +6,7 @@ from pathlib import Path
 _ZERO = {
     "input": 0, "output": 0,
     "cache_creation": 0, "cache_read": 0,
-    "model": "unknown"
+    "model": "unknown", "speed": "unknown"
 }
 
 
@@ -51,6 +51,7 @@ def extract_usage(session_id: str) -> dict:
             "cache_creation": last_usage.get("cache_creation_input_tokens", 0),
             "cache_read": last_usage.get("cache_read_input_tokens", 0),
             "model": last_model,
+            "speed": last_usage.get("speed", "unknown"),
         }
     except Exception:
         return dict(_ZERO)

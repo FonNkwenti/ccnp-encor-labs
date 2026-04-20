@@ -28,6 +28,7 @@ Each line is a JSON object:
     "invocation_id": "uuid"
   },
   "model": "claude-haiku-4-5-20251001",
+  "effort_level": "standard",
   "tokens": {
     "input": 4250,
     "output": 1820,
