@@ -1,5 +1,18 @@
 {
   "enabledPlugins": {
     "commit-commands@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 scripts/_hook-spike.py"
+          }
+        ]
+      }
+    ]
   }
 }
