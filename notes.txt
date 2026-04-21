@@ -16,3 +16,8 @@ Sometimes, labs may already have complete configs in the case were a student alr
 and saved it but want to redo it again. In this scenario, the Setup_lab.py script should reset the lab to its original state. 
 So existing configs have to be removed as part of the setup_lab.py. For example, interfaces should  be defaulted before any interface configs. 
 If there is a way to reset all the device configs, that would be ideal instead of undoing line by line. is this possible? what do you think?
+
+
+Look at all the files generated for a specific lab chapter or lab. Then ask if there is redundant information that can be removed. 
+For example, in the lab-02-gre-tunnels, the initial-configs folder has PC1.vpc and PC2.vpc files. These files are not needed 
+and can be removed. Or the workbook.md has redundant sections or information that can be consolidated

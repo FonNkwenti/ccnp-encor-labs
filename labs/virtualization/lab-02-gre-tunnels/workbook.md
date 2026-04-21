@@ -746,6 +746,7 @@ R1# show ip ospf 1 neighbor
 </details>
 
 <details>
+
 <summary>Click to view Fix</summary>
 
 ```bash

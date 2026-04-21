@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="gre-tunnels-lab-02" name="Page-1">
-        <mxGraphModel dx="674" dy="433" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
+        <mxGraphModel dx="1167" dy="433" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -145,14 +145,18 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_tun0_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="74" y="-350" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_tun0_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="389" y="53" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_tun0_mid" value="Tunnel0 (GRE overlay)&#10;172.16.14.0/30&#10;2001:db8:14::/64" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint x="-95" as="offset"/>
+                        <mxPoint x="92" y="-61" as="offset"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Physical Links&lt;/b&gt;&lt;br&gt;— White solid (w=2): Routed / WAN / P2P&lt;br&gt;— White solid (w=2): LAN access port&lt;br&gt;&lt;br&gt;&lt;b&gt;Tunnel Overlay&lt;/b&gt;&lt;br&gt;— White dotted (w=1, dash=1 4):&lt;br&gt;  GRE bare (unencrypted)&lt;br&gt;  Tunnel0: R1 ↔ R4, arcs left of R3&lt;br&gt;&lt;br&gt;&lt;b&gt;Zones&lt;/b&gt;&lt;br&gt;— Teal dashed: Global Underlay&lt;br&gt;  (OSPF Process 1 — transit core)&lt;br&gt;&lt;br&gt;&lt;b&gt;Label Rule&lt;/b&gt;&lt;br&gt;Label on side with no links;&lt;br&gt;default: bottom" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#FFFFFF;fontColor=#FFFFFF;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;arcSize=3;" parent="1" vertex="1">
