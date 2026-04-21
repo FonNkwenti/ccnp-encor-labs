@@ -49,7 +49,7 @@ crypto ikev2 profile <name>         ! ties keyring to a peer identity + auth met
   keyring local <keyring-name>
 ```
 
-The profile is what gets referenced by the IPsec profile (`set ikev2-profile`). Both endpoints must mirror each other — R1 references R4's loopback in its keyring; R4 references R1's loopback.
+The profile is what gets referenced by the IPsec profile (`set ikev2-profile`). Both endpoints must mirror each other — R1 references R4's Loopback10 (`10.10.4.4`) in its keyring; R4 references R1's Loopback10 (`10.10.1.1`).
 
 ### IPsec Transform Set and Profile
 
@@ -390,6 +390,8 @@ Step 5: Bob replies (reverse path)
 
 **The PSK mismatch fault is the most common lab failure** because IKEv2 silently fails if the pre-shared key doesn't match—the negotiation just gets deleted. You can't see it in `show crypto` until you send traffic first to trigger the exchange.
 
+**VTI and plain GRE cannot share the same endpoint pair.** A VTI (`tunnel mode ipsec ipv4`) negotiates wildcard traffic selectors (`0.0.0.0/0 ↔ 0.0.0.0/0`) for its source/destination IP pair. Any unencrypted tunnel (like plain GRE) using the same src/dst will have its packets dropped with `%CRYPTO-4-RECVD_PKT_NOT_IPSEC`. This lab uses `Loopback10` as the dedicated IPsec anchor for Tunnel1 and Tunnel2, leaving `Loopback0` exclusively for Tunnel0. See `troubleshooting-reports/INC-20260421-ticket-002.md` for the full incident analysis.
+
 ---
 
 ## 2. Topology & Scenario
@@ -402,9 +404,10 @@ Step 5: Bob replies (reverse path)
           │    ┌─────────────────────────────────────────────────────────┐     │
           │    │                      R1                                  │     │
           │    │               (HQ / Tunnel Head)                        │     │
-          │    │ Lo0: 1.1.1.1    Tunnel0: 172.16.14.1   (plain GRE)      │     │
-          │    │                 Tunnel1: 172.16.15.1   (IPsec VTI)      │     │
-          │    │                 Tunnel2: 172.16.16.1   (GRE-over-IPsec) │     │
+          │    │ Lo0: 1.1.1.1    Lo10: 10.10.1.1                          │     │
+          │    │ Tunnel0: 172.16.14.1   (plain GRE, src Lo0)             │     │
+          │    │ Tunnel1: 172.16.15.1   (IPsec VTI, src Lo10)            │     │
+          │    │ Tunnel2: 172.16.16.1   (GRE-over-IPsec, src Lo10)       │     │
           │    └───────┬─────────────────────────────────┬───────────────┘     │
           │            │ Gi0/0                           │ Gi0/1               │
           │            │ 10.0.13.1/30                    │ 10.0.12.1/30        │
@@ -425,8 +428,10 @@ Step 5: Bob replies (reverse path)
           ┌──────────┴─────────────────────────────────────────────────────────┐
           │                           R4                                        │
           │                   (Remote Site Router)                              │
-          │  Lo0: 4.4.4.4    Lo1: 10.4.4.4   Lo2: 10.4.4.5   Lo3: 10.4.4.6   │
-          │  Tunnel0: 172.16.14.2   Tunnel1: 172.16.15.2   Tunnel2: 172.16.16.2│
+          │  Lo0: 4.4.4.4    Lo10: 10.10.4.4                                    │
+          │  Lo1: 10.4.4.4   Lo2: 10.4.4.5   Lo3: 10.4.4.6                   │
+          │  Tunnel0: 172.16.14.2 (src Lo0)                                   │
+          │  Tunnel1: 172.16.15.2 (src Lo10)  Tunnel2: 172.16.16.2 (src Lo10)│
           └────────────────────────────────────────────────────────────────────┘
 
   Overlay paths (all traverse R3 underlay):
@@ -501,13 +506,24 @@ The following is pre-loaded from lab-02 solutions when you run `setup_lab.py`:
 
 ### Task 1: Build the IKEv2 Key Infrastructure
 
-Configure the IKEv2 proposal, policy, keyring, and profile on both R1 and R4. Use the following parameters:
+**Step 0 — Create the IPsec tunnel anchor loopback**
+
+Before configuring IKEv2, create `Loopback10` on both R1 and R4. Tunnel1 (VTI) and Tunnel2 (GRE-over-IPsec) will source from this interface. Using a dedicated loopback ensures the VTI's wildcard IPsec SA covers only the `10.10.1.1 ↔ 10.10.4.4` endpoint pair — leaving Tunnel0's `1.1.1.1 ↔ 4.4.4.4` path unaffected by IPsec policy.
+
+- R1: `interface Loopback10`, IP address `10.10.1.1/32`; add `network 10.10.1.1 0.0.0.0 area 0` under OSPF process 1
+- R4: `interface Loopback10`, IP address `10.10.4.4/32`; add `network 10.10.4.4 0.0.0.0 area 0` under OSPF process 1
+
+Verify Lo10 is reachable before proceeding: `ping 10.10.4.4 source Loopback10` from R1 should return 5/5.
+
+> **Design note:** This is the unique-loopback pattern required for mixed plain/encrypted overlay topologies. See `troubleshooting-reports/INC-20260421-ticket-002.md` for the failure mode this prevents.
+
+**Step 1 — Configure IKEv2 proposal, policy, keyring, and profile** on both R1 and R4. Use the following parameters:
 
 - Proposal name: `IKEv2-PROP`; encryption: AES-256-CBC; integrity: SHA-256; DH group: 14
 - Policy name: `IKEv2-POL`; reference the proposal above
-- Keyring name: `IKEv2-KEYRING`; peer name on R1 is `R4` (address 4.4.4.4); peer name on R4 is `R1` (address 1.1.1.1)
+- Keyring name: `IKEv2-KEYRING`; peer name on R1 is `R4` (address `10.10.4.4`); peer name on R4 is `R1` (address `10.10.1.1`)
 - Pre-shared key on both sides: `LAB-PSK-2026`
-- Profile name: `IKEv2-PROFILE`; match the remote peer by its loopback /32; use pre-share authentication on both local and remote ends; reference the keyring above
+- Profile name: `IKEv2-PROFILE`; match the remote peer by its Loopback10 /32; use pre-share authentication on both local and remote ends; reference the keyring above
 
 **Verification:** `show crypto ikev2 proposal` on both routers should list `IKEv2-PROP` with correct algorithms. No IKEv2 SA will form yet — the profile is not attached to a tunnel interface.
 
@@ -530,7 +546,7 @@ Configure a Virtual Tunnel Interface between R1 and R4 for encrypted, unicast-on
 
 - Interface: Tunnel1 on both routers
 - Tunnel subnet: 172.16.15.0/30 (R1 takes .1, R4 takes .2)
-- Source: Loopback0 on each router; destination: the far-end Loopback0 IP
+- Source: Loopback10 on each router; destination: the far-end Loopback10 IP (`10.10.4.4` from R1, `10.10.1.1` from R4)
 - Set the tunnel mode to native IPsec IPv4 (not GRE)
 - Apply the IPsec profile to the tunnel interface
 
@@ -546,7 +562,7 @@ Configure a GRE tunnel protected by the same IPsec profile on both R1 and R4.
 
 - Interface: Tunnel2 on both routers
 - Tunnel subnet: 172.16.16.0/30 (R1 takes .1, R4 takes .2); add IPv6 2001:db8:16::1/64 (R1) and ::2/64 (R4)
-- Source: Loopback0; destination: far-end Loopback0
+- Source: Loopback10; destination: far-end Loopback10 (`10.10.4.4` from R1, `10.10.1.1` from R4)
 - Tunnel mode: GRE IP (not IPsec)
 - Apply the IPsec profile as tunnel protection on both sides
 - Set ip mtu 1400 and ip tcp adjust-mss 1360 (GRE + IPsec overhead)
@@ -609,23 +625,23 @@ R1# show interface Tunnel1
 Tunnel1 is up, line protocol is up           ! ← both must be up
   Hardware is Tunnel
   Internet address is 172.16.15.1/30         ! ← correct address
-  Tunnel source 1.1.1.1 (Loopback0), destination 4.4.4.4
+  Tunnel source 10.10.1.1 (Loopback10), destination 10.10.4.4
   Tunnel protocol/transport IPSEC/IP         ! ← tunnel mode ipsec ipv4
 
 R1# show crypto ikev2 sa
 IPv4 Crypto IKEv2  SA
 
 Tunnel-id Local                 Remote                fvrf/ivrf            Status
-1         1.1.1.1/500           4.4.4.4/500           none/none            READY    ! ← READY means IKEv2 SA up
+1         10.10.1.1/500         10.10.4.4/500         none/none            READY    ! ← READY means IKEv2 SA up
 
 ! Populate counters with: ping 10.4.4.5 source Tunnel1
 R1# show crypto ipsec sa
 interface: Tunnel1
-    Crypto map tag: Tunnel1-head-0, local addr 1.1.1.1
+    Crypto map tag: Tunnel1-head-0, local addr 10.10.1.1
    protected vrf: (none)
    local  ident (addr/mask/prot/port): (0.0.0.0/0.0.0.0/0/0)
    remote ident (addr/mask/prot/port): (0.0.0.0/0.0.0.0/0/0)
-   current_peer 4.4.4.4 port 500
+   current_peer 10.10.4.4 port 500
     #pkts encaps: 5, #pkts encrypt: 5, #pkts digest: 5   ! ← non-zero after ping source Tunnel1
     #pkts decaps: 5, #pkts decrypt: 5, #pkts verify: 5   ! ← non-zero: reply returns through Tunnel1
 ```
@@ -636,7 +652,7 @@ interface: Tunnel1
 R1# show interface Tunnel2
 Tunnel2 is up, line protocol is up           ! ← both must be up
   Internet address is 172.16.16.1/30
-  Tunnel source 1.1.1.1 (Loopback0), destination 4.4.4.4
+  Tunnel source 10.10.1.1 (Loopback10), destination 10.10.4.4
   Tunnel protocol/transport GRE/IP           ! ← still GRE, NOT IPsec here
   ...
   Tunnel protection via IPSec (profile "IPSEC-PROFILE")   ! ← profile applied
@@ -735,8 +751,8 @@ crypto ipsec profile <name>
 ```
 interface Tunnel1                             ! IPsec VTI
  ip address 172.16.15.1 255.255.255.252
- tunnel source Loopback0
- tunnel destination 4.4.4.4
+ tunnel source Loopback10
+ tunnel destination 10.10.4.4
  tunnel mode ipsec ipv4
  tunnel protection ipsec profile IPSEC-PROFILE
 
@@ -744,8 +760,8 @@ interface Tunnel2                             ! GRE-over-IPsec
  ip address 172.16.16.1 255.255.255.252
  ip mtu 1400
  ip tcp adjust-mss 1360
- tunnel source Loopback0
- tunnel destination 4.4.4.4
+ tunnel source Loopback10
+ tunnel destination 10.10.4.4
  tunnel mode gre ip
  tunnel protection ipsec profile IPSEC-PROFILE
  ip ospf network point-to-point
@@ -797,6 +813,14 @@ interface Tunnel2                             ! GRE-over-IPsec
 <summary>Click to view R1 Configuration</summary>
 
 ```bash
+! R1 — Step 0: IPsec tunnel anchor
+interface Loopback10
+ description R1 IPsec tunnel anchor (dedicated to encrypted overlays)
+ ip address 10.10.1.1 255.255.255.255
+!
+router ospf 1
+ network 10.10.1.1 0.0.0.0 area 0
+
 ! R1 — IKEv2 proposal, policy, keyring, profile + IPsec profile
 crypto ikev2 proposal IKEv2-PROP
  encryption aes-cbc-256
@@ -808,11 +832,11 @@ crypto ikev2 policy IKEv2-POL
 !
 crypto ikev2 keyring IKEv2-KEYRING
  peer R4
-  address 4.4.4.4
+  address 10.10.4.4
   pre-shared-key LAB-PSK-2026
 !
 crypto ikev2 profile IKEv2-PROFILE
- match identity remote address 4.4.4.4 255.255.255.255
+ match identity remote address 10.10.4.4 255.255.255.255
  authentication remote pre-share
  authentication local pre-share
  keyring local IKEv2-KEYRING
@@ -830,6 +854,14 @@ crypto ipsec profile IPSEC-PROFILE
 <summary>Click to view R4 Configuration</summary>
 
 ```bash
+! R4 — Step 0: IPsec tunnel anchor
+interface Loopback10
+ description R4 IPsec tunnel anchor (dedicated to encrypted overlays)
+ ip address 10.10.4.4 255.255.255.255
+!
+router ospf 1
+ network 10.10.4.4 0.0.0.0 area 0
+
 ! R4 — mirror of R1 with swapped peer address
 crypto ikev2 proposal IKEv2-PROP
  encryption aes-cbc-256
@@ -841,11 +873,11 @@ crypto ikev2 policy IKEv2-POL
 !
 crypto ikev2 keyring IKEv2-KEYRING
  peer R1
-  address 1.1.1.1
+  address 10.10.1.1
   pre-shared-key LAB-PSK-2026
 !
 crypto ikev2 profile IKEv2-PROFILE
- match identity remote address 1.1.1.1 255.255.255.255
+ match identity remote address 10.10.1.1 255.255.255.255
  authentication remote pre-share
  authentication local pre-share
  keyring local IKEv2-KEYRING
@@ -868,8 +900,8 @@ crypto ipsec profile IPSEC-PROFILE
 ! R1 — Tunnel1 IPsec VTI + static route for test prefix
 interface Tunnel1
  ip address 172.16.15.1 255.255.255.252
- tunnel source Loopback0
- tunnel destination 4.4.4.4
+ tunnel source Loopback10
+ tunnel destination 10.10.4.4
  tunnel mode ipsec ipv4
  tunnel protection ipsec profile IPSEC-PROFILE
  no shutdown
@@ -888,8 +920,8 @@ interface Loopback2
 !
 interface Tunnel1
  ip address 172.16.15.2 255.255.255.252
- tunnel source Loopback0
- tunnel destination 1.1.1.1
+ tunnel source Loopback10
+ tunnel destination 10.10.1.1
  tunnel mode ipsec ipv4
  tunnel protection ipsec profile IPSEC-PROFILE
  no shutdown
@@ -908,8 +940,8 @@ interface Tunnel2
  ipv6 address 2001:db8:16::1/64
  ip mtu 1400
  ip tcp adjust-mss 1360
- tunnel source Loopback0
- tunnel destination 4.4.4.4
+ tunnel source Loopback10
+ tunnel destination 10.10.4.4
  tunnel mode gre ip
  tunnel protection ipsec profile IPSEC-PROFILE
  ip ospf network point-to-point
@@ -934,8 +966,8 @@ interface Tunnel2
  ipv6 address 2001:db8:16::2/64
  ip mtu 1400
  ip tcp adjust-mss 1360
- tunnel source Loopback0
- tunnel destination 1.1.1.1
+ tunnel source Loopback10
+ tunnel destination 10.10.1.1
  tunnel mode gre ip
  tunnel protection ipsec profile IPSEC-PROFILE
  ip ospf network point-to-point
