@@ -1,5 +1,5 @@
 <mxfile host="65bd71144e">
-    <diagram id="gre-tunnels-lab-02" name="Page-1">
+    <diagram id="ipsec-gre-lab-03" name="Page-1">
         <mxGraphModel dx="674" dy="433" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
@@ -10,7 +10,7 @@
                 <mxCell id="zone_global" value="Global Underlay (OSPF Process 1)" style="rounded=1;arcSize=5;whiteSpace=wrap;html=1;dashed=1;strokeColor=#00838F;strokeWidth=2;fillColor=#003d45;opacity=25;fontSize=11;fontStyle=1;verticalAlign=top;fontColor=#FFFFFF;" parent="1" vertex="1">
                     <mxGeometry x="160" y="100" width="820" height="620" as="geometry"/>
                 </mxCell>
-                <mxCell id="R1" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Branch A / VRF Host&lt;br&gt;Lo0: 1.1.1.1/32&lt;br&gt;Lo1: 172.20.1.1/24 (VRF-B)&lt;br&gt;Lo2: 192.168.1.100/24 (VRF-B)&lt;br&gt;Tunnel0: 172.16.14.1/30&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];verticalLabelPosition=top;html=1;verticalAlign=bottom;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" parent="1" vertex="1">
+                <mxCell id="R1" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Branch A / VRF Host&lt;br&gt;Lo0: 1.1.1.1/32&lt;br&gt;Lo1: 172.20.1.1/24 (VRF-B)&lt;br&gt;Lo2: 192.168.1.100/24 (VRF-B)&lt;br&gt;Tunnel0: 172.16.14.1/30&lt;br&gt;Tunnel1: 172.16.15.1/30&lt;br&gt;Tunnel2: 172.16.16.1/30&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];verticalLabelPosition=top;html=1;verticalAlign=bottom;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" parent="1" vertex="1">
                     <mxGeometry x="200" y="200" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="R2" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R2&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Branch B / VRF Host&lt;br&gt;Lo0: 2.2.2.2/32&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];verticalLabelPosition=top;html=1;verticalAlign=bottom;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" parent="1" vertex="1">
@@ -19,7 +19,7 @@
                 <mxCell id="R3" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R3&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Shared WAN Transport&lt;br&gt;Lo0: 3.3.3.3/32&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];labelPosition=right;verticalLabelPosition=middle;html=1;verticalAlign=middle;aspect=fixed;align=left;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" parent="1" vertex="1">
                     <mxGeometry x="530" y="380" width="60" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="R4" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R4&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Remote Site&lt;br&gt;Lo0: 4.4.4.4/32&lt;br&gt;Lo1: 10.4.4.4/32 (overlay)&lt;br&gt;Tunnel0: 172.16.14.2/30&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];verticalLabelPosition=bottom;html=1;verticalAlign=top;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" parent="1" vertex="1">
+                <mxCell id="R4" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;R4&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;Remote Site&lt;br&gt;Lo0: 4.4.4.4/32&lt;br&gt;Lo1: 10.4.4.4/32 (GRE)&lt;br&gt;Lo2: 10.4.4.5/32 (VTI)&lt;br&gt;Lo3: 10.4.4.6/32 (GRE+IPsec)&lt;br&gt;Tunnel0: 172.16.14.2/30&lt;br&gt;Tunnel1: 172.16.15.2/30&lt;br&gt;Tunnel2: 172.16.16.2/30&lt;/font&gt;" style="sketch=0;points=[[0.5,0,0],[1,0.5,0],[0.5,1,0],[0,0.5,0],[0.145,0.145,0],[0.8555,0.145,0],[0.855,0.8555,0],[0.145,0.855,0]];verticalLabelPosition=bottom;html=1;verticalAlign=top;aspect=fixed;align=center;labelPosition=center;pointerEvents=1;shape=mxgraph.cisco19.rect;prIcon=router;fillColor=#FAFAFA;strokeColor=#005073;" parent="1" vertex="1">
                     <mxGeometry x="530" y="580" width="60" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="PC1" value="&lt;b style=&quot;color:#FFFFFF;&quot;&gt;PC1&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#CCCCCC&quot; style=&quot;font-size:10px;&quot;&gt;VPCS — CUSTOMER-A&lt;br&gt;192.168.1.10/24&lt;br&gt;2001:db8:a1::10/64&lt;/font&gt;" style="points=[[0.03,0.03,0],[0.5,0,0],[0.97,0.03,0],[1,0.4,0],[0.97,0.745,0],[0.5,1,0],[0.03,0.745,0],[0,0.4,0]];labelPosition=left;verticalLabelPosition=middle;sketch=0;html=1;verticalAlign=middle;aspect=fixed;align=right;pointerEvents=1;shape=mxgraph.cisco19.workstation;fillColor=#005073;strokeColor=none;" parent="1" vertex="1">
@@ -136,11 +136,12 @@
                         <mxPoint x="65" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="tunnel0" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FFFFFF;dashed=1;dashPattern=1 4;curved=1;exitX=0.145;exitY=0.145;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.145;entryY=0.855;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="R1" target="R4" edge="1">
+                <!-- Tunnel0: plain GRE, white, arcs above topology -->
+                <mxCell id="tunnel0" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FFFFFF;dashed=1;dashPattern=1 4;curved=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="R1" target="R4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="120" y="170"/>
-                            <mxPoint x="120" y="640"/>
+                            <mxPoint x="230" y="92"/>
+                            <mxPoint x="560" y="92"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
@@ -150,13 +151,53 @@
                 <mxCell id="lbl_tun0_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
                     <mxGeometry relative="0.92" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl_tun0_mid" value="Tunnel0 (GRE overlay)&#10;172.16.14.0/30&#10;2001:db8:14::/64" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
+                <mxCell id="lbl_tun0_mid" value="Tunnel0 (GRE)&#10;172.16.14.0/30&#10;2001:db8:14::/64" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint x="-95" as="offset"/>
+                        <mxPoint y="-18" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Physical Links&lt;/b&gt;&lt;br&gt;— White solid (w=2): Routed / WAN / P2P&lt;br&gt;— White solid (w=2): LAN access port&lt;br&gt;&lt;br&gt;&lt;b&gt;Tunnel Overlay&lt;/b&gt;&lt;br&gt;— White dotted (w=1, dash=1 4):&lt;br&gt;  GRE bare (unencrypted)&lt;br&gt;  Tunnel0: R1 ↔ R4, arcs left of R3&lt;br&gt;&lt;br&gt;&lt;b&gt;Zones&lt;/b&gt;&lt;br&gt;— Teal dashed: Global Underlay&lt;br&gt;  (OSPF Process 1 — transit core)&lt;br&gt;&lt;br&gt;&lt;b&gt;Label Rule&lt;/b&gt;&lt;br&gt;Label on side with no links;&lt;br&gt;default: bottom" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#FFFFFF;fontColor=#FFFFFF;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;arcSize=3;" parent="1" vertex="1">
-                    <mxGeometry x="1270" y="500" width="280" height="310" as="geometry"/>
+                <!-- Tunnel1: IPsec VTI, orange, arcs above at y=78 -->
+                <mxCell id="tunnel1" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FF6D00;dashed=1;dashPattern=1 4;curved=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="R1" target="R4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="230" y="78"/>
+                            <mxPoint x="560" y="78"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lbl_tun1_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel1" vertex="1" connectable="0">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_tun1_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel1" vertex="1" connectable="0">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_tun1_mid" value="Tunnel1 (IPsec VTI)&#10;172.16.15.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel1" vertex="1" connectable="0">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint y="-18" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <!-- Tunnel2: GRE-over-IPsec, orange, arcs above at y=64 -->
+                <mxCell id="tunnel2" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FF6D00;dashed=1;dashPattern=1 4;curved=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="R1" target="R4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="230" y="64"/>
+                            <mxPoint x="560" y="64"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="lbl_tun2_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel2" vertex="1" connectable="0">
+                    <mxGeometry relative="0.08" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_tun2_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel2" vertex="1" connectable="0">
+                    <mxGeometry relative="0.92" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl_tun2_mid" value="Tunnel2 (GRE-over-IPsec)&#10;172.16.16.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel2" vertex="1" connectable="0">
+                    <mxGeometry relative="0.5" as="geometry">
+                        <mxPoint y="-18" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Physical Links&lt;/b&gt;&lt;br&gt;━━━  Routed / WAN / P2P (w=2)&lt;br&gt;──     LAN access port (w=1)&lt;br&gt;&lt;br&gt;&lt;b&gt;Tunnel Overlays&lt;/b&gt; (curved arcs, w=1)&lt;br&gt;. . .  GRE bare — Tunnel0&lt;br&gt;&lt;font color=&quot;#FF6D00&quot;&gt;. . .  IPsec encrypted — Tunnel1, Tunnel2&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Zones&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#00838F&quot;&gt;[teal box]&lt;/font&gt;  Global Underlay (OSPF P1)&lt;br&gt;&lt;br&gt;Label on side with no links;&lt;br&gt;default: bottom" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#FFFFFF;fontColor=#FFFFFF;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;arcSize=3;" parent="1" vertex="1">
+                    <mxGeometry x="1270" y="500" width="280" height="280" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
