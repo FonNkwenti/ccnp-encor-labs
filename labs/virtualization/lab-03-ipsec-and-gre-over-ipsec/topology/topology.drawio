@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="ipsec-gre-lab-03" name="Page-1">
-        <mxGraphModel dx="674" dy="433" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
+        <mxGraphModel dx="974" dy="433" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -43,7 +43,7 @@
                 </mxCell>
                 <mxCell id="lbl_L1_mid" value="Gi0/0 — Gi0/0&#10;10.0.13.0/30&#10;(+Gi0/0.100: 172.16.13.0/30 VRF-A)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L1" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint x="-80" y="10" as="offset"/>
+                        <mxPoint x="-23" y="-9" as="offset"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="link_L2" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.145;exitY=0.855;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8555;entryY=0.145;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="R2" target="R3" edge="1">
@@ -136,27 +136,30 @@
                         <mxPoint x="65" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <!-- Tunnel0: plain GRE, white, arcs above topology -->
                 <mxCell id="tunnel0" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FFFFFF;dashed=1;dashPattern=1 4;curved=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="R1" target="R4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="230" y="92"/>
-                            <mxPoint x="560" y="92"/>
+                            <mxPoint x="186" y="434"/>
+                            <mxPoint x="412" y="569"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_tun0_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="25" y="-147" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_tun0_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="336" y="170" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_tun0_mid" value="Tunnel0 (GRE)&#10;172.16.14.0/30&#10;2001:db8:14::/64" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="tunnel0" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint y="-18" as="offset"/>
+                        <mxPoint x="111" y="25" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <!-- Tunnel1: IPsec VTI, orange, arcs above at y=78 -->
                 <mxCell id="tunnel1" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FF6D00;dashed=1;dashPattern=1 4;curved=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="R1" target="R4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
@@ -173,10 +176,9 @@
                 </mxCell>
                 <mxCell id="lbl_tun1_mid" value="Tunnel1 (IPsec VTI)&#10;172.16.15.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel1" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint y="-18" as="offset"/>
+                        <mxPoint x="-133" y="47" as="offset"/>
                     </mxGeometry>
                 </mxCell>
-                <!-- Tunnel2: GRE-over-IPsec, orange, arcs above at y=64 -->
                 <mxCell id="tunnel2" value="" style="endArrow=none;html=1;strokeWidth=1;strokeColor=#FF6D00;dashed=1;dashPattern=1 4;curved=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="R1" target="R4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
@@ -193,7 +195,7 @@
                 </mxCell>
                 <mxCell id="lbl_tun2_mid" value="Tunnel2 (GRE-over-IPsec)&#10;172.16.16.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=9;fontColor=#FF6D00;labelBackgroundColor=none;" parent="tunnel2" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint y="-18" as="offset"/>
+                        <mxPoint x="27" y="76" as="offset"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="legend" value="&lt;b&gt;LEGEND&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Physical Links&lt;/b&gt;&lt;br&gt;━━━  Routed / WAN / P2P (w=2)&lt;br&gt;──     LAN access port (w=1)&lt;br&gt;&lt;br&gt;&lt;b&gt;Tunnel Overlays&lt;/b&gt; (curved arcs, w=1)&lt;br&gt;. . .  GRE bare — Tunnel0&lt;br&gt;&lt;font color=&quot;#FF6D00&quot;&gt;. . .  IPsec encrypted — Tunnel1, Tunnel2&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Zones&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#00838F&quot;&gt;[teal box]&lt;/font&gt;  Global Underlay (OSPF P1)&lt;br&gt;&lt;br&gt;Label on side with no links;&lt;br&gt;default: bottom" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#000000;strokeColor=#FFFFFF;fontColor=#FFFFFF;fontSize=10;align=left;verticalAlign=top;spacingLeft=8;spacingTop=8;arcSize=3;" parent="1" vertex="1">
