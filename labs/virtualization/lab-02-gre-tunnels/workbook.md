@@ -37,6 +37,7 @@ GRE (RFC 2784) wraps an original IP packet inside a new IP packet with a GRE hea
 ```
 
 Key properties:
+
 - **Protocol number:** 47. Transport routers (R3) see IP proto=47 and forward without inspecting the inner packet.
 - **No encryption.** GRE provides only encapsulation, not confidentiality. Add IPsec for encryption (lab-03).
 - **Multicast support.** OSPF hellos (224.0.0.5/224.0.0.6) are carried through the tunnel, enabling dynamic routing protocols over GRE.
@@ -183,12 +184,14 @@ Without keepalives (the default), the tunnel line protocol goes UP as soon as bo
 The `initial-configs/` directory contains the following pre-loaded state:
 
 **Pre-loaded:**
+
 - R1, R2, R3: complete lab-01 dual-stack VRF configuration (VRF CUSTOMER-A and CUSTOMER-B, inter-VRF leaking, OSPF process 1 underlay)
 - R3: L6 underlay link (Gi0/2 toward R4, 10.0.34.1/30) and OSPF process 1 advertisement for it
 - R4: Loopback0 (4.4.4.4/32), Loopback1 (10.4.4.4/32), Gi0/0 (10.0.34.2/30), OSPF process 1 (underlay only — Lo0 and Gi0/0 advertised in area 0)
 - PC1 and PC2: IPv4 and IPv6 addressing from lab-01
 
 **NOT pre-loaded (you configure this):**
+
 - GRE Tunnel0 on R1 and R4
 - OSPF process 2 (overlay routing over the tunnel)
 - IPv6 addresses on Tunnel0 interfaces
@@ -226,6 +229,7 @@ Start a second OSPF routing process (process 2) on R1 and R4. This process runs 
 ### Task 3: Extend the Tunnel to Carry IPv6
 
 Assign IPv6 addresses to the Tunnel0 interface on both routers:
+
 - R1 Tunnel0: `2001:db8:14::1/64`
 - R4 Tunnel0: `2001:db8:14::2/64`
 
@@ -450,6 +454,7 @@ interface Tunnel0
  ip ospf network point-to-point
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -466,6 +471,7 @@ interface Tunnel0
  ip ospf network point-to-point
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -476,6 +482,7 @@ show interface Tunnel0
 ping 172.16.14.2
 show interface Tunnel0   ! on R4
 ```
+
 </details>
 
 ---
@@ -490,6 +497,7 @@ router ospf 2
  router-id 1.1.1.1
  network 172.16.14.0 0.0.0.3 area 0
 ```
+
 </details>
 
 <details>
@@ -501,6 +509,7 @@ router ospf 2
  network 172.16.14.0 0.0.0.3 area 0
  network 10.4.4.4 0.0.0.0 area 0
 ```
+
 </details>
 
 <details>
@@ -511,6 +520,7 @@ show ip ospf 2 neighbor
 show ip route ospf 2
 ping 10.4.4.4 source 1.1.1.1
 ```
+
 </details>
 
 ---
@@ -524,6 +534,7 @@ ping 10.4.4.4 source 1.1.1.1
 interface Tunnel0
  ipv6 address 2001:db8:14::1/64
 ```
+
 </details>
 
 <details>
@@ -533,6 +544,7 @@ interface Tunnel0
 interface Tunnel0
  ipv6 address 2001:db8:14::2/64
 ```
+
 </details>
 
 <details>
@@ -542,6 +554,7 @@ interface Tunnel0
 show ipv6 interface Tunnel0
 ping 2001:db8:14::2
 ```
+
 </details>
 
 ---
@@ -561,6 +574,7 @@ show ip route 10.4.4.4                    ! must show "ospf 2" via Tunnel0
 show ip route 10.4.4.4                    ! must return "% Network not in table"
 show ip route 172.16.14.0                 ! must return "% Network not in table"
 ```
+
 </details>
 
 ---
@@ -615,6 +629,7 @@ R4# show running-config | section router ospf 2
 ! One of the network statements has area 1 instead of area 0 — that is the fault
 ! R1 is in area 0, R4 is in area 1 → area mismatch → adjacency blocked
 ```
+
 </details>
 
 <details>
@@ -636,6 +651,7 @@ R1# show ip ospf 2 neighbor
 R1# ping 10.4.4.4 source 1.1.1.1
 !!!!!                                                        ! ← overlay restored
 ```
+
 </details>
 
 ---
@@ -668,6 +684,7 @@ R1# ping 4.4.4.5
 R1# ping 4.4.4.4
 !!!!!   ! 4.4.4.4 is reachable via underlay — typo in destination
 ```
+
 </details>
 
 <details>
@@ -686,6 +703,7 @@ R1# show interface Tunnel0
 R1# ping 10.4.4.4 source 1.1.1.1
 !!!!!
 ```
+
 </details>
 
 ---
@@ -724,6 +742,7 @@ R1# show running-config interface Tunnel0
 R1# show ip ospf 1 neighbor
 ! R3 adjacency may be lost or routes may have changed — Lo0 no longer advertised
 ```
+
 </details>
 
 <details>
@@ -749,6 +768,7 @@ R1# ping 10.4.4.4 source 1.1.1.1
 ! Key lesson: loopbacks should NEVER be shut on production routers used as tunnel anchors.
 ! This is why loopbacks are preferred over physical interfaces as tunnel source.
 ```
+
 </details>
 
 ---
@@ -757,27 +777,27 @@ R1# ping 10.4.4.4 source 1.1.1.1
 
 ### Core Implementation
 
-- [ ] Tunnel0 configured on R1 with source Loopback0, destination 4.4.4.4
-- [ ] Tunnel0 configured on R4 with source Loopback0, destination 1.1.1.1
-- [ ] R1 Tunnel0 IP: `172.16.14.1/30`; R4 Tunnel0 IP: `172.16.14.2/30`
-- [ ] `ip mtu 1400` and `ip tcp adjust-mss 1360` on both tunnel interfaces
-- [ ] `ip ospf network point-to-point` on both tunnel interfaces
-- [ ] `show interface Tunnel0` on R1 shows up/up
-- [ ] `show interface Tunnel0` on R4 shows up/up
-- [ ] OSPF process 2 running on R1 (network 172.16.14.0/30 in area 0)
-- [ ] OSPF process 2 running on R4 (network 172.16.14.0/30 and 10.4.4.4/32 in area 0)
-- [ ] `show ip ospf 2 neighbor` on R1 shows R4 in FULL state
-- [ ] `show ip route ospf 2` on R1 shows 10.4.4.4/32 via Tunnel0
-- [ ] `ping 10.4.4.4 source 1.1.1.1` succeeds
-- [ ] R1 Tunnel0 IPv6: `2001:db8:14::1/64`; R4 Tunnel0 IPv6: `2001:db8:14::2/64`
-- [ ] `ping 2001:db8:14::2` from R1 succeeds (IPv6 over GRE)
-- [ ] `traceroute 4.4.4.4 source 1.1.1.1` shows R3 (10.0.13.2) as hop 1 (underlay)
-- [ ] `traceroute 10.4.4.4 source 1.1.1.1` shows only 1 hop at 172.16.14.2 (overlay)
-- [ ] `show ip route 10.4.4.4` on R3 returns "% Network not in table"
-- [ ] `show ip route 172.16.14.0` on R3 returns "% Network not in table"
+- [x] Tunnel0 configured on R1 with source Loopback0, destination 4.4.4.4
+- [x] Tunnel0 configured on R4 with source Loopback0, destination 1.1.1.1
+- [x] R1 Tunnel0 IP: `172.16.14.1/30`; R4 Tunnel0 IP: `172.16.14.2/30`
+- [x] `ip mtu 1400` and `ip tcp adjust-mss 1360` on both tunnel interfaces
+- [x] `ip ospf network point-to-point` on both tunnel interfaces
+- [x] `show interface Tunnel0` on R1 shows up/up
+- [x] `show interface Tunnel0` on R4 shows up/up
+- [x] OSPF process 2 running on R1 (network 172.16.14.0/30 in area 0)
+- [x] OSPF process 2 running on R4 (network 172.16.14.0/30 and 10.4.4.4/32 in area 0)
+- [x] `show ip ospf 2 neighbor` on R1 shows R4 in FULL state
+- [x] `show ip route ospf 2` on R1 shows 10.4.4.4/32 via Tunnel0
+- [x] `ping 10.4.4.4 source 1.1.1.1` succeeds
+- [x] R1 Tunnel0 IPv6: `2001:db8:14::1/64`; R4 Tunnel0 IPv6: `2001:db8:14::2/64`
+- [x] `ping 2001:db8:14::2` from R1 succeeds (IPv6 over GRE)
+- [x] `traceroute 4.4.4.4 source 1.1.1.1` shows R3 (10.0.13.2) as hop 1 (underlay)
+- [x] `traceroute 10.4.4.4 source 1.1.1.1` shows only 1 hop at 172.16.14.2 (overlay)
+- [x] `show ip route 10.4.4.4` on R3 returns "% Network not in table"
+- [x] `show ip route 172.16.14.0` on R3 returns "% Network not in table"
 
 ### Troubleshooting
 
-- [ ] Ticket 1: Identified OSPF process 2 area mismatch on R4; corrected area to 0; overlay routing restored
-- [ ] Ticket 2: Identified wrong tunnel destination on R1 (4.4.4.5); corrected to 4.4.4.4; Tunnel0 came back up
-- [ ] Ticket 3: Identified Loopback0 shutdown on R1; restored with `no shutdown`; tunnel recovered; understood loopback-as-source stability principle
+- [x] Ticket 1: Identified OSPF process 2 area mismatch on R4; corrected area to 0; overlay routing restored
+- [x] Ticket 2: Identified wrong tunnel destination on R1 (4.4.4.5); corrected to 4.4.4.4; Tunnel0 came back up
+- [x] Ticket 3: Identified Loopback0 shutdown on R1; restored with `no shutdown`; tunnel recovered; understood loopback-as-source stability principle
