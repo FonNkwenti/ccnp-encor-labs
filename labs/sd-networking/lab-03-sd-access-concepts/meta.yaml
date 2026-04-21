@@ -1,0 +1,11 @@
+lab: lab-03-sd-access-concepts
+chapter: sd-networking
+created:
+  date: "2026-04-20"
+  agent: claude-sonnet-4-6
+  skill: lab-workbook-creator
+  skill_version: "2026-04-20"
+  format: reference
+  files:
+    - workbook.md
+updated: []

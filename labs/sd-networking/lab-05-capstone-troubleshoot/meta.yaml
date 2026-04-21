@@ -1,0 +1,27 @@
+lab: lab-05-capstone-troubleshoot
+chapter: sd-networking
+created:
+  date: "2026-04-20"
+  agent: claude-sonnet-4-6
+  skill: lab-workbook-creator
+  skill_version: "2026-04-20"
+  format: hybrid
+  files:
+    - workbook.md
+    - topology/topology.drawio
+    - setup_lab.py
+    - initial-configs/R-TRANSPORT.cfg
+    - initial-configs/vManage.cfg
+    - initial-configs/vSmart.cfg
+    - initial-configs/vBond.cfg
+    - initial-configs/vEdge1.cfg
+    - initial-configs/vEdge2.cfg
+    - solutions/R-TRANSPORT.cfg
+    - solutions/vManage.cfg
+    - solutions/vSmart.cfg
+    - solutions/vBond.cfg
+    - solutions/vEdge1.cfg
+    - solutions/vEdge2.cfg
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+updated: []
