@@ -111,12 +111,12 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [ ] lab-04-capstone-troubleshoot (hybrid)
 
 ### 12. sd-networking (6 labs — hybrid)
-- [ ] lab-00-sdwan-fabric-bringup (standard)
-- [ ] lab-01-sdwan-omp-and-policies (standard)
-- [ ] lab-02-sdwan-data-plane (standard)
-- [ ] lab-03-sd-access-concepts (reference)
-- [ ] lab-04-capstone-config (hybrid)
-- [ ] lab-05-capstone-troubleshoot (hybrid)
+- [~] lab-00-sdwan-fabric-bringup (standard) — Review Needed
+- [~] lab-01-sdwan-omp-and-policies (standard) — Review Needed
+- [~] lab-02-sdwan-data-plane (standard) — Review Needed
+- [~] lab-03-sd-access-concepts (reference) — Review Needed
+- [~] lab-04-capstone-config (hybrid) — Review Needed
+- [~] lab-05-capstone-troubleshoot (hybrid) — Review Needed
 
 ### 13. overlay-technologies (3 labs — reference)
 - [ ] lab-00-device-virtualization
@@ -132,7 +132,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 54 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01; automation/lab-00 through lab-05)
-- **Remaining:** 21
-- **Skipped:** security/lab-02-acls through lab-05-capstone-troubleshoot (deferred)
-- **Next up:** network-design/lab-00-design-principles
+- **Built:** 58 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01; automation/lab-00 through lab-05; sd-networking/lab-00 through lab-05)
+- **Remaining:** 17
+- **Skipped:** security/lab-02-acls through security/lab-05-capstone-troubleshoot (deferred)
+- **Next up:** network-design/lab-00-design-principles (pending lab-05 review)

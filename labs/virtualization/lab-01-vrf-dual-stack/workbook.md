@@ -178,6 +178,7 @@ The exam frequently tests whether you add the `vrf <name>` keyword to verificati
 The `initial-configs/` directory contains Lab 00's completed solution — VRF-Lite is fully operational. The following is pre-loaded on all devices:
 
 **Pre-loaded:**
+
 - VRF definitions for CUSTOMER-A and CUSTOMER-B (IPv4 address family only)
 - All interface IP addresses (IPv4 only — no IPv6 addresses configured yet)
 - OSPF process 1 on global-table underlay interfaces
@@ -185,6 +186,7 @@ The `initial-configs/` directory contains Lab 00's completed solution — VRF-Li
 - PC1 and PC2 IPv4 addresses and gateways
 
 **NOT pre-loaded (you configure this):**
+
 - IPv6 address family in VRF definitions
 - Global IPv6 unicast routing
 - IPv6 addresses on VRF-bound interfaces
@@ -498,6 +500,7 @@ vrf definition CUSTOMER-A
  exit-address-family
 ipv6 unicast-routing
 ```
+
 </details>
 
 <details>
@@ -507,6 +510,7 @@ ipv6 unicast-routing
 show running-config | section vrf definition CUSTOMER-A
 show running-config | include ipv6 unicast-routing
 ```
+
 </details>
 
 ---
@@ -524,6 +528,7 @@ interface GigabitEthernet0/2
 interface Loopback1
  ipv6 address 2001:db8:b1::1/64
 ```
+
 </details>
 
 <details>
@@ -537,6 +542,7 @@ interface GigabitEthernet0/2
 interface Loopback1
  ipv6 address 2001:db8:b2::1/64
 ```
+
 </details>
 
 <details>
@@ -548,6 +554,7 @@ interface GigabitEthernet0/0.100
 interface GigabitEthernet0/1.100
  ipv6 address 2001:db8:ca23::2/64
 ```
+
 </details>
 
 <details>
@@ -560,6 +567,7 @@ ip 2001:db8:a1::10/64 2001:db8:a1::1
 ! PC2 (VPCS):
 ip 2001:db8:a2::10/64 2001:db8:a2::1
 ```
+
 </details>
 
 <details>
@@ -570,6 +578,7 @@ show ipv6 interface brief
 show ipv6 interface GigabitEthernet0/0.100
 ping vrf CUSTOMER-A 2001:db8:ca13::2
 ```
+
 </details>
 
 ---
@@ -582,6 +591,7 @@ ping vrf CUSTOMER-A 2001:db8:ca13::2
 ```bash
 ipv6 route vrf CUSTOMER-A 2001:db8:a2::/64 2001:db8:ca13::2
 ```
+
 </details>
 
 <details>
@@ -590,6 +600,7 @@ ipv6 route vrf CUSTOMER-A 2001:db8:a2::/64 2001:db8:ca13::2
 ```bash
 ipv6 route vrf CUSTOMER-A 2001:db8:a1::/64 2001:db8:ca23::2
 ```
+
 </details>
 
 <details>
@@ -599,6 +610,7 @@ ipv6 route vrf CUSTOMER-A 2001:db8:a1::/64 2001:db8:ca23::2
 ipv6 route vrf CUSTOMER-A 2001:db8:a1::/64 2001:db8:ca13::1
 ipv6 route vrf CUSTOMER-A 2001:db8:a2::/64 2001:db8:ca23::1
 ```
+
 </details>
 
 <details>
@@ -608,6 +620,7 @@ ipv6 route vrf CUSTOMER-A 2001:db8:a2::/64 2001:db8:ca23::1
 show ipv6 route vrf CUSTOMER-A
 ping vrf CUSTOMER-A 2001:db8:a2::1 source 2001:db8:a1::1
 ```
+
 </details>
 
 ---
@@ -640,6 +653,7 @@ show ip route vrf CUSTOMER-A
 ping vrf CUSTOMER-B 192.168.1.1 source Loopback1
 ping vrf CUSTOMER-A 172.20.1.1
 ```
+
 </details>
 
 ---
@@ -688,6 +702,7 @@ R3# show ipv6 route vrf CUSTOMER-A
 R2# show ipv6 route vrf CUSTOMER-A
 ! R3 has both /64 routes; R2 has its static to 2001:db8:a1::/64 — all OK
 ```
+
 </details>
 
 <details>
@@ -705,6 +720,7 @@ S   2001:db8:a2::/64 [1/0] via 2001:db8:ca13::2   ! ← route restored
 R1# ping vrf CUSTOMER-A 2001:db8:a2::1 source 2001:db8:a1::1
 !!!!!
 ```
+
 </details>
 
 ---
@@ -740,6 +756,7 @@ R1# show ip route vrf CUSTOMER-A
 R1# ping vrf CUSTOMER-A 192.168.2.1
 !!!!!    ! CUSTOMER-A intra-VRF is fine — only inter-VRF leaks are missing
 ```
+
 </details>
 
 <details>
@@ -760,6 +777,7 @@ R1# ping vrf CUSTOMER-B 192.168.1.1 source Loopback1
 R1# ping vrf CUSTOMER-A 172.20.1.1
 !!!!!
 ```
+
 </details>
 
 ---
@@ -805,6 +823,7 @@ vrf definition CUSTOMER-A
 R3# show running-config interface GigabitEthernet0/0.100
 ! ipv6 address 2001:db8:ca13::2/64 may be absent — removed along with the AF
 ```
+
 </details>
 
 <details>
@@ -828,6 +847,7 @@ S   2001:db8:a2::/64 [1/0] via 2001:db8:ca23::1
 R1# ping vrf CUSTOMER-A 2001:db8:a2::1 source 2001:db8:a1::1
 !!!!!   ! ← end-to-end IPv6 restored
 ```
+
 </details>
 
 ---
@@ -836,25 +856,25 @@ R1# ping vrf CUSTOMER-A 2001:db8:a2::1 source 2001:db8:a1::1
 
 ### Core Implementation
 
-- [ ] `address-family ipv6` added to VRF CUSTOMER-A on R1, R2, and R3
-- [ ] `address-family ipv6` added to VRF CUSTOMER-B on R1 and R2
-- [ ] `ipv6 unicast-routing` enabled on R1, R2, and R3
-- [ ] R1 Gi0/0.100 has `2001:db8:ca13::1/64` (CUSTOMER-A)
-- [ ] R1 Gi0/2 has `2001:db8:a1::1/64` (CUSTOMER-A)
-- [ ] R1 Lo1 has `2001:db8:b1::1/64` (CUSTOMER-B)
-- [ ] R2 Gi0/0.100 has `2001:db8:ca23::1/64` (CUSTOMER-A)
-- [ ] R2 Gi0/2 has `2001:db8:a2::1/64` (CUSTOMER-A)
-- [ ] R2 Lo1 has `2001:db8:b2::1/64` (CUSTOMER-B)
-- [ ] R3 Gi0/0.100 has `2001:db8:ca13::2/64` (CUSTOMER-A)
-- [ ] R3 Gi0/1.100 has `2001:db8:ca23::2/64` (CUSTOMER-A)
-- [ ] PC1 has `2001:db8:a1::10/64` with gateway `2001:db8:a1::1`
-- [ ] PC2 has `2001:db8:a2::10/64` with gateway `2001:db8:a2::1`
-- [ ] R1 `ipv6 route vrf CUSTOMER-A 2001:db8:a2::/64 2001:db8:ca13::2` installed
-- [ ] R2 `ipv6 route vrf CUSTOMER-A 2001:db8:a1::/64 2001:db8:ca23::2` installed
-- [ ] R3 has IPv6 statics for both LAN prefixes in VRF CUSTOMER-A
-- [ ] `show ipv6 route vrf CUSTOMER-A` on R1 shows `S 2001:db8:a2::/64`
-- [ ] `ping 2001:db8:a2::10` from PC1 succeeds (end-to-end IPv6 via VRF)
-- [ ] R1 `ip route vrf CUSTOMER-B 192.168.1.1 255.255.255.255 GigabitEthernet0/2` installed
+- [x] `address-family ipv6` added to VRF CUSTOMER-A on R1, R2, and R3
+- [x] `address-family ipv6` added to VRF CUSTOMER-B on R1 and R2
+- [x] `ipv6 unicast-routing` enabled on R1, R2, and R3
+- [x] R1 Gi0/0.100 has `2001:db8:ca13::1/64` (CUSTOMER-A)
+- [x] R1 Gi0/2 has `2001:db8:a1::1/64` (CUSTOMER-A)
+- [x] R1 Lo1 has `2001:db8:b1::1/64` (CUSTOMER-B)
+- [x] R2 Gi0/0.100 has `2001:db8:ca23::1/64` (CUSTOMER-A)
+- [x] R2 Gi0/2 has `2001:db8:a2::1/64` (CUSTOMER-A)
+- [x] R2 Lo1 has `2001:db8:b2::1/64` (CUSTOMER-B)
+- [x] R3 Gi0/0.100 has `2001:db8:ca13::2/64` (CUSTOMER-A)
+- [x] R3 Gi0/1.100 has `2001:db8:ca23::2/64` (CUSTOMER-A)
+- [x] PC1 has `2001:db8:a1::10/64` with gateway `2001:db8:a1::1`
+- [x] PC2 has `2001:db8:a2::10/64` with gateway `2001:db8:a2::1`
+- [x] R1 `ipv6 route vrf CUSTOMER-A 2001:db8:a2::/64 2001:db8:ca13::2` installed
+- [x] R2 `ipv6 route vrf CUSTOMER-A 2001:db8:a1::/64 2001:db8:ca23::2` installed
+- [x] R3 has IPv6 statics for both LAN prefixes in VRF CUSTOMER-A
+- [x] `show ipv6 route vrf CUSTOMER-A` on R1 shows `S 2001:db8:a2::/64`
+- [x] `ping 2001:db8:a2::10` from PC1 succeeds (end-to-end IPv6 via VRF)
+- [ ] 1 `ip route vrf CUSTOMER-B 192.168.1.1 255.255.255.255 GigabitEthernet0/2` installed
 - [ ] R1 `ip route vrf CUSTOMER-A 172.20.1.1 255.255.255.255 Loopback1` installed
 - [ ] `ping vrf CUSTOMER-B 192.168.1.1 source Loopback1` from R1 succeeds (Lo1 172.20.1.1 → CUSTOMER-A gateway)
 - [ ] `ping vrf CUSTOMER-A 172.20.1.1` from R1 succeeds

@@ -25,7 +25,7 @@ from eve_ng import EveNgError, connect_node, discover_ports, erase_device_config
 
 
 DEFAULT_LAB_PATH = "ccnp-encor/virtualization/lab-00-vrf-lite.unl"
-DEVICES = ["R1", "R2", "R3", "PC1", "PC2"]
+DEVICES = ["R1", "R2", "R3"]  # VPCS nodes (PC1, PC2) load .vpc files directly from EVE-NG
 
 
 def parse_args() -> argparse.Namespace:

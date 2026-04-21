@@ -1,0 +1,18 @@
+stop the autogeneration of eve-ng unl files. 
+I'll manually build the basic lab and export the zip file and unl file to the project
+
+compare these labs with the CCNP 101 labs workbook to make sure we are covering the syllables
+
+run a review of the project and cut off any things are do not provide value
+
+whats the difference between capsone I and capstone II
+
+Check all fault injection scenarios and make sure they are valid and testable 
+
+explain how to read and understand how Rapid PVST builds the topology and how to verify it. 
+Let Claude create a document and also a drawio file to explain this concept. 
+
+Sometimes, labs may already have complete configs in the case were a student already completed a lab 
+and saved it but want to redo it again. In this scenario, the Setup_lab.py script should reset the lab to its original state. 
+So existing configs have to be removed as part of the setup_lab.py. For example, interfaces should  be defaulted before any interface configs. 
+If there is a way to reset all the device configs, that would be ideal instead of undoing line by line. is this possible? what do you think?

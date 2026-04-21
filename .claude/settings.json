@@ -1,18 +1,5 @@
 {
   "enabledPlugins": {
     "commit-commands@claude-plugins-official": true
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 scripts/log-telemetry.py"
-          }
-        ]
-      }
-    ]
   }
 }

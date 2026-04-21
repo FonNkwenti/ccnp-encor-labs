@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="vrf-lite-lab-00" name="Page-1">
-        <mxGraphModel dx="749" dy="433" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
+        <mxGraphModel dx="395" dy="612" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1654" pageHeight="1169" background="#1a1a2e" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -35,10 +35,14 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="lbl_L1_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L1" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="-34" y="-87" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L1_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L1" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="48" y="73" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L1_mid" value="Gi0/0 — Gi0/0&#10;10.0.13.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L1" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
@@ -49,14 +53,18 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="lbl_L2_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L2" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="52" y="-59" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L2_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L2" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="-34" y="67" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="lbl_L2_mid" value="Gi0/0 — Gi0/1&#10;10.0.23.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L2" vertex="1" connectable="0">
+                <mxCell id="lbl_L2_mid" value="Gi0/0 — Gi0/1&#10;10.0.23.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=default;" parent="link_L2" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
-                        <mxPoint y="18" as="offset"/>
+                        <mxPoint x="-3" y="1" as="offset"/>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="link_L3" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#FFFFFF;exitX=0.145;exitY=0.855;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitPerimeter=0;" parent="1" source="R1" target="R2" edge="1">
@@ -68,10 +76,14 @@
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L3_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L3" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="71" y="-167" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L3_dst" value=".2" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L3" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="48" y="181" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L3_mid" value="Gi0/1 — Gi0/1&#10;10.0.12.0/30" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L3" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
@@ -82,10 +94,14 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="lbl_L4_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L4" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="87" y="-10" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L4_dst" value=".10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L4" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="-89" y="10" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L4_mid" value="Gi0/2&#10;192.168.1.0/24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L4" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">
@@ -96,10 +112,14 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="lbl_L5_src" value=".1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L5" vertex="1" connectable="0">
-                    <mxGeometry relative="0.08" as="geometry"/>
+                    <mxGeometry relative="0.08" as="geometry">
+                        <mxPoint x="-101" y="11" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L5_dst" value=".10" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L5" vertex="1" connectable="0">
-                    <mxGeometry relative="0.92" as="geometry"/>
+                    <mxGeometry relative="0.92" as="geometry">
+                        <mxPoint x="91" y="7" as="offset"/>
+                    </mxGeometry>
                 </mxCell>
                 <mxCell id="lbl_L5_mid" value="Gi0/2&#10;192.168.2.0/24" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=10;fontColor=#FFFFFF;labelBackgroundColor=none;" parent="link_L5" vertex="1" connectable="0">
                     <mxGeometry relative="0.5" as="geometry">

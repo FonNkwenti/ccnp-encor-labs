@@ -35,6 +35,7 @@ in that VRF's routing table — they cannot reach global-table destinations and 
 cannot reach VRF destinations, unless explicit leaking is configured.
 
 Key IOS command flow for modern VRF definition (IOS 15+):
+
 ```
 vrf definition CUSTOMER-A
  rd 65001:100          ! Route Distinguisher — makes VPNv4 routes unique
@@ -155,6 +156,7 @@ at the R2 site through R3's shared WAN, entirely within VRF CUSTOMER-A.
 ```
 
 **Key topology relationships:**
+
 - R3 is the shared transport — it carries both global underlay and VRF CUSTOMER-A traffic over the same physical links using sub-interfaces
 - The global table runs OSPF (process 1) for loopback reachability — this is pre-configured
 - VRF CUSTOMER-A has its own transit IPs (172.16.13.0/30, 172.16.23.0/30) on sub-interfaces, completely separate from the global underlay
@@ -199,11 +201,13 @@ at the R2 site through R3's shared WAN, entirely within VRF CUSTOMER-A.
 Run `python3 setup_lab.py --host <eve-ng-ip>` to push the initial configuration to all nodes.
 
 **Pre-configured on all routers:**
+
 - Hostnames
 - Interface IP addressing (global table, underlay links and loopbacks only)
 - OSPF process 1 in area 0 (global table — underlay IGP)
 
 **NOT pre-configured (student task):**
+
 - VRF definitions
 - Route distinguisher values
 - IPv4 address family under VRF definitions
@@ -503,6 +507,7 @@ vrf definition CUSTOMER-B
  address-family ipv4
  exit-address-family
 ```
+
 </details>
 
 <details>
@@ -516,6 +521,7 @@ vrf definition CUSTOMER-A
  address-family ipv4
  exit-address-family
 ```
+
 </details>
 
 <details>
@@ -535,6 +541,7 @@ vrf definition CUSTOMER-B
  address-family ipv4
  exit-address-family
 ```
+
 </details>
 
 <details>
@@ -544,6 +551,7 @@ vrf definition CUSTOMER-B
 show vrf
 show running-config | section vrf definition
 ```
+
 </details>
 
 ---
@@ -560,6 +568,7 @@ interface GigabitEthernet0/0.100
  vrf forwarding CUSTOMER-A
  ip address 172.16.13.1 255.255.255.252
 ```
+
 </details>
 
 <details>
@@ -577,6 +586,7 @@ interface GigabitEthernet0/1.100
  vrf forwarding CUSTOMER-A
  ip address 172.16.23.2 255.255.255.252
 ```
+
 </details>
 
 <details>
@@ -589,6 +599,7 @@ interface GigabitEthernet0/0.100
  vrf forwarding CUSTOMER-A
  ip address 172.16.23.1 255.255.255.252
 ```
+
 </details>
 
 <details>
@@ -599,6 +610,7 @@ show ip interface brief
 ping vrf CUSTOMER-A 172.16.13.2   ! from R1
 ping vrf CUSTOMER-A 172.16.23.2   ! from R2
 ```
+
 </details>
 
 ---
@@ -615,6 +627,7 @@ interface GigabitEthernet0/2
  ip address 192.168.1.1 255.255.255.0
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -627,6 +640,7 @@ interface GigabitEthernet0/2
  ip address 192.168.2.1 255.255.255.0
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -637,6 +651,7 @@ show ip vrf interfaces
 ! From PC1:
 ping 192.168.1.1
 ```
+
 </details>
 
 ---
@@ -650,6 +665,7 @@ ping 192.168.1.1
 ! R1
 ip route vrf CUSTOMER-A 192.168.2.0 255.255.255.0 172.16.13.2
 ```
+
 </details>
 
 <details>
@@ -660,6 +676,7 @@ ip route vrf CUSTOMER-A 192.168.2.0 255.255.255.0 172.16.13.2
 ip route vrf CUSTOMER-A 192.168.1.0 255.255.255.0 172.16.13.1
 ip route vrf CUSTOMER-A 192.168.2.0 255.255.255.0 172.16.23.1
 ```
+
 </details>
 
 <details>
@@ -669,6 +686,7 @@ ip route vrf CUSTOMER-A 192.168.2.0 255.255.255.0 172.16.23.1
 ! R2
 ip route vrf CUSTOMER-A 192.168.1.0 255.255.255.0 172.16.23.2
 ```
+
 </details>
 
 <details>
@@ -680,6 +698,7 @@ ping vrf CUSTOMER-A 192.168.2.1   ! from R1
 ! From PC1:
 ping 192.168.2.10
 ```
+
 </details>
 
 ---
@@ -706,6 +725,7 @@ interface Loopback2
  vrf forwarding CUSTOMER-B
  ip address 192.168.2.100 255.255.255.0
 ```
+
 </details>
 
 <details>
@@ -718,6 +738,7 @@ show ip route                     ! neither 192.168.x.0 nor 172.20.x.0 visible g
 ping 172.20.2.1 source Loopback0  ! global ping — must fail
 ping vrf CUSTOMER-B 172.20.2.1    ! vrf ping — fails (no inter-site B routing)
 ```
+
 </details>
 
 ---
@@ -776,6 +797,7 @@ R3# show vrf
 
 ! Root cause: VRF CUSTOMER-A was removed from R3 — sub-interfaces lost their VRF context
 ```
+
 </details>
 
 <details>
@@ -838,6 +860,7 @@ R2# show ip route vrf CUSTOMER-A
 ! Root cause: static route ip route vrf CUSTOMER-A 192.168.2.0 ... removed from R1;
 ! similarly ip route vrf CUSTOMER-A 192.168.1.0 ... removed from R2
 ```
+
 </details>
 
 <details>
@@ -892,6 +915,7 @@ R1# show running-config interface GigabitEthernet0/2
 ! However, traffic arriving from PC1 on Gi0/2 now enters the global routing table,
 ! not CUSTOMER-A — the VRF static routes to 192.168.2.0/24 are invisible here.
 ```
+
 </details>
 
 <details>
@@ -915,27 +939,27 @@ Verify with `show ip vrf interfaces` (Gi0/2 must show CUSTOMER-A) and PC1 `ping 
 
 ### Core Implementation
 
-- [ ] VRF CUSTOMER-A defined on R1, R3, R2 with RD 65001:100 and IPv4 address-family
-- [ ] VRF CUSTOMER-B defined on R1 and R2 with RD 65001:200 and IPv4 address-family
-- [ ] R1 Gi0/0.100 in CUSTOMER-A: 172.16.13.1/30 (sub-interface, dot1Q 100)
-- [ ] R3 Gi0/0.100 in CUSTOMER-A: 172.16.13.2/30 and Gi0/1.100: 172.16.23.2/30
-- [ ] R2 Gi0/0.100 in CUSTOMER-A: 172.16.23.1/30 (sub-interface, dot1Q 100)
-- [ ] R1 Gi0/2 in CUSTOMER-A: 192.168.1.1/24
-- [ ] R2 Gi0/2 in CUSTOMER-A: 192.168.2.1/24
-- [ ] Static route on R1: vrf CUSTOMER-A → 192.168.2.0/24 via 172.16.13.2
-- [ ] Static routes on R3: both LAN prefixes in vrf CUSTOMER-A
-- [ ] Static route on R2: vrf CUSTOMER-A → 192.168.1.0/24 via 172.16.23.2
-- [ ] `ping vrf CUSTOMER-A 192.168.2.1` from R1 succeeds
-- [ ] PC1 can ping PC2 (192.168.1.10 → 192.168.2.10)
-- [ ] R1 Lo1 in CUSTOMER-B: 172.20.1.1/24; R2 Lo1 in CUSTOMER-B: 172.20.2.1/24
-- [ ] R1 Lo2 in CUSTOMER-B: 192.168.1.100/24 (same prefix as CUSTOMER-A's LAN — overlapping address space)
-- [ ] R2 Lo2 in CUSTOMER-B: 192.168.2.100/24 (same prefix as CUSTOMER-A's LAN)
-- [ ] `show ip route vrf CUSTOMER-A` on R1 shows 192.168.1.0/24 via Gi0/2 only (not Lo2)
-- [ ] `show ip route vrf CUSTOMER-B` on R1 shows 192.168.1.0/24 via Lo2 only (not Gi0/2)
-- [ ] `show ip route` (global) on R1 shows neither 192.168.1.0 nor 172.20.0.0
+- [x] VRF CUSTOMER-A defined on R1, R3, R2 with RD 65001:100 and IPv4 address-family
+- [x] VRF CUSTOMER-B defined on R1 and R2 with RD 65001:200 and IPv4 address-family
+- [x] R1 Gi0/0.100 in CUSTOMER-A: 172.16.13.1/30 (sub-interface, dot1Q 100)
+- [x] R3 Gi0/0.100 in CUSTOMER-A: 172.16.13.2/30 and Gi0/1.100: 172.16.23.2/30
+- [x] R2 Gi0/0.100 in CUSTOMER-A: 172.16.23.1/30 (sub-interface, dot1Q 100)
+- [x] R1 Gi0/2 in CUSTOMER-A: 192.168.1.1/24
+- [x] R2 Gi0/2 in CUSTOMER-A: 192.168.2.1/24
+- [x] Static route on R1: vrf CUSTOMER-A → 192.168.2.0/24 via 172.16.13.2
+- [x] Static routes on R3: both LAN prefixes in vrf CUSTOMER-A
+- [x] Static route on R2: vrf CUSTOMER-A → 192.168.1.0/24 via 172.16.23.2
+- [x] `ping vrf CUSTOMER-A 192.168.2.1` from R1 succeeds
+- [x] PC1 can ping PC2 (192.168.1.10 → 192.168.2.10)
+- [x] R1 Lo1 in CUSTOMER-B: 172.20.1.1/24; R2 Lo1 in CUSTOMER-B: 172.20.2.1/24
+- [x] R1 Lo2 in CUSTOMER-B: 192.168.1.100/24 (same prefix as CUSTOMER-A's LAN — overlapping address space)
+- [x] R2 Lo2 in CUSTOMER-B: 192.168.2.100/24 (same prefix as CUSTOMER-A's LAN)
+- [x] `show ip route vrf CUSTOMER-A` on R1 shows 192.168.1.0/24 via Gi0/2 only (not Lo2)
+- [x] `show ip route vrf CUSTOMER-B` on R1 shows 192.168.1.0/24 via Lo2 only (not Gi0/2)
+- [x] `show ip route` (global) on R1 shows neither 192.168.1.0 nor 172.20.0.0
 
 ### Troubleshooting
 
-- [ ] Ticket 1 resolved: CUSTOMER-A VRF restored on R3, PC1-PC2 reachability confirmed
-- [ ] Ticket 2 resolved: static routes restored on R1 and R2, routing table verified
-- [ ] Ticket 3 resolved: R1 Gi0/2 back in CUSTOMER-A, PC1-PC2 reachability confirmed
+- [x] Ticket 1 resolved: CUSTOMER-A VRF restored on R3, PC1-PC2 reachability confirmed
+- [x] Ticket 2 resolved: static routes restored on R1 and R2, routing table verified
+- [x] Ticket 3 resolved: R1 Gi0/2 back in CUSTOMER-A, PC1-PC2 reachability confirmed
