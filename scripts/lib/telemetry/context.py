@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 
 _SKILL_PHASE_MAP = {
-    "lab-workbook-creator": "Phase 3 - Build",
+    "lab-assembler": "Phase 3 - Build",
     "build-labs": "Phase 3 - Build",
     "lab-builder": "Phase 3 - Build",
     "mega-capstone-creator": "Phase 3 - Build",

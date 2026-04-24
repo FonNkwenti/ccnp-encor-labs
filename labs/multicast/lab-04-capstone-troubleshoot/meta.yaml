@@ -67,4 +67,4 @@ end_state:
 created:
   date: "2026-04-18"
   agent: claude-opus-4-7
-  skill: lab-workbook-creator
+  skill: lab-assembler

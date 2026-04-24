@@ -248,7 +248,7 @@ Lab authors use a repeatable pipeline:
    `specs/topic-plan.yaml` + empty `labs/<topic>/` folders
 2. **Spec** — run `spec-creator` per topic → generates `spec.md` +
    `baseline.yaml` (reviewed before next step)
-3. **Build** — run `lab-workbook-creator` per lab → generates workbook,
+3. **Build** — run `lab-assembler` per lab → generates workbook,
    configs, topology, scripts (reviewed before next lab)
 
 See [`CLAUDE.md`](CLAUDE.md) and

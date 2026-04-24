@@ -4,7 +4,7 @@ chapter: switching
 created:
   date: "2026-04-14"
   agent: claude-opus-4-6
-  skill: lab-workbook-creator
+  skill: lab-assembler
   skill_version: "2026-04-13"
   files:
     - workbook.md

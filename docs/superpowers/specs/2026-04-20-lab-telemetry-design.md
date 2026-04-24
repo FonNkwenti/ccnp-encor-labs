@@ -115,7 +115,7 @@ One JSON object per line. Each represents one skill invocation.
 | `lab.chapter` | Chapter slug (e.g., `ospf`, `bgp`, `switching`) |
 | `lab.name` | Lab directory name |
 | `lab.phase` | Phase 1 Plan / Phase 2 Spec / Phase 3 Build |
-| `skill.name` | Skill identifier (e.g., `spec-creator`, `lab-workbook-creator`) |
+| `skill.name` | Skill identifier (e.g., `spec-creator`, `lab-assembler`) |
 | `skill.invocation_id` | UUID for this specific call |
 | `model` | Full model ID used for the skill |
 | `tokens.input` | Input tokens consumed |

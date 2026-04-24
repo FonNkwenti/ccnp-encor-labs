@@ -55,7 +55,7 @@ def test_resolves_phase_from_branch_name_plan():
 def test_phase_inferred_from_skill_name_when_branch_unrecognized():
     with patch("scripts.lib.telemetry.context._get_cwd", return_value="/repo"):
         with patch("scripts.lib.telemetry.context._get_branch", return_value="docs/lab-progression-guide"):
-            ctx = resolve_lab_context(skill_name="lab-workbook-creator")
+            ctx = resolve_lab_context(skill_name="lab-assembler")
     assert ctx["phase"] == "Phase 3 - Build"
 
 

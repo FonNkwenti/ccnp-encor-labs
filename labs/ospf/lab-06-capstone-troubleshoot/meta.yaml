@@ -15,7 +15,7 @@ lab:
 skill:
   version: "2026-04-17"
   created_by: claude-sonnet-4-6
-  skill_used: lab-workbook-creator
+  skill_used: lab-assembler
 
 files:
   workbook: workbook.md

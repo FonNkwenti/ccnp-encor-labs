@@ -24,7 +24,7 @@ See conductor/product.md and conductor/workflow.md for detailed documentation.
 
 1. Phase 1 - Plan: Upload blueprint to blueprint/350-401/blueprint.md, then run exam-planner
 2. Phase 2 - Spec: Run spec-creator per topic (review after each)
-3. Phase 3 - Build: Run lab-workbook-creator one lab at a time (review after each)
+3. Phase 3 - Build: Run lab-assembler one lab at a time (review after each)
 
 ## Common Commands
 

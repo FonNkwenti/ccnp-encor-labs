@@ -1,0 +1,19 @@
+# Auto-generated — do not edit manually. Use /tag-lab to stamp external agent runs.
+lab: lab-01-high-availability
+chapter: network-design
+created:
+  date: "2026-04-22"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler
+  skill_version: "2026-04-21"
+  format: reference
+  notes: >
+    Reference workbook format — no initial-configs, solutions, setup_lab.py, or
+    fault-injection scripts. Topology copied from lab-00 (identical device set
+    and links); title cell updated. Theory covers hardware redundancy,
+    FHRP design rationale, and SSO/NSF.
+  files:
+    - workbook.md
+    - topology.drawio
+    - meta.yaml
+updated: []

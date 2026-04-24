@@ -34,7 +34,7 @@ fault_scenarios:
 created:
   date: "2026-04-19"
   agent: claude-sonnet-4-6
-  skill: lab-workbook-creator
+  skill: lab-assembler
   files:
     - initial-configs/R1.cfg
     - initial-configs/R2.cfg

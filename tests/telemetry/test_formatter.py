@@ -127,7 +127,7 @@ def test_cost_zero_for_unknown_model():
 
 def test_cost_usd_in_entry_matches_compute_cost():
     entry = build_entry(
-        skill_name="lab-workbook-creator",
+        skill_name="lab-assembler",
         invocation_id="uuid-cost-test",
         context={"chapter": "ospf", "name": "lab-00", "phase": "Phase 3 - Build"},
         usage={"input": 4250, "output": 1820, "cache_creation": 0, "cache_read": 0,

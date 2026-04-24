@@ -1,0 +1,18 @@
+# Auto-generated — do not edit manually. Use /tag-lab to stamp external agent runs.
+lab: lab-00-design-principles
+chapter: network-design
+created:
+  date: "2026-04-22"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler
+  skill_version: "2026-04-21"
+  format: reference
+  notes: >
+    Reference workbook format — no initial-configs, solutions, setup_lab.py, or
+    fault-injection scripts. The topology runs for show-command reference only;
+    no configuration changes are made in this lab.
+  files:
+    - workbook.md
+    - topology.drawio
+    - meta.yaml
+updated: []

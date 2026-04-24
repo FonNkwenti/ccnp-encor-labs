@@ -7,7 +7,7 @@ clean_slate: true
 created:
   date: "2026-04-19"
   agent: claude-sonnet-4-6
-  skill: lab-workbook-creator
+  skill: lab-assembler
   skill_version: "2026-04-19"
   files:
     - workbook.md

@@ -64,7 +64,7 @@ troubleshooting_scenarios: 3
 created:
   date: "2026-04-11"
   agent: claude-opus-4-6
-  skill: lab-workbook-creator
+  skill: lab-assembler
 
 updated:
   - date: "2026-04-11"

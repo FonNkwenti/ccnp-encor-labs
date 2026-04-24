@@ -393,7 +393,7 @@ When building lab-02 (next lab in the queue after lab-01), follow this sequence:
    alongside `eve_ng.py`)
 3. Verify Alpine image prep: `iperf`, `socat`, `tcpdump`, `iproute2`, `bash` all
    `apk add`-ed and baked into the EVE-NG qcow2
-4. Generate the lab normally via `lab-workbook-creator` — the skill should pick up
+4. Generate the lab normally via `lab-assembler` — the skill should pick up
    the platform override from baseline.yaml for PC1/PC2
 5. Author `PC1.sh` and `PC2.sh` in `initial-configs/`
 6. Run `setup_lab.py` against the EVE-NG host to verify Alpine nodes receive config

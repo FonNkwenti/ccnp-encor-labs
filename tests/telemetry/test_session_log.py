@@ -99,7 +99,7 @@ SKILL_DURATION_LINES = [
                       "cache_creation_input_tokens": 0, "cache_read_input_tokens": 0},
             "content": [
                 {"type": "tool_use", "name": "Skill", "id": "toolu_abc",
-                 "input": {"skill": "lab-workbook-creator"}}
+                 "input": {"skill": "lab-assembler"}}
             ],
         },
     }),

@@ -72,4 +72,4 @@ troubleshooting_scenarios: 3
 created:
   date: "2026-04-16"
   agent: claude-sonnet-4-6
-  skill: lab-workbook-creator
+  skill: lab-assembler

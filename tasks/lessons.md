@@ -64,7 +64,7 @@ drift and burns tokens on a subagent that produces something that should be byte
 to what already exists.
 
 **Rule:**
-- Before Step 5 of `lab-workbook-creator`, compare `baseline.yaml labs[N].devices` and
+- Before Step 5 of `lab-assembler`, compare `baseline.yaml labs[N].devices` and
   the effective link set against lab N-1's.
 - If both match exactly → `cp labs/<topic>/lab-(N-1)-.../topology/topology.drawio
   labs/<topic>/lab-NN-.../topology/topology.drawio`. Done.
@@ -77,7 +77,7 @@ to what already exists.
 expensive to recreate and easy to lose. A verbatim copy preserves every tweak.
 
 **Touched:**
-- `.agent/skills/lab-workbook-creator/SKILL.md` — Step 5 split into 5a (reuse gate) and
+- `.agent/skills/lab-assembler/SKILL.md` — Step 5 split into 5a (reuse gate) and
   5b (generate fresh, with a "start from sibling" directive).
 - `labs/multicast/lab-01-rp-discovery-and-igmpv3/topology/topology.drawio` — replaced the
   subagent-generated version with a verbatim copy of `lab-00-pim-sm-and-igmp`.

@@ -1,34 +1,30 @@
-lab: security/lab-01-aaa
-title: "AAA Authentication and Authorization"
-blueprint_refs: ["5.1", "5.1.b"]
-type: progressive
-clean_slate: false
-
+# Auto-generated — do not edit manually. Use /tag-lab to stamp external agent runs.
+lab: lab-03-capstone-config
+chapter: network-design
 created:
-  date: "2026-04-19"
+  date: "2026-04-22"
   agent: claude-sonnet-4-6
   skill: lab-assembler
-  skill_version: "2026-04-19"
+  skill_version: "2026-04-21"
+  format: hybrid
+  notes: >
+    Capstone I — clean-slate initial-configs (IP addressing only; no OSPF, no PBR).
+    Hybrid format: Part A is hands-on OSPF + PBR from scratch; Part B is design
+    interpretation covering all chapter blueprint bullets (1.1, 1.1.a, 1.1.b, 3.2.d).
   files:
     - workbook.md
+    - topology.drawio
     - setup_lab.py
     - initial-configs/R1.cfg
     - initial-configs/R2.cfg
     - initial-configs/R3.cfg
-    - initial-configs/SW1.cfg
-    - initial-configs/PC1.vpc
-    - initial-configs/PC2.vpc
     - solutions/R1.cfg
     - solutions/R2.cfg
     - solutions/R3.cfg
-    - solutions/SW1.cfg
-    - solutions/PC1.vpc
-    - solutions/PC2.vpc
     - scripts/fault-injection/inject_scenario_01.py
     - scripts/fault-injection/inject_scenario_02.py
     - scripts/fault-injection/inject_scenario_03.py
     - scripts/fault-injection/apply_solution.py
     - scripts/fault-injection/README.md
-    - topology/topology.drawio
-
+    - meta.yaml
 updated: []

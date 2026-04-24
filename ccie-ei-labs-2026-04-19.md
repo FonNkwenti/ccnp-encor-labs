@@ -8,7 +8,7 @@
 
 ## 1. Purpose
 
-Decide how to structure a CCIE Enterprise Infrastructure lab build, given an existing working pattern for CCNP ENCOR (per-technology labs generated from blueprints via `spec-creator` -> `lab-workbook-creator` -> `fault-injector`). Two questions were in scope:
+Decide how to structure a CCIE Enterprise Infrastructure lab build, given an existing working pattern for CCNP ENCOR (per-technology labs generated from blueprints via `spec-creator` -> `lab-assembler` -> `fault-injector`). Two questions were in scope:
 
 1. What does CCIE test in a given technology that CCNP ENCOR/ENARSI does not?
 2. Should CCIE labs be per-domain (like CCNP) or a single mega-topology (like traditional CCIE workbooks)?
@@ -194,7 +194,7 @@ ccie-ei-labs/                     (one repo per certification)
 - **Hardware:** the Dell Latitude 5540 is likely insufficient for Tier 3 (20-30 nodes). Plan for a rented lab (INE, CML-on-cloud) or a dedicated server (used ProLiant/R630-class) before starting Tier 3. Tier 1 and most of Tier 2 should still fit locally.
 - **Tier-2 generator skill:** the current skill stack has `spec-creator` (one feature, one lab) and `mega-capstone-creator` (full blueprint, one mega-lab). A Tier-2 generator is missing — something that produces a 6-12 node integration lab covering 2-3 technologies in one domain. Design this skill before starting Tier 2.
 - **Blueprint ingestion:** capture the CCIE EI v1.1 blueprint to `blueprint/ccie-ei/blueprint.md` before running `exam-planner`. Unlike CCNP, it must be split per tier — `exam-planner` may need a `--tier` flag.
-- **Skill reuse:** `spec-creator`, `lab-workbook-creator`, `fault-injector`, `mega-capstone-creator`, `tag-lab`, `drawio`, and `eve-ng` all transfer directly. Only the tier-2 generator is net-new.
+- **Skill reuse:** `spec-creator`, `lab-assembler`, `fault-injector`, `mega-capstone-creator`, `tag-lab`, `drawio`, and `eve-ng` all transfer directly. Only the tier-2 generator is net-new.
 - **Publishing strategy:** decide early whether Tier 1 may be public (marketing, GitHub stars) while Tier 3 stays private. This is the one decision that could flip the repo structure from §7.
 - **CCIE SP vs EI:** if both certifications are eventually in scope, they should be separate repos (`ccie-ei-labs`, `ccie-sp-labs`) that share only the skills submodule. Do not attempt to unify them.
 
