@@ -16,4 +16,17 @@ Then read `.agent/skills/exam-planner/SKILL.md` and execute it end-to-end. The s
 - Writing `specs/topic-plan.yaml`
 - Creating empty `labs/<topic>/` folders per the plan
 
-When finished, summarise the generated topic list and point the user at `/create-spec <topic-slug>` for Phase 2.
+When the topic plan is approved, **update `README.md`**:
+1. Read the topic list from `specs/topic-plan.yaml`.
+2. Find the `<!-- lab-index-start -->` / `<!-- lab-index-end -->` markers in `README.md`. If the markers are absent, append them at the end of the file.
+3. Replace everything between the markers (inclusive of the placeholder line) with one section per topic, in plan order:
+
+```
+### <topic-slug>
+
+> Spec not yet created — run `/create-spec <topic-slug>`
+```
+
+4. Write the updated `README.md` and commit it alongside `specs/topic-plan.yaml` and the empty `labs/` folders.
+
+Finish by summarising the generated topic list and pointing the user at `/create-spec <topic-slug>` for Phase 2.

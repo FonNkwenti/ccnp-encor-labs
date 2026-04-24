@@ -17,4 +17,8 @@ Then read `.agent/skills/lab-builder/SKILL.md` and execute it for topic `$ARGUME
 - Enforcing the pause-for-review gate after each lab (do not skip these pauses, even if the user seems eager)
 - Running the Step 3 validation checklist after all labs are approved
 
+After **each individual lab** is approved during the topic build, update `README.md` immediately:
+- In the `### $ARGUMENTS` section between the `<!-- lab-index-start -->` / `<!-- lab-index-end -->` markers, find the line `- [ ] \`<lab-id>\`` for the just-approved lab and change `[ ]` to `[x]`.
+- Write the updated `README.md` before pausing for the next lab.
+
 To build a single lab without the topic loop, use `/build-lab <topic>/<lab-id>` instead (that calls `lab-assembler` directly).

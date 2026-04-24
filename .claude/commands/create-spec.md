@@ -17,4 +17,16 @@ Then read `.agent/skills/spec-creator/SKILL.md` and execute it for topic `$ARGUM
 - Producing `labs/$ARGUMENTS/spec.md`
 - Producing `labs/$ARGUMENTS/baseline.yaml`
 
-When finished, stop for review before moving to Phase 3. Point the user at `/build-lab $ARGUMENTS/<lab-id>` once they approve.
+When the spec is approved, **update `README.md`**:
+1. Read `labs/$ARGUMENTS/baseline.yaml` and extract the `labs[]` list — each entry's `folder` and `title` (or `name`) fields.
+2. Find the `### $ARGUMENTS` section between the `<!-- lab-index-start -->` / `<!-- lab-index-end -->` markers in `README.md`.
+3. Replace the "Spec not yet created" placeholder line with an unchecked checklist, one entry per lab in `baseline.yaml` order:
+
+```
+- [ ] `<lab.folder>` — <lab.title>
+```
+
+4. Leave all other `### <topic>` sections unchanged.
+5. Write the updated `README.md` and commit it alongside `spec.md` and `baseline.yaml`.
+
+Stop for review before moving to Phase 3. Point the user at `/build-lab $ARGUMENTS/<lab-id>` or `/build-topic $ARGUMENTS` once they approve.

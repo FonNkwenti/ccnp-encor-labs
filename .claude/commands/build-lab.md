@@ -17,4 +17,9 @@ Then read `.agent/skills/lab-assembler/SKILL.md` and execute it for `$ARGUMENTS`
 
 Note: this command builds **one** lab. To build every lab in a topic with a review gate between each, use `/build-topic <topic-slug>` instead (that routes to the `lab-builder` orchestrator).
 
-When finished, stop for review and suggest `/tag-lab $ARGUMENTS` once the lab is approved.
+When the lab is approved, **update `README.md`**:
+1. Parse `$ARGUMENTS` as `<topic-slug>/<lab-id>`.
+2. In the `### <topic-slug>` section between the `<!-- lab-index-start -->` / `<!-- lab-index-end -->` markers, find the line containing `- [ ] \`<lab-id>\`` and change `[ ]` to `[x]`.
+3. Write the updated `README.md`.
+
+Then suggest `/tag-lab $ARGUMENTS` and point the user at the next unbuilt lab in the same topic.
