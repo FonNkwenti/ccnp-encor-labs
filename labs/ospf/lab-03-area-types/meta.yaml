@@ -1,0 +1,75 @@
+lab:
+  number: 3
+  folder: lab-03-area-types
+  title: "OSPF Area Types: Stub, Totally Stubby, and NSSA"
+  topic: ospf
+  exam: "350-401"
+  difficulty: Intermediate
+  type: progressive
+  extends: lab-02-network-types
+  time_minutes: 90
+  blueprint_refs: ["3.2.a"]
+
+devices:
+  - name: R1
+    platform: iosv
+    role: "Backbone router (Area 0, DR at priority 255)"
+  - name: R2
+    platform: iosv
+    role: "ABR (Area 0 / Area 1, Totally Stubby ABR)"
+  - name: R3
+    platform: iosv
+    role: "ABR (Area 0 / Area 2, NSSA ABR and Type 7->5 translator)"
+  - name: R4
+    platform: iosv
+    role: "Internal router (Area 1, Totally Stubby internal)"
+  - name: R5
+    platform: iosv
+    role: "ASBR (Area 2 NSSA, redistributes external loopbacks as Type 7)"
+  - name: R6
+    platform: iosv
+    role: "Internal router (Area 1, new in lab-03)"
+  - name: SW-AREA0
+    platform: unmanaged_switch
+    role: "Shared broadcast segment for Area 0"
+  - name: PC1
+    type: vpc
+  - name: PC2
+    type: vpc
+
+files:
+  workbook: workbook.md
+  readme: README.md
+  topology: topology/topology.drawio
+  setup_script: setup_lab.py
+  initial_configs:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/R4.cfg
+    - initial-configs/R5.cfg
+    - initial-configs/R6.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+  solutions:
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/R4.cfg
+    - solutions/R5.cfg
+    - solutions/R6.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+  fault_injection:
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+
+troubleshooting_scenarios: 3
+
+created:
+  date: "2026-04-16"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler

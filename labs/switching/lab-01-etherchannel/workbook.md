@@ -835,10 +835,15 @@ diagnose and fix using only show commands.
 ### Workflow
 
 ```bash
-python3 setup_lab.py --host <eve-ng-ip>              # reset to known-good (solution config)
-python3 scripts/fault-injection/inject_scenario_01.py # Ticket 1
-python3 scripts/fault-injection/apply_solution.py     # restore
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # reset to known-good solution
+python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>  # inject Ticket 1
+# diagnose and fix using show commands
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # restore between tickets
 ```
+
+> Note: `setup_lab.py` pushes the *initial* (bare-minimum) configs and is only
+> used once, before you start Section 4. For troubleshooting, always reset
+> with `apply_solution.py`, which pushes the full solution configs.
 
 ---
 
@@ -848,7 +853,7 @@ The overnight monitoring system flagged that Po1 on SW1 shows only one active me
 network team confirmed both physical cables between SW1 and SW2 are connected and the
 LEDs are lit.
 
-**Inject:** `python3 scripts/fault-injection/inject_scenario_01.py`
+**Inject:** `python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>`
 
 **Success criteria:** Both Gi0/1 and Gi0/2 show as `P` (bundled) in `show etherchannel summary`
 on both SW1 and SW2. Po1 line protocol is `up`.
@@ -898,39 +903,46 @@ SW1# show etherchannel summary
 The engineering team reports they cannot reach PC2 from any device in the campus. SW1's
 routing table shows no path to the VLAN 20 subnet.
 
-**Inject:** `python3 scripts/fault-injection/inject_scenario_02.py`
+**Inject:** `python3 scripts/fault-injection/inject_scenario_02.py --host <eve-ng-ip>`
 
-**Success criteria:** `show etherchannel summary` on SW1 shows Po2 as `SU` with both
-Gi0/3 and Gi1/0 as `P`. PC1 can ping PC2.
+**Success criteria:** `show etherchannel summary` on SW1 shows Po2 as `SU`; on SW2 shows
+Po3 as `SU`. Both Gi0/3 and Gi1/0 show as `P` on each bundle. PC1 can ping PC2.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
 ```bash
-! 1. Check bundle state on SW1
+! 1. Check bundle state on SW1 — Po2 will show SD or members suspended
 SW1# show etherchannel summary
-! Po2 likely shows 'SD' (standalone down) or members show 's' (suspended)
 
-! 2. Check PAgP neighbor
+! 2. Check bundle state on SW2 — Po3 is also down (SW3 has no uplinks at all)
+SW2# show etherchannel summary
+
+! 3. Check PAgP neighbor for Po2 — empty means SW3 is not sending PAgP
 SW1# show pagp 2 neighbor
-! If output is empty — no PAgP frames received from SW3
 
-! 3. Check SW3's EtherChannel config
+! 4. Check SW3's EtherChannel summary — both Po2 and Po3 will show SD
 SW3# show etherchannel summary
-! Look at the Protocol column — should show PAgP, not LACP or '-'
+! Protocol column shows LACP on Po2 members (should be PAgP)
+! Po3 members also show LACP (should be static '-')
 
-! 4. Verify mode on SW3 members
+! 5. Confirm the specific modes on SW3
 SW3# show run interface GigabitEthernet0/3
 SW3# show run interface GigabitEthernet1/0
-! If mode is 'active' (LACP) instead of 'auto' (PAgP), that is the mismatch
+! Po2 members show 'channel-group 2 mode active' — wrong protocol (LACP vs PAgP)
+SW3# show run interface GigabitEthernet0/1
+SW3# show run interface GigabitEthernet0/2
+! Po3 members show 'channel-group 3 mode passive' — wrong for static bundle
 ```
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-The fault is a protocol mismatch: SW3 member interfaces were set to LACP `active` while SW1
-is running PAgP `desirable`.
+The fault is on SW3: all EtherChannel members were reconfigured to LACP. Po2 fails because
+SW1 runs PAgP `desirable` and SW3 now runs LACP `active` (protocol mismatch). Po3 fails
+because SW2 runs static `on` and SW3 now runs LACP `passive` (neither forms a static bundle
+with an LACP peer). Restore both bundles on SW3.
 
 ```bash
 SW3(config)# interface GigabitEthernet0/3
@@ -939,10 +951,17 @@ SW3(config-if)# channel-group 2 mode auto
 SW3(config)# interface GigabitEthernet1/0
 SW3(config-if)# channel-group 2 mode auto
 
+SW3(config)# interface GigabitEthernet0/1
+SW3(config-if)# channel-group 3 mode on
+
+SW3(config)# interface GigabitEthernet0/2
+SW3(config-if)# channel-group 3 mode on
+
 ! Verify recovery
 SW1# show etherchannel summary
 SW1# show pagp 2 neighbor
-! Po2 must show SU; SW3 must appear as PAgP neighbor
+SW2# show etherchannel summary
+! Po2 and Po3 must both show SU on their respective switches
 ```
 </details>
 
@@ -953,43 +972,51 @@ SW1# show pagp 2 neighbor
 SW2's network team reports that SW3 is unreachable from the SW2 management SVI. PC2 is
 also not pingable from the campus.
 
-**Inject:** `python3 scripts/fault-injection/inject_scenario_03.py`
+**Inject:** `python3 scripts/fault-injection/inject_scenario_03.py --host <eve-ng-ip>`
 
-**Success criteria:** `show etherchannel summary` on SW2 shows Po3 as `SU` with both
-Gi0/3 and Gi1/0 as `P`. SW2 can ping SW3's management IP 192.168.99.3.
+**Success criteria:** `show etherchannel summary` on SW2 shows Po3 as `SU`; on SW1 shows
+Po2 as `SU`. SW2 can ping SW3's management IP 192.168.99.3. PC1 can ping PC2.
 
 <details>
 <summary>Click to view Diagnosis Steps</summary>
 
 ```bash
-! 1. Check bundle state
+! 1. Check bundle state on SW2 — Po3 shows SU (static 'on' bundles unconditionally)
+!    but SW3's side shows SD. Start on SW3 where the fault actually manifests.
 SW2# show etherchannel summary
-! Po3 likely shows 'SD' or members show 's'
 
-! 2. For a static bundle there is no protocol — check member consistency
-SW2# show interfaces Gi0/3 trunk
-SW2# show interfaces Gi1/0 trunk
-SW3# show interfaces Gi0/1 trunk
-SW3# show interfaces Gi0/2 trunk
-! Compare allowed VLAN lists on all four member interfaces
+! 2. Check bundle state on SW3 — Po2 and Po3 both SD (SW3 is fully isolated)
+SW3# show etherchannel summary
 
-! 3. Check channel-group mode
+! 3. Check SW1 — Po2 SD (Gi0/3 I, Gi1/0 I = stand-alone, not bundled)
+SW1# show etherchannel summary
+
+! 4. For Po3 (static bundle) check member mode consistency
 SW2# show run interface Gi0/3
 SW3# show run interface Gi0/1
-! Both must show 'channel-group 3 mode on'
-! If one side is 'mode active' or 'mode desirable', that is the mismatch
+! SW2 shows 'channel-group 3 mode on'; SW3 shows 'channel-group 3 mode passive'
+! Static 'on' vs LACP 'passive' — neither side negotiates, no bundle forms
 
-! 4. Check port-channel interface state
-SW2# show interfaces port-channel3
-! If 'line protocol is down' — no members are bundled
+! 5. For Po2 (PAgP bundle) check member mode on SW3
+SW1# show run interface Gi0/3
+SW3# show run interface Gi0/3
+! SW1 shows 'channel-group 2 mode desirable'; SW3 shows 'channel-group 2 mode passive'
+! LACP 'passive' vs PAgP 'desirable' — incompatible protocols, both sides go to SD/stand-alone
+
+! 6. Check port-channel interface states on SW3
+SW3# show interfaces port-channel2
+SW3# show interfaces port-channel3
+! Both 'line protocol is down' — confirms SW3 is completely isolated
 ```
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-The fault is a static/dynamic mode mismatch: SW3 Gi0/1 and Gi0/2 were changed to
-`channel-group 3 mode passive` (LACP), while SW2 is configured as `mode on` (static).
+The fault is on SW3: Po3 members were changed to LACP `passive` (mismatches SW2's static
+`on` — neither side negotiates, no bundle) and Po2 members were changed to LACP `passive`
+(mismatches SW1's PAgP `desirable` — incompatible protocols, both sides go SD). Restore both
+to their solution modes.
 
 ```bash
 SW3(config)# interface GigabitEthernet0/1
@@ -998,10 +1025,17 @@ SW3(config-if)# channel-group 3 mode on
 SW3(config)# interface GigabitEthernet0/2
 SW3(config-if)# channel-group 3 mode on
 
+SW3(config)# interface GigabitEthernet0/3
+SW3(config-if)# channel-group 2 mode auto
+
+SW3(config)# interface GigabitEthernet1/0
+SW3(config-if)# channel-group 2 mode auto
+
 ! Verify recovery
 SW2# show etherchannel summary
 SW2# ping 192.168.99.3
-! Po3 SU; management ping to SW3 succeeds
+SW1# show etherchannel summary
+! Po3 and Po2 both SU; management ping to SW3 succeeds
 ```
 </details>
 

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NETCONF edit-config payload — Create Loopback200
+  Target: running datastore
+  YANG model: ietf-interfaces (RFC 7223)
+  Use: m.edit_config(target="running", config=open("loopback200_config.xml").read())
+-->
+<config>
+  <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+    <interface>
+      <name>Loopback200</name>
+      <description>Created via NETCONF</description>
+      <type xmlns:ianaift="urn:ietf:params:xml:ns:yang:iana-if-type">
+        ianaift:softwareLoopback
+      </type>
+      <enabled>true</enabled>
+      <ipv4 xmlns="urn:ietf:params:xml:ns:yang:ietf-ip">
+        <address>
+          <ip>10.200.200.1</ip>
+          <prefix-length>32</prefix-length>
+        </address>
+      </ipv4>
+    </interface>
+  </interfaces>
+</config>

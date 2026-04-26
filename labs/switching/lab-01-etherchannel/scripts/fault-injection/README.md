@@ -1,55 +1,67 @@
-# Fault Injection — Switching Lab 01
+# Fault Injection -- Switching Lab 01: Static and Dynamic EtherChannels
 
 Each script injects one fault. Work through the corresponding ticket in
 `workbook.md` Section 9 before looking at the solution.
 
 ## Prerequisites
 
-- EVE-NG lab must be running with all nodes started
-- All nodes accessible via their EVE-NG console ports (telnet to `<eve-ng-ip>:<dynamic-port>`)
-- Python 3.x installed
-- `netmiko` library installed (`pip install netmiko`)
-- Update `EVE_NG_HOST` in each script to match your EVE-NG server IP
+- EVE-NG lab `switching/lab-01-etherchannel.unl` imported and **STARTED**
+- EVE-NG REST credentials are admin/eve (the default)
+- `pip install -r requirements.txt` (installs `netmiko` + `requests`)
 
-## Inject a Fault
+Console ports are discovered automatically via the EVE-NG REST API -- no need
+to edit port numbers in any script.
 
-```bash
-python3 inject_scenario_01.py   # Ticket 1
-python3 inject_scenario_02.py   # Ticket 2
-python3 inject_scenario_03.py   # Ticket 3
-```
-
-## Restore
+## Standard Workflow
 
 ```bash
-python3 apply_solution.py
+# 1. Reset to known-good solution state
+python3 apply_solution.py --host <eve-ng-ip>
+
+# 2. Inject one scenario at a time
+python3 inject_scenario_01.py --host <eve-ng-ip>   # Ticket 1 -- Po1 member individual (SW2 native VLAN)
+python3 inject_scenario_02.py --host <eve-ng-ip>   # Ticket 2 -- Po2 down (SW3 PAgP/LACP mismatch)
+python3 inject_scenario_03.py --host <eve-ng-ip>   # Ticket 3 -- Po3 down (SW3 static/LACP mismatch)
+
+# 3. Between tickets, restore solution
+python3 apply_solution.py --host <eve-ng-ip>
 ```
 
-`apply_solution.py` removes all injected faults and returns all affected devices
-to their known-good state. Run it between tickets to reset the lab.
+## Arguments
 
-## Scenario Reference
+All scripts accept the same base arguments:
 
-| Script | Target | Ticket |
-|--------|--------|--------|
-| `inject_scenario_01.py` | SW2 | Ticket 1 — workbook.md Section 9 |
-| `inject_scenario_02.py` | SW3 | Ticket 2 — workbook.md Section 9 |
-| `inject_scenario_03.py` | SW3 | Ticket 3 — workbook.md Section 9 |
+- `--host <ip>` (required): EVE-NG server IP
+- `--lab-path <path>`: Path of the .unl on EVE-NG (default:
+  `switching/lab-01-etherchannel.unl`). Override if you imported the lab
+  to a different folder.
 
-## Recommended Workflow
+Inject scripts additionally accept:
 
-```bash
-# Reset to known-good, then inject one ticket at a time
-python3 ../../setup_lab.py --host <eve-ng-ip>              # full reset (optional)
-python3 scripts/fault-injection/inject_scenario_01.py      # Ticket 1
-# ... diagnose and fix using show commands only ...
-python3 scripts/fault-injection/apply_solution.py          # restore before next ticket
+- `--skip-preflight`: Bypass the sanity check that confirms the target is
+  currently in the expected solution state. Use only if you know what you're
+  doing.
 
-python3 scripts/fault-injection/inject_scenario_02.py      # Ticket 2
-# ... diagnose and fix ...
-python3 scripts/fault-injection/apply_solution.py
+## Why the pre-flight check?
 
-python3 scripts/fault-injection/inject_scenario_03.py      # Ticket 3
-# ... diagnose and fix ...
-python3 scripts/fault-injection/apply_solution.py
-```
+Injecting a fault on top of a device that's already broken (or not yet
+configured) usually produces confusing symptoms. Each inject script first
+reads `show running-config interface <target>` and verifies the expected
+solution-state config is present. If not, it stops with a clear error
+pointing you at `apply_solution.py`.
+
+## Fault matrix
+
+| Scenario | Target | Pre-flight check | Fault |
+|----------|--------|------------------|-------|
+| 01 | SW2 Gi0/2 | `native vlan 99` present | Change native VLAN to 1 -- LACP member falls out of bundle |
+| 02 | SW3 Gi0/3 | `channel-group 2 mode auto` present | Switch to LACP active -- Po2 cannot form |
+| 03 | SW3 Gi0/1 | `channel-group 3 mode on` present | Switch to LACP passive -- Po3 cannot form |
+
+## Exit codes
+
+- `0` success
+- `1` at least one device failed to restore (apply_solution.py only)
+- `2` missing `--host`
+- `3` EVE-NG API error (lab not running, auth failed, node not found)
+- `4` pre-flight check failed (target not in expected state)

@@ -1,0 +1,44 @@
+topic: automation
+lab: lab-02-netconf
+title: "NETCONF Configuration and Verification"
+blueprint_refs: ["4.6"]
+difficulty: Intermediate
+type: progressive
+
+created:
+  date: "2026-04-19"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler
+  skill_version: "2026-04-19"
+  files:
+    - workbook.md
+    - setup_lab.py
+    - topology/topology.drawio
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+    - solutions/scripts/netconf_get_config.py
+    - solutions/scripts/netconf_create_loopback.py
+    - solutions/scripts/netconf_get_ospf.py
+    - solutions/scripts/netconf_candidate.py
+    - solutions/xml/loopback200_config.xml
+    - solutions/xml/ospf_neighbor_filter.xml
+
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    skill_version: "2026-04-19"
+    files:
+      - scripts/fault-injection/inject_scenario_01.py
+      - scripts/fault-injection/inject_scenario_02.py
+      - scripts/fault-injection/inject_scenario_03.py
+      - scripts/fault-injection/apply_solution.py
+      - scripts/fault-injection/README.md

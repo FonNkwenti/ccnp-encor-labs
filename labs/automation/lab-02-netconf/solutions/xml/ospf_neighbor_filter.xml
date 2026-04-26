@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  NETCONF get RPC filter — OSPF Neighbor Operational Data
+  YANG model: Cisco-IOS-XE-ospf-oper
+  Namespace: http://cisco.com/ns/yang/Cisco-IOS-XE-ospf-oper
+  IOS-XE version: 17.03.05 (CSR1000v)
+
+  NOTE: The ospf-oper-data path may differ on other IOS-XE versions.
+  Use get-schema to retrieve the module on your device:
+    m.get_schema("Cisco-IOS-XE-ospf-oper")
+-->
+<filter type="subtree">
+  <ospf-oper-data xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-ospf-oper">
+    <ospf-state>
+      <ospf-instance>
+        <ospf-area>
+          <ospf-interface>
+            <ospf-neighbor/>
+          </ospf-interface>
+        </ospf-area>
+      </ospf-instance>
+    </ospf-state>
+  </ospf-oper-data>
+</filter>

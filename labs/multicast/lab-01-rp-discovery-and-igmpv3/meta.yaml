@@ -1,0 +1,44 @@
+topic: multicast
+lab_number: 1
+folder: lab-01-rp-discovery-and-igmpv3
+title: "RP Discovery Mechanisms and IGMPv3"
+type: progressive
+difficulty: Intermediate
+time_minutes: 75
+clean_slate: false
+extends: lab-00-pim-sm-and-igmp
+initial_configs_source: lab-00-pim-sm-and-igmp/solutions (verbatim)
+blueprint_refs:
+  - "3.3.d"
+devices:
+  - R1
+  - R2
+  - R3
+  - PC1
+  - PC2
+objectives:
+  - Replace static RP with Auto-RP (R2 candidate RP, R1/R3 Mapping Agents)
+  - Verify Auto-RP control-plane with show ip pim rp mapping and show ip pim autorp
+  - Migrate RP discovery from Auto-RP to BSR (R2 bsr-candidate + rp-candidate)
+  - Compare Auto-RP (proprietary) vs BSR (standards-based) behavior
+  - Upgrade R3 receiver interface (Gi0/2) to IGMPv3
+  - Configure ip igmp join-group on R3 Gi0/2 so R3 itself acts as receiver
+  - Verify end-to-end multicast forwarding (*,G) and (S,G) with SPT switchover
+end_state:
+  rp_discovery: BSR (carries into lab-03 capstone)
+  rp: 2.2.2.2 (R2 Loopback0)
+  igmp_version_on_receiver_lan: 3
+  static_joins:
+    R3 Gi0/2: 239.1.1.1
+created:
+  date: "2026-04-18"
+  agent: claude-opus-4-7
+  skill: lab-assembler
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    note: fault-injection audit fix — corrected inject scripts and workbook success criteria
+    files:
+      - scripts/fault-injection/inject_scenario_02.py
+      - workbook.md

@@ -1,0 +1,13 @@
+lab:
+  number: 1
+  folder: lab-01-nat-pat
+  title: "Static NAT, Dynamic NAT, and PAT"
+  topic: ip-services
+  difficulty: Foundation
+  type: progressive
+  time_minutes: 75
+  devices: [R1, R2, R3, SW-LAN, PC1, PC2]
+  blueprint_refs:
+    - "3.3.b"
+  initial_configs_source: lab-00-ntp-and-qos/solutions
+  clean_slate: false

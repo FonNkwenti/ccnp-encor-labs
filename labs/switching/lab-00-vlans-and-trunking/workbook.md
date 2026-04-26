@@ -52,6 +52,7 @@ A trunk carries frames from multiple VLANs over a single physical link by insert
 allowing up to 4094 VLANs.
 
 Key trunk parameters:
+
 - **Native VLAN** — frames on the native VLAN are sent **untagged** across the trunk. Both
   ends must agree on the native VLAN or a mismatch occurs (CDP will warn about this).
 - **Allowed VLANs** — by default, a trunk carries all VLANs (1-4094). Best practice is to
@@ -170,6 +171,7 @@ segment the network into VLANs for the Sales, Engineering, and Management teams,
 hosts in different VLANs can communicate through R1.
 
 The security team requires that:
+
 - All trunks use a dedicated native VLAN (not VLAN 1)
 - Trunks carry only the VLANs that are needed
 - DTP is disabled on production trunks after initial testing
@@ -236,6 +238,7 @@ The security team requires that:
 ### What IS pre-loaded (initial-configs/)
 
 Each device starts with only:
+
 - Hostname set
 - DNS lookup disabled
 - Console and VTY line settings (logging synchronous, no exec timeout)
@@ -261,11 +264,13 @@ python3 setup_lab.py --host <eve-ng-ip>
 After loading initial configs, configure the VPCs interactively:
 
 **PC1:**
+
 ```
 ip 192.168.10.10 255.255.255.0 192.168.10.1
 ```
 
 **PC2:**
+
 ```
 ip 192.168.20.10 255.255.255.0 192.168.20.1
 ```
@@ -680,6 +685,7 @@ interface Vlan99
  ip address 192.168.99.1 255.255.255.0
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -748,6 +754,7 @@ interface Vlan99
  ip address 192.168.99.2 255.255.255.0
  no shutdown
 ```
+
 </details>
 
 <details>
@@ -816,6 +823,7 @@ interface Vlan99
  ip address 192.168.99.3 255.255.255.0
  no shutdown
 ```
+
 </details>
 
 ### Tasks 5-6: Router-on-a-Stick
@@ -854,6 +862,7 @@ interface GigabitEthernet0/0.99
 interface Loopback0
  ip address 1.1.1.1 255.255.255.255
 ```
+
 </details>
 
 <details>
@@ -876,6 +885,7 @@ SW3# show interfaces trunk
 ! R1 sub-interface status
 R1# show ip interface brief
 ```
+
 </details>
 
 ---
@@ -888,10 +898,15 @@ diagnose and fix using only show commands.
 ### Workflow
 
 ```bash
-python3 setup_lab.py --host <eve-ng-ip>                          # reset to known-good
-python3 scripts/fault-injection/inject_scenario_01.py            # Ticket 1
-python3 scripts/fault-injection/apply_solution.py                # restore
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # reset to known-good solution
+python3 scripts/fault-injection/inject_scenario_01.py --host <eve-ng-ip>  # inject Ticket 1 fault
+# diagnose and fix using show commands
+python3 scripts/fault-injection/apply_solution.py --host <eve-ng-ip>   # restore between tickets
 ```
+
+> Note: `setup_lab.py` pushes the _initial_ (bare-minimum) configs and is only
+> used once, before you start Section 4. For troubleshooting, always reset with
+> `apply_solution.py`, which pushes the full solution configs.
 
 ---
 
@@ -911,24 +926,24 @@ A junior engineer reports that PC1 (VLAN 10, 192.168.10.10) can ping its default
 2. From PC1: `ping 192.168.10.1` — succeeds (gateway reachable, VLAN 10 is fine).
 3. From R1: `ping 192.168.20.10` — fails (R1 cannot reach PC2 either).
 4. From R1: `show ip interface brief` — check if Gi0/0.20 is up/up with correct IP.
-5. On SW1: `show interfaces trunk` — check "Vlans allowed on trunk" for Gi0/3 and Gi1/0 (links to SW3). If VLAN 20 is missing from allowed list on the SW1-SW3 trunk, VLAN 20 traffic cannot reach SW3.
-6. On SW3: `show interfaces trunk` — confirm the same VLAN is missing from the SW3 side.
+5. On SW1: `show interfaces trunk` — check "Vlans allowed on trunk" for all four switch-facing ports (Gi0/1, Gi0/2, Gi0/3, Gi1/0). VLAN 20 is missing from the allowed list on all of them. R1 delivers VLAN 20 frames to SW1 via Gi0/0 (unaffected), but SW1 cannot forward VLAN 20 to either SW2 or SW3 — all egress paths are blocked.
+6. On SW2 and SW3: `show interfaces trunk` — both show VLAN 20 allowed on their ports; the restriction is entirely on SW1's switch-facing trunks.
+
 </details>
 
 <details>
 <summary>Click to view Fix</summary>
 
-The fault is a missing VLAN in the trunk allowed list on the SW1-SW3 links. VLAN 20 was
-removed from the allowed VLAN list on SW1's Gi0/3 and Gi1/0 (and/or SW3's Gi0/3 and Gi1/0).
+The fault is a missing VLAN in the trunk allowed list on **SW1's** four switch-facing
+trunks (Gi0/1, Gi0/2, Gi0/3, Gi1/0). VLAN 20 was removed from all of them, blocking every
+path from R1 through SW1 to the access layer. Restore VLAN 20 on all four ports.
 
 ```bash
 ! SW1
-interface GigabitEthernet0/3
+interface GigabitEthernet0/1
  switchport trunk allowed vlan 10,20,30,99
-interface GigabitEthernet1/0
+interface GigabitEthernet0/2
  switchport trunk allowed vlan 10,20,30,99
-
-! SW3 (if also affected)
 interface GigabitEthernet0/3
  switchport trunk allowed vlan 10,20,30,99
 interface GigabitEthernet1/0
@@ -957,6 +972,7 @@ lost.
 2. On SW1: `show interfaces trunk` — compare. SW1 side will show native VLAN 99 while the SW2 side shows VLAN 1 (or vice versa).
 3. Identify which interface(s) have the wrong native VLAN.
 4. Check for missing `switchport trunk native vlan 99` on the affected port.
+
 </details>
 
 <details>
@@ -972,11 +988,13 @@ interface GigabitEthernet0/1
 ```
 
 Verify:
+
 ```bash
 SW2# show interfaces trunk
 ! Native VLAN column must show 99 on all trunk ports
 ! Wait 60 seconds — no more CDP mismatch syslog messages
 ```
+
 </details>
 
 ---
@@ -997,6 +1015,7 @@ PC2 cannot ping its own gateway. The physical link light is green.
 2. On SW3: `show vlan brief` — verify which ports are in which VLAN.
 3. On R1: `show ip interface brief` — confirm Gi0/0.20 has 192.168.20.1 and is up/up.
 4. If the VLAN assignment is wrong, the fix is straightforward.
+
 </details>
 
 <details>
@@ -1012,6 +1031,7 @@ interface GigabitEthernet1/1
 ```
 
 Verify:
+
 ```bash
 SW3# show interfaces Gi1/1 switchport
 ! Access Mode VLAN: 20 (ENGINEERING)
@@ -1022,6 +1042,7 @@ PC2> ping 192.168.20.1
 PC2> ping 192.168.10.10
 ! Should succeed (cross-VLAN via R1)
 ```
+
 </details>
 
 ---
@@ -1030,20 +1051,20 @@ PC2> ping 192.168.10.10
 
 ### Core Implementation
 
-- [ ] VLANs 10, 20, 30, 99 created and named on all three switches
-- [ ] All inter-switch links configured as 802.1Q trunks
-- [ ] Native VLAN 99 set on every trunk
-- [ ] Allowed VLANs restricted to 10, 20, 30, 99 on every trunk
-- [ ] DTP disabled (`switchport nonegotiate`) on all trunk ports
-- [ ] PC1 access port (SW2 Gi1/1) in VLAN 10
-- [ ] PC2 access port (SW3 Gi1/1) in VLAN 20
-- [ ] R1 sub-interfaces configured for VLANs 10, 20, 30, 99
-- [ ] Management SVIs configured on SW1 (.99.1), SW2 (.99.2), SW3 (.99.3)
-- [ ] PC1 can ping PC2 across VLANs (via R1)
-- [ ] Switches can ping each other over VLAN 99
+- [x] VLANs 10, 20, 30, 99 created and named on all three switches
+- [x] All inter-switch links configured as 802.1Q trunks
+- [x] Native VLAN 99 set on every trunk
+- [x] Allowed VLANs restricted to 10, 20, 30, 99 on every trunk
+- [x] DTP disabled (`switchport nonegotiate`) on all trunk ports
+- [x] PC1 access port (SW2 Gi1/1) in VLAN 10
+- [x] PC2 access port (SW3 Gi1/1) in VLAN 20
+- [x] R1 sub-interfaces configured for VLANs 10, 20, 30, 99
+- [x] Management SVIs configured on SW1 (.99.1), SW2 (.99.2), SW3 (.99.3)
+- [x] PC1 can ping PC2 across VLANs (via R1)
+- [x] Switches can ping each other over VLAN 99
 
 ### Troubleshooting
 
-- [ ] Ticket 1 — Diagnosed and fixed missing allowed VLAN on trunk
-- [ ] Ticket 2 — Diagnosed and fixed native VLAN mismatch
-- [ ] Ticket 3 — Diagnosed and fixed incorrect access VLAN assignment
+- [x] Ticket 1 — Diagnosed and fixed missing allowed VLAN on trunk
+- [x] Ticket 2 — Diagnosed and fixed native VLAN mismatch
+- [x] Ticket 3 — Diagnosed and fixed incorrect access VLAN assignment

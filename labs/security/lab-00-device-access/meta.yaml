@@ -1,0 +1,34 @@
+lab: security/lab-00-device-access
+title: "Lines, Local Users, and SSH Hardening"
+blueprint_refs: ["5.1", "5.1.a"]
+type: progressive
+clean_slate: false
+
+created:
+  date: "2026-04-19"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler
+  skill_version: "2026-04-19"
+  files:
+    - workbook.md
+    - setup_lab.py
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - initial-configs/SW1.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/SW1.cfg
+    - solutions/PC1.vpc
+    - solutions/PC2.vpc
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+    - topology/topology.drawio
+
+updated: []

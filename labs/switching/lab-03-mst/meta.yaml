@@ -1,0 +1,30 @@
+# Auto-generated — do not edit manually. Use /tag-lab to stamp external agent runs.
+lab: lab-03-mst
+chapter: switching
+created:
+  date: "2026-04-14"
+  agent: claude-opus-4-6
+  skill: lab-assembler
+  skill_version: "2026-04-13"
+  files:
+    - workbook.md
+    - setup_lab.py
+    - initial-configs/SW1.cfg
+    - initial-configs/SW2.cfg
+    - initial-configs/SW3.cfg
+    - initial-configs/R1.cfg
+    - initial-configs/PC1.vpc
+    - initial-configs/PC2.vpc
+    - solutions/SW1.cfg
+    - solutions/SW2.cfg
+    - solutions/SW3.cfg
+    - solutions/R1.cfg
+    - topology/topology.drawio
+    - topology/lab-03-mst.unl
+    - topology/lab-03-mst.zip
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+updated: []

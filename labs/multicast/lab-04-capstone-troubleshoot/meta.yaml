@@ -1,0 +1,70 @@
+topic: multicast
+lab_number: 4
+folder: lab-04-capstone-troubleshoot
+title: "Multicast Comprehensive Troubleshooting -- Capstone II"
+type: capstone_ii
+difficulty: Advanced
+time_minutes: 120
+clean_slate: true
+initial_configs_source: >
+  Full lab-03 Capstone I end-state (complete multicast stack: PIM-SM, BSR RP
+  discovery, SSM, Bidir, MSDP, bsr-border fencing) with six faults baked in
+  across R2, R3, and R4. The student diagnoses symptoms from `show` output
+  alone and restores each fault in place.
+blueprint_refs:
+  - "3.3.d"
+devices:
+  - R1
+  - R2
+  - R3
+  - R4
+  - PC1
+  - PC2
+objectives:
+  - Diagnose a missing PIM adjacency from `show ip pim neighbor` and restore
+    sparse-mode on the affected interface
+  - Recognise an empty RP mapping for one group range while another range
+    still works, and restore the missing rp-candidate advertisement
+  - Identify a unicast static-route override that breaks multicast RPF
+    (OSPF healthy but RPF points the wrong way)
+  - Diagnose a missing IGMPv3 static-group as the cause of no `(S,G)` state
+    for an SSM group range
+  - Troubleshoot an MSDP peering failure caused by a wrong peer IP (Inactive
+    / Listen states, empty SA cache)
+  - Detect a PIM-domain border leak (BSR messages and RP mappings from the
+    foreign domain appearing on the isolated router) and restore
+    `ip pim bsr-border` on both ends of the affected inter-domain link
+  - Apply systematic multicast troubleshooting methodology: verify layers
+    from `ip multicast-routing` up through RPF, RP mapping, IGMP, and MSDP
+  - Confirm end-state: ASM, SSM, and Bidir forwarding all working
+    simultaneously with PC1-to-PC2 as source/receiver
+fault_scenarios:
+  - fault_01: "R3 has `ip mroute 10.1.1.0 255.255.255.0 4.4.4.4` -- populates the multicast-only RPF table so RPF for PC1 source points out Gi0/3 toward R4, while unicast routing (OSPF) stays healthy; `show ip rpf 10.1.1.10` returns Gi0/3 with RPF type `mroute`; 0 packets forwarded"
+  - fault_02: "R2 Gi0/1 missing `ip pim sparse-mode` -- R2-R3 PIM adjacency on L2 never forms; OSPF on the segment stays healthy"
+  - fault_03: "R2 missing `ip pim rp-candidate Loopback0 group-list ASM_GROUPS` -- BSR elected but no RP for 239.1.1.0/24; Bidir range still works"
+  - fault_04: "R3 Gi0/2 missing `ip igmp static-group 232.1.1.1 source 10.1.1.10` -- no `(S,G)` forms for SSM; `show ip igmp groups 232.1.1.1 detail` empty"
+  - fault_05: "R4 `ip msdp peer 2.2.2.200 connect-source Loopback0` (should be 2.2.2.2) -- TCP session never establishes; R4 SA cache empty, R2 peer in Listen state"
+  - fault_06: "Both R2 Gi0/2 AND R4 Gi0/0 missing `ip pim bsr-border` -- BSR messages leak across L6 into R4's domain; R4 `show ip pim bsr-router` shows 2.2.2.2 and BSR-learned mappings override R4's static RP for 239.x ranges"
+ticket_order:
+  - "Ticket 1: R2-R3 PIM adjacency missing (Fault 2)"
+  - "Ticket 2: No ASM RP mapping (Fault 3)"
+  - "Ticket 3: ASM packets dropped by RPF (Fault 1)"
+  - "Ticket 4: No (S,G) for SSM (Fault 4)"
+  - "Ticket 5: MSDP peer Inactive (Fault 5)"
+  - "Ticket 6: BSR leak into R4's domain (Fault 6)"
+end_state:
+  identical_to: labs/multicast/lab-03-capstone-config/solutions/
+  rp_primary: 2.2.2.2 (R2 Lo0 -- BSR RP for 239.1.1.0/24 ASM + 239.2.2.0/24 Bidir)
+  rp_secondary: 4.4.4.4 (R4 Lo0 -- static RP for its own single-router PIM domain)
+  rp_discovery_main_domain: BSR
+  pim_domain_border: R2 Gi0/2, R3 Gi0/3, R4 Gi0/0, R4 Gi0/1
+  ssm_range: 232.1.1.0/24
+  bidir_range: 239.2.2.0/24
+  asm_range: 239.1.1.0/24
+  igmp_version_on_receiver_lan: 3
+  msdp_peers:
+    - R2 Lo0 (2.2.2.2) <-> R4 Lo0 (4.4.4.4)
+created:
+  date: "2026-04-18"
+  agent: claude-opus-4-7
+  skill: lab-assembler

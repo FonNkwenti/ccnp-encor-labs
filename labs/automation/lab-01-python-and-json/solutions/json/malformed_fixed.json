@@ -1,0 +1,24 @@
+{
+  "_note": "Corrected versions of the four malformed JSON snippets from Task 5",
+
+  "snippet_a_fixed": {
+    "name": "Loopback0",
+    "enabled": true
+  },
+
+  "snippet_b_fixed": {
+    "name": "Gi1",
+    "type": "ethernetCsmacd"
+  },
+
+  "snippet_c_fixed": {
+    "name": "Gi2",
+    "enabled": false,
+    "description": null
+  },
+
+  "snippet_d_fixed": {
+    "name": "Loopback1",
+    "prefix-length": 32
+  }
+}

@@ -14,3 +14,19 @@
 __pycache__/
 **/__pycache__/
 .envrc
+
+# Local Claude Code / IDE settings — per-user, not repo-wide
+**/.claude/settings.local.json
+
+# Junction links to .agent/skills/ (created by scripts/register-skills.py)
+# Per-machine artifact — not committed.
+**/.claude/skills/
+
+# Scratch/reference drawio at repo root (not a committed lab asset)
+/style-guide-reference.drawio
+
+# Telemetry logs (large, machine-generated — gitignored by default)
+logs/telemetry.jsonl
+logs/telemetry-errors.log
+logs/_spike-*.json
+logs/_spike-*.txt

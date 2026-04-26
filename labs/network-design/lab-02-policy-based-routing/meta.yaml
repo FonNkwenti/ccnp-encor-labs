@@ -1,0 +1,26 @@
+# Auto-generated — do not edit manually. Use /tag-lab to stamp external agent runs.
+lab: lab-02-policy-based-routing
+chapter: network-design
+created:
+  date: "2026-04-22"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler
+  skill_version: "2026-04-21"
+  format: standard
+  files:
+    - workbook.md
+    - topology.drawio
+    - setup_lab.py
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - scripts/fault-injection/inject_scenario_01.py
+    - scripts/fault-injection/inject_scenario_02.py
+    - scripts/fault-injection/inject_scenario_03.py
+    - scripts/fault-injection/apply_solution.py
+    - scripts/fault-injection/README.md
+    - meta.yaml
+updated: []

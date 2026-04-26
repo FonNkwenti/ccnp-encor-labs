@@ -328,9 +328,8 @@ ip_addressing:
 #         2001:db8:ff::<router-id>/128 for loopbacks
 #         Link-local: fe80::<router-number> on all interfaces
 #
+# link_local convention: fe80::<router-number> on all interfaces (e.g., R1 = fe80::1)
 ipv6_addressing:
-  link_local_convention: "fe80::<router-number> on all interfaces (e.g., R1 = fe80::1)"
-
   # Area 0 — broadcast segment
   - network: "2001:db8:0:123::/64"
     area: 0

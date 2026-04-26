@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<lab name="lab-03-mst" version="1" scripttimeout="300" lock="0" author="gen_unl.py">
+  <description>Auto-generated from baseline.yaml by gen_unl.py for lab 'lab-03-mst'.</description>
+  <topology>
+    <nodes>
+      <node id="1" name="SW1" type="qemu" template="viosl2" image="viosl2-2020" console="telnet" cpu="1" cpulimit="0" ram="768" ethernet="8" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Switch-2D-L3-Generic-S.svg" uuid="820b6af3-bf84-4749-877e-c696a589c29e" config="0" left="200" top="420">
+        <interface id="0" name="Gi0/0" type="ethernet" network_id="1" />
+        <interface id="1" name="Gi0/1" type="ethernet" network_id="2" />
+        <interface id="2" name="Gi0/2" type="ethernet" network_id="3" />
+        <interface id="3" name="Gi0/3" type="ethernet" network_id="4" />
+        <interface id="4" name="Gi1/0" type="ethernet" network_id="5" />
+      </node>
+      <node id="2" name="SW2" type="qemu" template="viosl2" image="viosl2-2020" console="telnet" cpu="1" cpulimit="0" ram="768" ethernet="8" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Switch-2D-L3-Generic-S.svg" uuid="620e8fba-0686-4a85-9202-0894949ea85d" config="0" left="500" top="420">
+        <interface id="1" name="Gi0/1" type="ethernet" network_id="2" />
+        <interface id="2" name="Gi0/2" type="ethernet" network_id="3" />
+        <interface id="3" name="Gi0/3" type="ethernet" network_id="6" />
+        <interface id="4" name="Gi1/0" type="ethernet" network_id="7" />
+        <interface id="5" name="Gi1/1" type="ethernet" network_id="8" />
+      </node>
+      <node id="3" name="SW3" type="qemu" template="viosl2" image="viosl2-2020" console="telnet" cpu="1" cpulimit="0" ram="768" ethernet="8" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Switch-2D-L3-Generic-S.svg" uuid="7d08d5fa-09f9-4f9b-be9d-1520bd691a02" config="0" left="800" top="420">
+        <interface id="1" name="Gi0/1" type="ethernet" network_id="6" />
+        <interface id="2" name="Gi0/2" type="ethernet" network_id="7" />
+        <interface id="3" name="Gi0/3" type="ethernet" network_id="4" />
+        <interface id="4" name="Gi1/0" type="ethernet" network_id="5" />
+        <interface id="5" name="Gi1/1" type="ethernet" network_id="9" />
+      </node>
+      <node id="4" name="R1" type="qemu" template="vios" image="vios-159-3" console="telnet" cpu="1" cpulimit="0" ram="512" ethernet="4" qemu_options="-machine type=pc,accel=kvm -serial mon:stdio -nographic -no-user-config -nodefaults -rtc base=utc -cpu host" qemu_version="2.4.0" qemu_arch="x86_64" delay="0" icon="Router-2D-Gen-White-S.svg" uuid="706ec8ec-72fa-48b2-a8da-9c9d05134b33" config="0" left="200" top="80">
+        <interface id="0" name="Gi0/0" type="ethernet" network_id="1" />
+      </node>
+      <node id="5" name="PC1" type="vpcs" template="vpcs" image="" ethernet="1" delay="0" icon="PC-2D-Desktop-Generic-S.svg" config="0" left="200" top="700">
+        <interface id="0" name="eth0" type="ethernet" network_id="8" />
+      </node>
+      <node id="6" name="PC2" type="vpcs" template="vpcs" image="" ethernet="1" delay="0" icon="PC-2D-Desktop-Generic-S.svg" config="0" left="500" top="700">
+        <interface id="0" name="eth0" type="ethernet" network_id="9" />
+      </node>
+    </nodes>
+    <networks>
+      <network id="1" type="bridge" name="Net-L1" left="200" top="250" visibility="0" icon="lan.png" />
+      <network id="2" type="bridge" name="Net-L2" left="350" top="420" visibility="0" icon="lan.png" />
+      <network id="3" type="bridge" name="Net-L3" left="350" top="420" visibility="0" icon="lan.png" />
+      <network id="4" type="bridge" name="Net-L4" left="500" top="420" visibility="0" icon="lan.png" />
+      <network id="5" type="bridge" name="Net-L5" left="500" top="420" visibility="0" icon="lan.png" />
+      <network id="6" type="bridge" name="Net-L6" left="650" top="420" visibility="0" icon="lan.png" />
+      <network id="7" type="bridge" name="Net-L7" left="650" top="420" visibility="0" icon="lan.png" />
+      <network id="8" type="bridge" name="Net-L8" left="350" top="560" visibility="0" icon="lan.png" />
+      <network id="9" type="bridge" name="Net-L9" left="650" top="560" visibility="0" icon="lan.png" />
+    </networks>
+  </topology>
+</lab>

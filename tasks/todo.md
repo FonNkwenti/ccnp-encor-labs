@@ -28,80 +28,80 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 ### 1. switching (6 labs)
 - [x] lab-00-vlans-and-trunking (built during test run)
 - [x] lab-01-etherchannel
-- [ ] lab-02-rstp
-- [ ] lab-03-mst
-- [ ] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-02-rstp
+- [x] lab-03-mst
+- [x] lab-04-capstone-config
+- [x] lab-05-capstone-troubleshoot
 
 ### 2. ospf (7 labs)
 - [x] lab-00-single-area-ospfv2 (built during test run)
-- [ ] lab-01-multi-area-ospfv2
-- [ ] lab-02-network-types
-- [ ] lab-03-area-types
-- [ ] lab-04-summarization-filtering
-- [ ] lab-05-capstone-config
-- [ ] lab-06-capstone-troubleshoot
+- [x] lab-01-multi-area-ospfv2
+- [x] lab-02-network-types
+- [x] lab-03-area-types
+- [x] lab-04-summarization-filtering
+- [x] lab-05-capstone-config
+- [x] lab-06-capstone-troubleshoot
 
 ### 3. eigrp (5 labs)
-- [ ] lab-00-classic-eigrp
-- [ ] lab-01-named-mode-dual-stack
-- [ ] lab-02-stub-summarization-variance
-- [ ] lab-03-capstone-config
-- [ ] lab-04-capstone-troubleshoot
+- [x] lab-00-classic-eigrp
+- [x] lab-01-named-mode-dual-stack
+- [x] lab-02-stub-summarization-variance
+- [x] lab-03-capstone-config
+- [x] lab-04-capstone-troubleshoot
 
 ### 4. bgp (5 labs)
-- [ ] lab-00-ebgp-peering
-- [ ] lab-01-ibgp-and-dual-stack
-- [ ] lab-02-best-path-selection
-- [ ] lab-03-capstone-config
-- [ ] lab-04-capstone-troubleshoot
+- [x] lab-00-ebgp-peering
+- [x] lab-01-ibgp-and-dual-stack
+- [x] lab-02-best-path-selection
+- [x] lab-03-capstone-config
+- [x] lab-04-capstone-troubleshoot
 
 ### 5. ip-services (6 labs)
-- [ ] lab-00-ntp-and-qos
-- [ ] lab-01-nat-pat
-- [ ] lab-02-hsrp
-- [ ] lab-03-vrrp-dual-stack
-- [ ] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-00-ntp-and-qos
+- [x] lab-01-nat-pat
+- [x] lab-02-hsrp
+- [x] lab-03-vrrp-dual-stack
+- [x] lab-04-capstone-config
+- [x] lab-05-capstone-troubleshoot
 
 ### 6. multicast (5 labs)
-- [ ] lab-00-pim-sm-and-igmp
-- [ ] lab-01-rp-discovery-and-igmpv3
-- [ ] lab-02-ssm-bidir-msdp
-- [ ] lab-03-capstone-config
-- [ ] lab-04-capstone-troubleshoot
+- [x] lab-00-pim-sm-and-igmp
+- [x] lab-01-rp-discovery-and-igmpv3
+- [x] lab-02-ssm-bidir-msdp
+- [x] lab-03-capstone-config
+- [x] lab-04-capstone-troubleshoot
 
 ### 7. virtualization (6 labs)
-- [ ] lab-00-vrf-lite
-- [ ] lab-01-vrf-dual-stack
-- [ ] lab-02-gre-tunnels
-- [ ] lab-03-ipsec-and-gre-over-ipsec
-- [ ] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-00-vrf-lite
+- [x] lab-01-vrf-dual-stack
+- [x] lab-02-gre-tunnels
+- [x] lab-03-ipsec-and-gre-over-ipsec
+- [x] lab-04-capstone-config
+- [x] lab-05-capstone-troubleshoot
 
 ### 8. network-assurance (6 labs)
-- [ ] lab-00-diagnostics
-- [ ] lab-01-flexible-netflow
-- [ ] lab-02-span-rspan
-- [ ] lab-03-ip-sla
-- [ ] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-00-diagnostics
+- [x] lab-01-flexible-netflow
+- [x] lab-02-span-rspan
+- [x] lab-03-ip-sla
+- [x] lab-04-capstone-config
+- [x] lab-05-capstone-troubleshoot
 
 ### 9. security (6 labs)
-- [ ] lab-00-device-access
-- [ ] lab-01-aaa
+- [x] lab-00-device-access
+- [x] lab-01-aaa
 - [ ] lab-02-acls
 - [ ] lab-03-copp
 - [ ] lab-04-capstone-config
 - [ ] lab-05-capstone-troubleshoot
 
 ### 10. automation (6 labs)
-- [ ] lab-00-eem-applets
-- [ ] lab-01-python-and-json
-- [ ] lab-02-netconf
-- [ ] lab-03-restconf
-- [ ] lab-04-capstone-config
-- [ ] lab-05-capstone-troubleshoot
+- [x] lab-00-eem-applets
+- [x] lab-01-python-and-json
+- [x] lab-02-netconf
+- [x] lab-03-restconf
+- [x] lab-04-capstone-config
+- [x] lab-05-capstone-troubleshoot
 
 ### 11. network-design (5 labs — hybrid)
 - [ ] lab-00-design-principles (reference)
@@ -111,12 +111,12 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 - [ ] lab-04-capstone-troubleshoot (hybrid)
 
 ### 12. sd-networking (6 labs — hybrid)
-- [ ] lab-00-sdwan-fabric-bringup (standard)
-- [ ] lab-01-sdwan-omp-and-policies (standard)
-- [ ] lab-02-sdwan-data-plane (standard)
-- [ ] lab-03-sd-access-concepts (reference)
-- [ ] lab-04-capstone-config (hybrid)
-- [ ] lab-05-capstone-troubleshoot (hybrid)
+- [~] lab-00-sdwan-fabric-bringup (standard) — Review Needed
+- [~] lab-01-sdwan-omp-and-policies (standard) — Review Needed
+- [~] lab-02-sdwan-data-plane (standard) — Review Needed
+- [~] lab-03-sd-access-concepts (reference) — Review Needed
+- [~] lab-04-capstone-config (hybrid) — Review Needed
+- [~] lab-05-capstone-troubleshoot (hybrid) — Review Needed
 
 ### 13. overlay-technologies (3 labs — reference)
 - [ ] lab-00-device-virtualization
@@ -132,6 +132,7 @@ Reference-format labs only need: workbook.md (+ optional topology.drawio).
 
 ## Summary
 - **Total labs:** 75
-- **Built:** 3 (switching/lab-00, ospf/lab-00 — test runs; switching/lab-01)
-- **Remaining:** 72
-- **Next up:** switching/lab-02-rstp-and-enhancements
+- **Built:** 58 (switching 00-05; ospf 00-06; eigrp 00-04; bgp 00-04; ip-services 00-05; multicast 00-04; virtualization 00-05; network-assurance 00-05; security/lab-00, lab-01; automation/lab-00 through lab-05; sd-networking/lab-00 through lab-05)
+- **Remaining:** 17
+- **Skipped:** security/lab-02-acls through security/lab-05-capstone-troubleshoot (deferred)
+- **Next up:** network-design/lab-00-design-principles (pending lab-05 review)

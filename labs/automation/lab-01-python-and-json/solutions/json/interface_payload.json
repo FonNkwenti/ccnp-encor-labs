@@ -1,0 +1,24 @@
+{
+  "ietf-interfaces:interface": {
+    "name": "Loopback100",
+    "description": "Python Lab Interface",
+    "type": "iana-if-type:softwareLoopback",
+    "enabled": true,
+    "ietf-ip:ipv4": {
+      "address": [
+        {
+          "ip": "10.100.100.1",
+          "prefix-length": 32
+        }
+      ]
+    },
+    "ietf-ip:ipv6": {
+      "address": [
+        {
+          "ip": "2001:db8:100::1",
+          "prefix-length": 128
+        }
+      ]
+    }
+  }
+}

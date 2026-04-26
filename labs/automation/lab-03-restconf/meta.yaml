@@ -1,0 +1,62 @@
+topic: automation
+lab_number: 3
+folder: lab-03-restconf
+title: "RESTCONF and REST API Interpretation"
+type: progressive
+difficulty: Intermediate
+time_minutes: 90
+clean_slate: false
+blueprint_refs:
+  - "4.6"
+  - "6.5"
+devices:
+  - R1
+  - R2
+  - R3
+  - PC1
+  - PC2
+objectives:
+  - Verify RESTCONF service activation on IOS-XE CSR1000v
+  - Send GET requests to RESTCONF root and ietf-interfaces datastore
+  - Build a dual-stack JSON payload and PUT a new loopback interface
+  - Use PATCH to update a single interface field without replacing the resource
+  - DELETE a resource and confirm 404 on subsequent GET
+  - Deliberately trigger 200/201/204/400/401/404 response codes and explain each
+  - PATCH an OSPF network statement using the Cisco-IOS-XE-native YANG model
+fault_scenarios:
+  - scenario_01: R1 RESTCONF subsystem disabled — connection error on API requests
+  - scenario_02: R1 admin user password changed and privilege reduced — 401 on all requests
+  - scenario_03: R1 HTTPS server disabled — SSL connection error on port 443
+created:
+  date: "2026-04-19"
+  agent: claude-sonnet-4-6
+  skill: lab-assembler
+  files:
+    - initial-configs/R1.cfg
+    - initial-configs/R2.cfg
+    - initial-configs/R3.cfg
+    - solutions/R1.cfg
+    - solutions/R2.cfg
+    - solutions/R3.cfg
+    - solutions/scripts/restconf_get.py
+    - solutions/scripts/restconf_put.py
+    - solutions/scripts/restconf_patch.py
+    - solutions/scripts/restconf_delete.py
+    - solutions/scripts/restconf_error_codes.py
+    - solutions/scripts/restconf_ospf.py
+    - solutions/json/loopback30_payload.json
+    - solutions/json/patch_description.json
+    - solutions/json/ospf_network_payload.json
+    - workbook.md
+    - setup_lab.py
+    - topology/topology.drawio
+updated:
+  - date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: fault-injector
+    files:
+      - scripts/fault-injection/inject_scenario_01.py
+      - scripts/fault-injection/inject_scenario_02.py
+      - scripts/fault-injection/inject_scenario_03.py
+      - scripts/fault-injection/apply_solution.py
+      - scripts/fault-injection/README.md

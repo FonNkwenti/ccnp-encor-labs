@@ -1,0 +1,41 @@
+lab: lab-03-ipsec-and-gre-over-ipsec
+title: "IPsec Tunnels and GRE over IPsec"
+topic: virtualization
+difficulty: Advanced
+time_minutes: 90
+clean_slate: false
+extends: lab-02-gre-tunnels
+blueprint_refs:
+  - "2.2"
+  - "2.2.b"
+devices:
+  - R1
+  - R2
+  - R3
+  - R4
+  - PC1
+  - PC2
+objectives:
+  - Configure an IKEv2 IPsec VTI (Tunnel1) between R1 and R4
+  - Define IKEv2 proposal, policy, keyring, and profile
+  - Verify IPsec SA establishment with show crypto ikev2 sa and show crypto ipsec sa
+  - Route traffic through the IPsec VTI and verify encryption with packet counts
+  - Configure GRE over IPsec (Tunnel2) — GRE tunnel protected by IPsec profile
+  - Compare pure IPsec VTI vs GRE-over-IPsec — multicast support, overhead, use cases
+  - Verify that GRE-over-IPsec carries both IPv4 and IPv6 with encryption
+meta:
+  created:
+    date: "2026-04-19"
+    agent: claude-sonnet-4-6
+    skill: lab-assembler
+  updated:
+    - date: "2026-04-19"
+      agent: claude-sonnet-4-6
+      skill: inject-faults
+      skill_version: "2026-04-18"
+      files:
+        - scripts/fault-injection/inject_scenario_01.py
+        - scripts/fault-injection/inject_scenario_02.py
+        - scripts/fault-injection/inject_scenario_03.py
+        - scripts/fault-injection/apply_solution.py
+        - scripts/fault-injection/README.md
